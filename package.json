@@ -1,0 +1,42 @@
+{
+  "name": "backend-main",
+  "version": "1.0.0",
+  "scripts": {
+    "test": "jest",
+    "dev": "nodemon -r dotenv/config -e * --watch src/ src/server.ts",
+    "build": "tsc",
+    "start": "pm2-docker start dist/server.js",
+    "lint": "eslint '.src/** /*.{ts,tsx,js,jsx}'",
+    "lint:fix": "eslint --fix '.src/** /*.{ts,tsx,js,jsx}'"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/DaVinciCodeGame/backend-main.git"
+  },
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/DaVinciCodeGame/backend-main/issues"
+  },
+  "homepage": "https://github.com/DaVinciCodeGame/backend-main#readme",
+  "dependencies": {
+    "express": "^4.18.2"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.15",
+    "@types/jest": "^29.2.5",
+    "@typescript-eslint/eslint-plugin": "^5.48.0",
+    "@typescript-eslint/parser": "^5.48.0",
+    "dotenv": "^16.0.3",
+    "eslint": "^8.31.0",
+    "eslint-config-airbnb-base": "^15.0.0",
+    "eslint-config-prettier": "^8.6.0",
+    "eslint-plugin-import": "^2.26.0",
+    "eslint-plugin-prettier": "^4.2.1",
+    "jest": "^29.3.1",
+    "nodemon": "^2.0.20",
+    "prettier": "^2.8.2",
+    "ts-jest": "^29.0.3",
+    "ts-node": "^10.9.1",
+    "typescript": "^4.9.4"
+  }
+}

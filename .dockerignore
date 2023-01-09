@@ -1,0 +1,11 @@
+.aws
+.github
+node_modules
+src
+.eslintrc
+.gitignore
+.prettierrc
+jest.config.ts
+License
+README.md
+tscofig.json
