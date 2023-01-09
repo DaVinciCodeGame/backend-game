@@ -22,7 +22,7 @@ class App {
     this.app.use(express.json());
     this.app.use(express.urlencoded({ extended: true }));
     this.app.use(morgan);
-    this.app.use('/main', apiRouter);
+    this.app.use('/game', apiRouter);
     this.app.use(errorHandler);
   }
 
