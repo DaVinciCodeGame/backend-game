@@ -8,20 +8,24 @@ import errorHandler from './middlewares/errorHandler';
 import logger from './config/logger';
 
 class App {
-  private app;
+  private readonly app;
 
   constructor() {
     this.app = express();
-    this.setMiddlewares();
-  }
-
-  private setMiddlewares() {
-    this.app.use(cors()); // TODO: 프론트앤드 서버 배포 후 해당 도메인만 연결하도록 설정
+    this.app.use(
+      cors({
+        credentials: true,
+        origin: [
+          'https://frontend-delta-puce.vercel.app',
+          'http://localhost:3000',
+        ],
+      })
+    );
     this.app.use(helmet());
     this.app.use(compression());
     this.app.use(express.json());
     this.app.use(express.urlencoded({ extended: true }));
-    this.app.use(morgan);
+    this.app.use(morgan());
     this.app.use('/game', apiRouter);
     this.app.use(errorHandler);
   }

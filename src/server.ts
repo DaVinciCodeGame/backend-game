@@ -1,6 +1,5 @@
 import App from './app';
+import env from './config/env';
 
 const app = new App();
-
-if (!process.env.PORT) throw new Error('유효하지 않은 환경 변수: PORT');
-app.listen(Number(process.env.PORT));
+app.listen(Number(env.PORT));
