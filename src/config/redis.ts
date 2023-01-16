@@ -1,11 +1,12 @@
-import { createClient } from 'redis';
+import Redis from 'ioredis';
+
 import env from './env';
 import logger from './logger';
 
-const client = createClient({ url: env.REDIS_URL });
+const redis = new Redis(env.REDIS_URL);
 
-client.on('error', (err) => {
+redis.on('error', (err) => {
   logger.error(err);
 });
 
-export default client;
+export default redis;
