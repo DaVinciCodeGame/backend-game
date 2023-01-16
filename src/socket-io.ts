@@ -1,3 +1,9 @@
+import {
+  RedisClientType,
+  RedisModules as M,
+  RedisFunctions as F,
+  RedisScripts as S,
+} from 'redis';
 import { Server } from 'socket.io';
 
 const serverOption = {
@@ -9,7 +15,11 @@ const serverOption = {
 };
 
 export default class SocketIO extends Server {
-  constructor() {
+  redis: RedisClientType<M, F, S>;
+
+  constructor(redis: RedisClientType<M, F, S>) {
     super(serverOption);
+
+    this.redis = redis;
   }
 }

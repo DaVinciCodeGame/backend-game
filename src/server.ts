@@ -5,7 +5,7 @@ import SocketIO from './socket-io';
 
 redis.connect().then(() => {
   logger.info('Redis 연결 완료');
-  const socketIO = new SocketIO();
+  const socketIO = new SocketIO(redis);
 
   socketIO.listen(Number(env.PORT));
 });
