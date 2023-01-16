@@ -19,8 +19,8 @@
   },
   "homepage": "https://github.com/DaVinciCodeGame/backend-game#readme",
   "dependencies": {
+    "ioredis": "^5.2.5",
     "joi": "^17.7.0",
-    "redis": "^4.5.1",
     "socket.io": "^4.5.4",
     "winston": "^3.8.2"
   },
