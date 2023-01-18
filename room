@@ -29,12 +29,14 @@ type Card = {
   isOpened: boolean;
 };
 
-NOTE: 방 정보
+NOTE: 방 정보 / STRING
 `rooms:${roomId}:current-turn` = "0"
+
 `rooms:${roomId}:security` = "4"
+
 `rooms:${roomId}:is-playing` = "true"
 
-NOTE: 깔려 있는 검은색 카드들
+NOTE: 깔려 있는 검은색 카드들 / LIST<JSON>
 `rooms:${roomId}:table:black` = [
   "{'color, value, isOpened'}"
   "{'color, value, isOpened'}"
@@ -42,7 +44,7 @@ NOTE: 깔려 있는 검은색 카드들
   ...
 ]
 
-NOTE: 깔려 있는 흰색 카드들
+NOTE: 깔려 있는 흰색 카드들 / LIST<JSON>
 `rooms:${roomId}:table:white` = [
   "{'color, value, isOpened'}"
   "{'color, value, isOpened'}"
@@ -50,7 +52,7 @@ NOTE: 깔려 있는 흰색 카드들
   ...
 ]
 
-NOTE: 유저 목록
+NOTE: 유저 목록 / HASH<JSON>
 `rooms:${roomId}:users` = {
   "0": "{'userId','socketId','username','isReady','isAlive'}"
   "1": "{'userId','socketId','username','isReady','isAlive'}"
@@ -58,7 +60,7 @@ NOTE: 유저 목록
   "3": "{'userId','socketId','username','isReady','isAlive'}"
 }
 
-NOTE: 
+NOTE: / LIST<JSON>
 `rooms:${roomId}:users:${userId}:hand` = [
   "{'color, value, isOpened'}"
   "{'color, value, isOpened'}"
@@ -66,3 +68,10 @@ NOTE:
   ...
 ]
 
+NOTE: 유저 정보 / HASH<STRING>
+`users:${me.userId}` = {
+  "roomId": "0"
+  "socketId": "s3q6w3f548dfg"
+  "userId": "3"
+  "username": "이름"
+}
