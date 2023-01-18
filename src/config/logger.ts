@@ -3,7 +3,7 @@ import env from './env';
 
 const logger = createLogger({
   level: env.NODE_ENV === 'development' ? 'debug' : 'info',
-  format: env.NODE_ENV === 'development' ? format.prettyPrint() : format.json(),
+  format: format.json(),
   transports: new transports.Console(),
 });
 
