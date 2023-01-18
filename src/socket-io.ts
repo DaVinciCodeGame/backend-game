@@ -86,36 +86,43 @@ io.on(events.CONNECT, async (socket: Socket) => {
             .pipeline()
             .hset(`users:${me.userId}`, { roomId });
 
-          if (!existUsers[0])
+          let yourSeat: number;
+
+          if (!existUsers[0]) {
             await pipeline
               .hset(`rooms:${roomId}:users`, {
                 0: JSON.stringify(new User(me.userId, me.username, socket.id)),
               })
               .exec();
-          else if (!existUsers[1])
+            yourSeat = 0;
+          } else if (!existUsers[1]) {
             await pipeline
               .hset(`rooms:${roomId}:users`, {
                 1: JSON.stringify(new User(me.userId, me.username, socket.id)),
               })
               .exec();
-          else if (!existUsers[2])
+            yourSeat = 1;
+          } else if (!existUsers[2]) {
             await pipeline
               .hset(`rooms:${roomId}:users`, {
                 2: JSON.stringify(new User(me.userId, me.username, socket.id)),
               })
               .exec();
-          else if (!existUsers[3])
+            yourSeat = 2;
+          } else {
             await pipeline
               .hset(`rooms:${roomId}:users`, {
                 3: JSON.stringify(new User(me.userId, me.username, socket.id)),
               })
               .exec();
+            yourSeat = 3;
+          }
 
           await socket.join(roomId.toString());
 
           const users = await redis.hgetall(`rooms:${roomId}:users`);
 
-          io.to(socket.id).emit(events.YOU_JOINED, { users });
+          io.to(socket.id).emit(events.YOU_JOINED, { users, yourSeat });
           socket.to(roomId.toString()).emit(events.NEW_USER_JOINED, { users });
         }
       }
