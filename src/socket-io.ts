@@ -89,25 +89,25 @@ io.on(events.CONNECT, async (socket: Socket) => {
           if (!existUsers[0])
             await pipeline
               .hset(`rooms:${roomId}:users`, {
-                0: new User(me.userId, me.username, socket.id),
+                0: JSON.stringify(new User(me.userId, me.username, socket.id)),
               })
               .exec();
           else if (!existUsers[1])
             await pipeline
               .hset(`rooms:${roomId}:users`, {
-                1: new User(me.userId, me.username, socket.id),
+                1: JSON.stringify(new User(me.userId, me.username, socket.id)),
               })
               .exec();
           else if (!existUsers[2])
             await pipeline
               .hset(`rooms:${roomId}:users`, {
-                2: new User(me.userId, me.username, socket.id),
+                2: JSON.stringify(new User(me.userId, me.username, socket.id)),
               })
               .exec();
           else if (!existUsers[3])
             await pipeline
               .hset(`rooms:${roomId}:users`, {
-                3: new User(me.userId, me.username, socket.id),
+                3: JSON.stringify(new User(me.userId, me.username, socket.id)),
               })
               .exec();
 
@@ -121,7 +121,41 @@ io.on(events.CONNECT, async (socket: Socket) => {
       }
     });
 
+    socket.on(events.RTC_OFFER, ({ targetSocketId, sdp }) => {
+      io.to(targetSocketId).emit(events.RTC_DELIVER_OFFER, {
+        sdp,
+        callerSocketId: socket.id,
+      });
+    });
+
+    socket.on(events.RTC_ANSWER, ({ targetSocketId, sdp }) => {
+      io.to(targetSocketId).emit(events.RTC_DELIVER_ANSWER, {
+        sdp,
+        callerSocketId: socket.id,
+      });
+    });
+
     socket.on(events.DISCONNECT, async () => {
+      const pipeline = redis.pipeline().hdel(`users:${me.userId}`);
+
+      const roomId = await redis.hget(`users:${me.userId}`, 'roomId');
+      if (roomId) {
+        const usersInRoom = await redis.hgetall(`rooms:${roomId}:users`);
+
+        if (JSON.parse(usersInRoom[0]).userId === me.userId)
+          await pipeline.hdel(`rooms:${roomId}:users`, '0').exec();
+        else if (JSON.parse(usersInRoom[1]).userId === me.userId)
+          await pipeline.hdel(`rooms:${roomId}:users`, '1').exec();
+        else if (JSON.parse(usersInRoom[2]).userId === me.userId)
+          await pipeline.hdel(`rooms:${roomId}:users`, '2').exec();
+        else if (JSON.parse(usersInRoom[3]).userId === me.userId)
+          await pipeline.hdel(`rooms:${roomId}:users`, '3').exec();
+
+        socket
+          .to(roomId.toString())
+          .emit(events.DISCONNECT, { disconnectedSocketId: socket.id });
+      }
+
       logger.debug(`${socket.id} 연결 해제`);
     });
   } catch (err) {
