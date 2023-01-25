@@ -14,6 +14,10 @@ dotenv.config();
 app.use(cors());
 mongoose.set('strictQuery', false);
 
+app.get('/', (req, res) => {
+  res.send('OK');
+});
+
 const server = http.createServer(app);
 
 //DB settings
@@ -94,9 +98,6 @@ io.on('connection', async (socket) => {
     const userInfo = await client.hGetAll(
       `rooms:${roomID}:users:${socket.userID}`
     );
-
-    console.log('userID:', userID, typeof userID);
-    console.log('roomID:', roomID, typeof roomID);
 
     await client.hSet(`rooms:${roomID}:users:${socket.userID}`, {
       isReady: userInfo.isReady === 'false' ? 'true' : 'false',
