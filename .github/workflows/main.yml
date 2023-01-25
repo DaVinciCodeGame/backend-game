@@ -1,4 +1,4 @@
-name: CI/CD
+name: Auto deployment
 
 on:
   push:
@@ -8,100 +8,23 @@ on:
       - '.prettierrc'
       - 'README.md'
       - 'License'
-      - 'room'
-
-env:
-  AWS_REGION: ap-northeast-2
-  ECR_REPOSITORY: dc-game
-  ECS_SERVICE: dc-service-game
-  ECS_CLUSTER: dc-cluster-game
-  ECS_TASK_DEFINITION: .aws/task-definition.json
-  CONTAINER_NAME: dc-game
-  REGISTRY_ALIAS: v0g8b0z8
-
-permissions:
-  contents: read
 
 jobs:
-  CI:
-    runs-on: ubuntu-20.04
+  Deploy:
+    runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
+      - name: SSH Remote Commands
+        uses: appleboy/ssh-action@v0.1.7
         with:
-          node-version: 18.13.0
-          cache: npm
-
-      - name: Install packages
-        run: npm ci
-
-      - name: Test
-        run: npm test
-
-      - name: Transpile to javascript
-        run: npm run build
-
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v1
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: us-east-1
-
-      - name: Login to Amazon ECR Public
-        id: login-ecr-public
-        uses: aws-actions/amazon-ecr-login@v1
-        with:
-          registry-type: public
-
-      - name: Setup Docker Buildx
-        uses: docker/setup-buildx-action@v2
-
-      - name: Build, tag, and push docker image to Amazon ECR Public
-        env:
-          ECR_REGISTRY: ${{ steps.login-ecr-public.outputs.registry }}
-          IMAGE_TAG: ${{ github.sha }}
-        id: build-image
-        uses: docker/build-push-action@v3
-        with:
-          context: .
-          push: true
-          tags: |
-            ${{ env.ECR_REGISTRY }}/${{ env.REGISTRY_ALIAS }}/${{ env.ECR_REPOSITORY }}:${{ env.IMAGE_TAG }}
-            ${{ env.ECR_REGISTRY }}/${{ env.REGISTRY_ALIAS }}/${{ env.ECR_REPOSITORY }}:latest
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-    outputs:
-      ECR_REGISTRY: ${{ steps.login-ecr-public.outputs.registry }}
-  CD:
-    needs: CI
-    runs-on: ubuntu-20.04
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v1
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ env.AWS_REGION }}
-
-      - name: Fill in the new image ID in the Amazon ECS task definition
-        id: task-def
-        uses: aws-actions/amazon-ecs-render-task-definition@v1
-        with:
-          task-definition: ${{ env.ECS_TASK_DEFINITION }}
-          container-name: ${{ env.CONTAINER_NAME }}
-          image: ${{ needs.CI.outputs.ECR_REGISTRY }}/${{ env.REGISTRY_ALIAS }}/${{ env.ECR_REPOSITORY }}:latest
-
-      - name: Deploy Amazon ECS task definition
-        uses: aws-actions/amazon-ecs-deploy-task-definition@v1
-        with:
-          task-definition: ${{ steps.task-def.outputs.task-definition }}
-          service: ${{ env.ECS_SERVICE }}
-          cluster: ${{ env.ECS_CLUSTER }}
-          wait-for-service-stability: true
+          proxy_host: ${{ secrets.BASTION_HOST_IP }}
+          proxy_username: ${{ secrets.BASTION_HOST_USERNAME }}
+          proxy_key: ${{ secrets.BASTION_HOST_KEY }}
+          host: ${{ secrets.APP_SERVER_IP }}
+          username: ${{ secrets.APP_SERVER_USERNAME }}
+          key: ${{ secrets.APP_SERVER_KEY }}
+          script_stop: true
+          script: |
+            cd ${{ secrets.APP_PATH }}
+            git pull
+            npm install
+            pm2 restart server
