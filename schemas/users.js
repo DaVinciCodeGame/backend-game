@@ -1,4 +1,4 @@
-const mongoose = require("mongoose");
+const mongoose = require('mongoose');
 
 const userSchema = new mongoose.Schema({
   userId: {
@@ -27,8 +27,6 @@ const userSchema = new mongoose.Schema({
   },
 
   hand: [{ color: String, value: Number, isOpen: String }],
-
-
 });
 
-module.exports = mongoose.model("user", userSchema);
+module.exports = mongoose.model('user', userSchema);

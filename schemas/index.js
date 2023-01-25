@@ -8,7 +8,7 @@ dotenv.config();
 mongoose.set("strictQuery", false);
 
 //DB settings
-mongoose.connect(process.env.DAVINCICODEDB);
+mongoose.connect(process.env.MONGO_URL);
 var DB = mongoose.connection;
 
 DB.once('open', function(){
@@ -21,6 +21,6 @@ DB.on('error', function(err){
 
 })
 
-app.listen(3000, function(){
-  console.log('server on! https://localhost:3000')
+app.listen(5000, function(){
+  console.log('server on! https://localhost:5000')
 });

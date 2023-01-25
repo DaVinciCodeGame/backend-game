@@ -207,6 +207,6 @@ io.on('connection', async (socket) => {
   });
 });
 
-server.listen(3001, () => {
+server.listen(process.env.PORT, () => {
   console.log('Server is Listening');
 });
