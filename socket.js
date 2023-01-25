@@ -1,18 +1,18 @@
-const express = require("express");
+const express = require('express');
 const app = express();
-const http = require("http");
-const { Server } = require("socket.io");
-const cors = require("cors");
-const dotenv = require("dotenv");
-const { log } = require("console");
-const { type } = require("os");
-const connect = require("./schemas");
-const { mongoose } = require("mongoose");
+const http = require('http');
+const { Server } = require('socket.io');
+const cors = require('cors');
+const dotenv = require('dotenv');
+const { log } = require('console');
+const { type } = require('os');
+const connect = require('./schemas');
+const { mongoose } = require('mongoose');
 //connect();
 
 dotenv.config();
 app.use(cors());
-mongoose.set("strictQuery", false);
+mongoose.set('strictQuery', false);
 
 const server = http.createServer(app);
 
@@ -20,18 +20,18 @@ const server = http.createServer(app);
 mongoose.connect(process.env.DAVINCICODEDB);
 var DB = mongoose.connection;
 
-DB.once("open", function () {
-  console.log("DB connected");
+DB.once('open', function () {
+  console.log('DB connected');
 });
 
-DB.on("error", function (err) {
-  console.log("DB ERROR: ", err);
+DB.on('error', function (err) {
+  console.log('DB ERROR: ', err);
 });
 
 const io = new Server(server, {
   cors: {
-    origin: "http://localhost:3000",
-    method: ["GET", "POST"],
+    origin: 'http://localhost:3000',
+    method: ['GET', 'POST'],
   },
 });
 
@@ -61,26 +61,26 @@ let readyCount = 0;
 //   },
 // ];
 
-io.on("connection", async (socket) => {
-  console.log("connect", socket.id);
+io.on('connection', async (socket) => {
+  console.log('connect', socket.id);
   socket.onAny(async (e) => {
     console.log(`SocketEvent:${e}`);
   });
 
-  socket.on("send-message", (msg, room, nickName, addMyMessage) => {
+  socket.on('send-message', (msg, room, nickName, addMyMessage) => {
     console.log(msg);
     console.log(room);
     // 소켓 아이디에 맞는 닉네임을 뽑아서 msg와 같이 전송
 
-    socket.to(room).emit("receive-message", nickName, msg);
+    socket.to(room).emit('receive-message', nickName, msg);
     addMyMessage(nickName, msg);
   });
 
-  socket.on("connect", (userId) => {
+  socket.on('connect', (userId) => {
     //DB room 돌면서 userId 있는지 확인하고 삭제
   });
 
-  socket.on("join", (roomId) => {
+  socket.on('join', (roomId) => {
     // TODO:
     // game-info 필요
     // roomId에 따른 방 제목 -> 게임 시작시 상단 바 정보(비공개, 인원, 방제목)
@@ -89,46 +89,46 @@ io.on("connection", async (socket) => {
     socket.data.roomId = roomId;
   });
 
-  socket.on("ready", async ({ userID, roomID }) => {
+  socket.on('ready', async ({ userID, roomID }) => {
     // FIXME: 변수 -> redis.lenth로 변경 필요
     const userInfo = await client.hGetAll(
       `rooms:${roomID}:users:${socket.userID}`
     );
 
-    console.log("userID:", userID, typeof userID);
-    console.log("roomID:", roomID, typeof roomID);
+    console.log('userID:', userID, typeof userID);
+    console.log('roomID:', roomID, typeof roomID);
 
     await client.hSet(`rooms:${roomID}:users:${socket.userID}`, {
-      isReady: userInfo.isReady === "false" ? "true" : "false",
+      isReady: userInfo.isReady === 'false' ? 'true' : 'false',
     });
 
-    if (userInfo.isReady === "false") {
+    if (userInfo.isReady === 'false') {
       //{userId:userId}
       // `userId`
       const some = userID;
       await client.hSet(`rooms:${roomID}`, { [userID]: some });
       const test2 = await client.hGetAll(`rooms:${roomID}`);
-      console.log("추가", test2);
+      console.log('추가', test2);
 
       let userLength = await client.hLen(`rooms:${roomID}`);
       userLength = 2;
 
       if (userLength == 2) {
-        console.log("test");
+        console.log('test');
         // 유저 별로 socket.Id 찾아서 뿌려주기.
-        io.to(socket.id).emit("game-start");
+        io.to(socket.id).emit('game-start');
       }
     } else {
       await client.hDel(`rooms:${roomID}`, `${userID}`);
 
       const test2 = await client.hGetAll(`rooms:${roomID}`);
-      console.log("삭제", test2);
+      console.log('삭제', test2);
     }
 
     // TODO: ADD_READY :: 방에 설정된 인원값이 모두 ready 했을 때 정보 보내기 + GAME_START 이벤트
   });
 
-  socket.on("first-draw", async (userId, black, roomId, myCard) => {
+  socket.on('first-draw', async (userId, black, roomId, myCard) => {
     // fn (본인 카드 & 잔여 카드 )
     // socket.to(roomId).emit("all-users-cards", [사람들 카드 + 잔여 카드])
     const white = 3 - black;
@@ -151,7 +151,7 @@ io.on("connection", async (socket) => {
       let randomCard = DB[roomIndex].table.blackCards[CardIndex];
       getCards = [
         ...getCards,
-        { color: "black", value: Number(randomCard), isOpen: false },
+        { color: 'black', value: Number(randomCard), isOpen: false },
       ];
       DB[roomIndex].table.blackCards.splice(CardIndex, 1);
     }
@@ -163,7 +163,7 @@ io.on("connection", async (socket) => {
       let randomCard = DB[roomIndex].table.whiteCards[CardIndex];
       getCards = [
         ...getCards,
-        { color: "white", value: Number(randomCard), isOpen: false },
+        { color: 'white', value: Number(randomCard), isOpen: false },
       ];
       DB[roomIndex].table.whiteCards.splice(CardIndex, 1);
     }
@@ -193,20 +193,20 @@ io.on("connection", async (socket) => {
     let sendAllData = {};
   });
 
-  socket.on("color-selected", (userId, color) => {
-    if (color === "black") {
+  socket.on('color-selected', (userId, color) => {
+    if (color === 'black') {
     } else {
     }
 
     // io.to.(개인의 socket.Id).emit("selected-result", gameInfo)
   });
 
-  socket.on("select-card-as-security", (userId, color, value) => {
+  socket.on('select-card-as-security', (userId, color, value) => {
     socket.data.security = { color: color, value: value };
-    io.to(socket.Id).emit("select-target");
+    io.to(socket.Id).emit('select-target');
   });
 });
 
 server.listen(3001, () => {
-  console.log("Server is Listening");
+  console.log('Server is Listening');
 });
