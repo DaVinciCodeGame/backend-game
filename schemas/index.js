@@ -8,7 +8,7 @@ dotenv.config();
 mongoose.set('strictQuery', false);
 
 //DB settings
-mongoose.connect(process.env.DAVINCICODEDB);
+mongoose.connect(process.env.MONGO_URL);
 var DB = mongoose.connection;
 
 DB.once('open', function () {

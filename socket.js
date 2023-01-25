@@ -17,7 +17,7 @@ mongoose.set('strictQuery', false);
 const server = http.createServer(app);
 
 //DB settings
-mongoose.connect(process.env.DAVINCICODEDB);
+mongoose.connect(process.env.MONGO_URL);
 var DB = mongoose.connection;
 
 DB.once('open', function () {
@@ -207,6 +207,6 @@ io.on('connection', async (socket) => {
   });
 });
 
-server.listen(3001, () => {
+server.listen(process.env.PORT, () => {
   console.log('Server is Listening');
 });
