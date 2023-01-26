@@ -1,24 +1,24 @@
-const express = require("express");
-const mongoose = require("mongoose");
-const dotenv = require("dotenv");
-const User = require("./users");
-const Room = require("./rooms");
+const express = require('express');
+const mongoose = require('mongoose');
+const dotenv = require('dotenv');
+const User = require('./users');
+const Room = require('./rooms');
 
 const app = express();
 dotenv.config();
 
-mongoose.set("strictQuery", false);
+mongoose.set('strictQuery', false);
 
 //DB settings
 mongoose.connect(process.env.DAVINCICODEDB);
 var DB = mongoose.connection;
 
-DB.once("open", function () {
-  console.log("DB connected");
+DB.once('open', function () {
+  console.log('DB connected');
 });
 
-DB.on("error", function (err) {
-  console.log("DB ERROR: ", err);
+DB.on('error', function (err) {
+  console.log('DB ERROR: ', err);
 });
 
 // const me = new User({
@@ -35,7 +35,7 @@ DB.on("error", function (err) {
 //   hand: [],
 // });
 
-const testroom = new Room({
+const room = new Room({
   roomId: 3,
 
   turn: 2,
@@ -81,24 +81,20 @@ const testroom = new Room({
     },
   ],
 });
-
-testroom
-  .save()
-  .then(() => {
-    console.log(testroom);
-  })
-  .catch((err) => {
-    console.log("Error : " + err);
-  });
-
-// me.save()
+// C
+// room
+//   .save()
 //   .then(() => {
-//     console.log(me);
+//     console.log(room);
 //   })
 //   .catch((err) => {
 //     console.log("Error : " + err);
 //   });
 
+const test = Room.find({}, { roomId: 3 });
+console.log('eraserasersaer', test);
+// console.log('test read', test.roomId);
+
 app.listen(3000, function () {
-  console.log("server on! https://localhost:3000");
+  console.log('server on! https://localhost:3000');
 });
