@@ -149,10 +149,13 @@ io.on('connection', async (socket) => {
     await Table.destroy({ where: { roomId: 0 } });
   });
 
-  socket.on('joined', async ({ userId, roomId, userName }) => {
+  socket.on('joined', async ({ userId, roomId }) => {
     // TODO:
     // game-info 필요
     // roomId에 따른 방 제목 -> 게임 시작시 상단 바 정보(비공개, 인원, 방제목)
+    // room 정보 마지막 함수로
+    // userName은 main DB에서 추출
+
     console.log('roomId: ', roomId);
     socket.join(roomId);
     socket.data.roomId = roomId;
@@ -209,7 +212,9 @@ io.on('connection', async (socket) => {
     }
   });
 
-  socket.on('ready', async ({ userId, roomId }) => {
+  socket.on('ready', async (userId) => {
+    const userId = socket.data.userId;
+    const roomId = socket.data.roomId;
     console.log('userId', userId);
     console.log('roomId', roomId);
 
