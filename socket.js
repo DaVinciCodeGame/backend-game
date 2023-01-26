@@ -155,7 +155,7 @@ io.on('connection', async (socket) => {
     // roomId에 따른 방 제목 -> 게임 시작시 상단 바 정보(비공개, 인원, 방제목)
     // room 정보 마지막 함수로
     // userName은 main DB에서 추출
-
+    userName = 'hohoho';
     console.log('roomId: ', roomId);
     socket.join(roomId);
     socket.data.roomId = roomId;
