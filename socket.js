@@ -116,6 +116,12 @@ io.on('connection', async (socket) => {
       attributes: ['roomId', 'turn'],
       raw: true,
     });
+    const tabeltest = await Table.findOne({
+      where: { roomId: 0 },
+      attributes: ['roomId', 'blackCard', 'whiteCard', 'users'],
+      raw: true,
+    });
+
     const usertest = await User.findOne({
       where: { roomId: 0 },
       attributes: [
@@ -128,11 +134,7 @@ io.on('connection', async (socket) => {
       ],
       raw: true,
     });
-    const tabeltest = await Table.findOne({
-      where: { roomId: 0 },
-      attributes: ['roomId', 'blackCard', 'whiteCard', 'users'],
-      raw: true,
-    });
+
     console.log('roomtest', roomtest);
     console.log('usertestm', usertest);
     console.log('tabeltest', tabeltest);
@@ -177,18 +179,15 @@ io.on('connection', async (socket) => {
         hand: '[]',
       });
     } else {
-      console.log(1);
       const result = await Table.findOne({
         where: { roomId },
         attributes: ['users'],
         raw: true,
       });
-      console.log('result 값은? : ', result.users);
 
       let usersData = JSON.parse(result.users);
-      console.log('testcode: ', usersData);
+
       usersData.push({ userId });
-      console.log('값 확인: ', usersData);
 
       await Table.update(
         { users: JSON.stringify(usersData) },
@@ -199,39 +198,8 @@ io.on('connection', async (socket) => {
 
   socket.on('ready', async ({ userId, roomId }) => {
     //const userInff = await User.findOne({where: userId})
-
-    const userInfo = await client.hGetAll(
-      `rooms:${roomID}:users:${socket.userID}`
-    );
-
-    await client.hSet(`rooms:${roomID}:users:${socket.userID}`, {
-      isReady: userInfo.isReady === 'false' ? 'true' : 'false',
-    });
-
-    if (userInfo.isReady === 'false') {
-      //{userId:userId}
-      // `userId`
-      const some = userID;
-      await client.hSet(`rooms:${roomID}`, { [userID]: some });
-      const test2 = await client.hGetAll(`rooms:${roomID}`);
-      console.log('추가', test2);
-
-      let userLength = await client.hLen(`rooms:${roomID}`);
-      userLength = 2;
-
-      if (userLength == 2) {
-        console.log('test');
-        // 유저 별로 socket.Id 찾아서 뿌려주기.
-        io.to(socket.id).emit('game-start');
-      }
-    } else {
-      await client.hDel(`rooms:${roomID}`, `${userID}`);
-
-      const test2 = await client.hGetAll(`rooms:${roomID}`);
-      console.log('삭제', test2);
-    }
-
-    // TODO: ADD_READY :: 방에 설정된 인원값이 모두 ready 했을 때 정보 보내기 + GAME_START 이벤트
+    
+    
   });
 
   socket.on('first-draw', async (userId, black, roomId, myCard) => {
