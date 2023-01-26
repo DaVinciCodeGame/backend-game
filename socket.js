@@ -145,17 +145,61 @@ io.on('connection', async (socket) => {
     await Table.destroy({ where: { roomId: 0 } });
   });
 
-  socket.on('join', (roomId) => {
+  socket.on('join', async ({ userId, roomId, userName }) => {
     // TODO:
     // game-info 필요
     // roomId에 따른 방 제목 -> 게임 시작시 상단 바 정보(비공개, 인원, 방제목)
-    console.log(roomId);
+    console.log('roomId: ', roomId);
     socket.join(roomId);
     socket.data.roomId = roomId;
+    socket.data.userId = userId;
+
+    const result = await Room.findOne({ where: { roomId } });
+    if (!result) {
+      await Room.create({
+        roomId,
+        turn: 9999,
+      });
+
+      await Table.create({
+        roomId,
+        blackCard: '[0,1,2,3,4,5,6,7,8,9,10,11,12]',
+        whiteCard: '[0,1,2,3,4,5,6,7,8,9,10,11,12]',
+        users: JSON.stringify([{ userId }]),
+      });
+
+      await User.create({
+        roomId,
+        userId,
+        userName,
+        isReady: false,
+        isAlive: true,
+        hand: '[]',
+      });
+    } else {
+      console.log(1);
+      const result = await Table.findOne({
+        where: { roomId },
+        attributes: ['users'],
+        raw: true,
+      });
+      console.log('result 값은? : ', result.users);
+
+      let usersData = JSON.parse(result.users);
+      console.log('testcode: ', usersData);
+      usersData.push({ userId });
+      console.log('값 확인: ', usersData);
+
+      await Table.update(
+        { users: JSON.stringify(usersData) },
+        { where: { roomId } }
+      );
+    }
   });
 
-  socket.on('ready', async ({ userID, roomID }) => {
-    // FIXME: 변수 -> redis.lenth로 변경 필요
+  socket.on('ready', async ({ userId, roomId }) => {
+    //const userInff = await User.findOne({where: userId})
+
     const userInfo = await client.hGetAll(
       `rooms:${roomID}:users:${socket.userID}`
     );
