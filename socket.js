@@ -102,11 +102,47 @@ io.on('connection', async (socket) => {
 
     await User.create({
       roomId: 0,
-      username: 'test',
+      userId: 7,
+      userName: 'test',
       isReady: false,
       isAlive: true,
       hand: '[{color:black, value:5, isOpen:ture},{color:white, value:3, isOpen:false}]',
     });
+  });
+
+  socket.on('sql-read', async () => {
+    const roomtest = await Room.findOne({
+      where: { roomId: 0 },
+      attributes: ['roomId', 'turn'],
+      raw: true,
+    });
+    const usertest = await User.findOne({
+      where: { roomId: 0 },
+      attributes: [
+        'userId',
+        'roomId',
+        'userName',
+        'isReady',
+        'isAlive',
+        'hand',
+      ],
+      raw: true,
+    });
+    const tabeltest = await Table.findOne({
+      where: { roomId: 0 },
+      attributes: ['roomId', 'blackCard', 'whiteCard', 'users'],
+      raw: true,
+    });
+    console.log('roomtest', roomtest);
+    console.log('usertestm', usertest);
+    console.log('tabeltest', tabeltest);
+  });
+
+  socket.on('sql-update', async () => {
+    await Room.update({ turn: 8 }, { where: { roomId: 0 } });
+  });
+  socket.on('sql-delete', async () => {
+    await Table.destroy({ where: { roomId: 0 } });
   });
 
   socket.on('join', (roomId) => {
