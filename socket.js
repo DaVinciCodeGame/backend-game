@@ -4,6 +4,7 @@ const http = require('http');
 const { Server } = require('socket.io');
 const cors = require('cors');
 require('dotenv');
+const { User, Room, Table } = require('./models');
 
 // const { log } = require('console');
 // const { type } = require('os');
@@ -20,10 +21,10 @@ app.get('/', (req, res) => {
 });
 
 const server = http.createServer(app);
-console.log(2);
+
 // db 연결
 const DB = require('./models');
-console.log(3);
+
 // db 연결 확인
 DB.sequelize
   .sync()
@@ -31,14 +32,12 @@ DB.sequelize
     console.log('database 연결 성공');
   })
   .catch(console.error);
-console.log(4);
+
 // sequelize model sync(), 테이블 수정 적용 여부
 // https://medium.com/@smallbee/how-to-use-sequelize-sync-without-difficulties-4645a8d96841
 DB.sequelize.sync({
   force: false, // default가 false, force: true -> 테이블을 생성하고 이미 존재하는 경우 먼저 삭제합니다. (공식문서 참고: https://sequelize.org/docs/v6/core-concepts/model-basics/#model-synchronization)
 });
-console.log(5);
-
 
 const io = new Server(server, {
   cors: {
@@ -46,8 +45,6 @@ const io = new Server(server, {
     method: ['GET', 'POST'],
   },
 });
-
-
 
 let userCount = 0;
 let readyCount = 0;
@@ -90,8 +87,26 @@ io.on('connection', async (socket) => {
     addMyMessage(nickName, msg);
   });
 
-  socket.on('connect', (userId) => {
-    //DB room 돌면서 userId 있는지 확인하고 삭제
+  socket.on('test-line', async (userId) => {
+    await Room.create({
+      roomId: 0,
+      turn: 3,
+    });
+
+    await Table.create({
+      roomId: 0,
+      blackCard: '[0,1,2,3,4,5,6,7,8,9,10,11,12]',
+      whiteCard: '[0,1,2,3,4,5,6,7,8,9,10,11,12]',
+      users: '[{userId:0},{userId:1},{userId:2},{userId:3},]',
+    });
+
+    await User.create({
+      roomId: 0,
+      username: 'test',
+      isReady: false,
+      isAlive: true,
+      hand: '[{color:black, value:5, isOpen:ture},{color:white, value:3, isOpen:false}]',
+    });
   });
 
   socket.on('join', (roomId) => {
