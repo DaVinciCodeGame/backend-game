@@ -227,6 +227,8 @@ io.on('connection', async (socket) => {
       ? await User.update({ isReady: false }, { where: { userId } })
       : await User.update({ isReady: true }, { where: { userId } });
 
+    
+    
     // let readyCount = await User.findAll({
     //   where: {
     //     roomId,
