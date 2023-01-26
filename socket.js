@@ -3,16 +3,18 @@ const app = express();
 const http = require('http');
 const { Server } = require('socket.io');
 const cors = require('cors');
-const dotenv = require('dotenv');
-const { log } = require('console');
-const { type } = require('os');
-const connect = require('./schemas');
-const { mongoose } = require('mongoose');
-//-connect();
+require('dotenv');
+const { User, Room, Table } = require('./models');
 
-dotenv.config();
+// const { log } = require('console');
+// const { type } = require('os');
+// const User = require('./schemas/users');
+// const Room = require('./schemas/rooms');
+// const { mongoose } = require('mongoose');
+// mongoose.set('strictQuery', false);
+
+//dotenv.config();
 app.use(cors());
-mongoose.set('strictQuery', false);
 
 app.get('/', (req, res) => {
   res.send('OK');
@@ -20,16 +22,21 @@ app.get('/', (req, res) => {
 
 const server = http.createServer(app);
 
-//DB settings
-mongoose.connect(process.env.MONGO_URL);
-var DB = mongoose.connection;
+// db 연결
+const DB = require('./models');
 
-DB.once('open', function () {
-  console.log('DB connected');
-});
+// db 연결 확인
+DB.sequelize
+  .sync()
+  .then(() => {
+    console.log('database 연결 성공');
+  })
+  .catch(console.error);
 
-DB.on('error', function (err) {
-  console.log('DB ERROR: ', err);
+// sequelize model sync(), 테이블 수정 적용 여부
+// https://medium.com/@smallbee/how-to-use-sequelize-sync-without-difficulties-4645a8d96841
+DB.sequelize.sync({
+  force: false, // default가 false, force: true -> 테이블을 생성하고 이미 존재하는 경우 먼저 삭제합니다. (공식문서 참고: https://sequelize.org/docs/v6/core-concepts/model-basics/#model-synchronization)
 });
 
 const io = new Server(server, {
@@ -58,7 +65,7 @@ let readyCount = 0;
 //         sids: 0,
 //         username: 0,
 //         isReady: false,
-//         isAlive: true,
+//         gameOver: flase,
 //         hand: [], // [ {color: black, value: 3 , isOpen: true}, {color: black, value: 3 , isOpen: true}, {color: black, value: 3 , isOpen: true} ]
 //       },
 //     ],
@@ -80,53 +87,155 @@ io.on('connection', async (socket) => {
     addMyMessage(nickName, msg);
   });
 
-  socket.on('connect', (userId) => {
-    //DB room 돌면서 userId 있는지 확인하고 삭제
+  socket.on('test-line', async (userId) => {
+    await Room.create({
+      roomId: 0,
+      turn: 3,
+    });
+
+    await Table.create({
+      roomId: 0,
+      blackCard: '[0,1,2,3,4,5,6,7,8,9,10,11,12]',
+      whiteCard: '[0,1,2,3,4,5,6,7,8,9,10,11,12]',
+      users: '[{userId:0},{userId:1},{userId:2},{userId:3},]',
+    });
+
+    await User.create({
+      roomId: 0,
+      userId: 7,
+      sids: socket.id,
+      userName: 'test',
+      isReady: false,
+      gameOver: false,
+      hand: '[{color:black, value:5, isOpen:ture},{color:white, value:3, isOpen:false}]',
+    });
   });
 
-  socket.on('join', (roomId) => {
+  socket.on('sql-read', async () => {
+    const roomtest = await Room.findOne({
+      where: { roomId: 0 },
+      attributes: ['roomId', 'turn'],
+      raw: true,
+    });
+    const tabeltest = await Table.findOne({
+      where: { roomId: 0 },
+      attributes: ['roomId', 'blackCard', 'whiteCard', 'users'],
+      raw: true,
+    });
+
+    const usertest = await User.findOne({
+      where: { roomId: 0 },
+      attributes: [
+        'userId',
+        'roomId',
+        'sids',
+        'userName',
+        'isReady',
+        'gameOver',
+        'hand',
+      ],
+      raw: true,
+    });
+
+    console.log('roomtest', roomtest);
+    console.log('usertestm', usertest);
+    console.log('tabeltest', tabeltest);
+  });
+
+  socket.on('sql-update', async () => {
+    await Room.update({ turn: 8 }, { where: { roomId: 0 } });
+  });
+  socket.on('sql-delete', async () => {
+    await Table.destroy({ where: { roomId: 0 } });
+  });
+
+  socket.on('join', async ({ userId, roomId, userName }) => {
     // TODO:
     // game-info 필요
     // roomId에 따른 방 제목 -> 게임 시작시 상단 바 정보(비공개, 인원, 방제목)
-    console.log(roomId);
+    console.log('roomId: ', roomId);
     socket.join(roomId);
     socket.data.roomId = roomId;
+    socket.data.userId = userId;
+
+    const result = await Room.findOne({ where: { roomId } });
+    if (!result) {
+      await Room.create({
+        roomId,
+        turn: 9999,
+      });
+
+      await Table.create({
+        roomId,
+        blackCard: '[0,1,2,3,4,5,6,7,8,9,10,11,12]',
+        whiteCard: '[0,1,2,3,4,5,6,7,8,9,10,11,12]',
+        users: JSON.stringify([{ userId }]),
+      });
+
+      await User.create({
+        roomId,
+        userId,
+        sids: socket.id,
+        userName,
+        isReady: false,
+        gameOver: false,
+        hand: '[]',
+      });
+    } else {
+      const result = await Table.findOne({
+        where: { roomId },
+        attributes: ['users'],
+        raw: true,
+      });
+
+      await User.create({
+        roomId,
+        userId,
+        sids: socket.id,
+        userName,
+        isReady: false,
+        gameOver: false,
+        hand: '[]',
+      });
+
+      let usersData = JSON.parse(result.users);
+
+      usersData.push({ userId });
+
+      await Table.update(
+        { users: JSON.stringify(usersData) },
+        { where: { roomId } }
+      );
+    }
   });
 
-  socket.on('ready', async ({ userID, roomID }) => {
-    // FIXME: 변수 -> redis.lenth로 변경 필요
-    const userInfo = await client.hGetAll(
-      `rooms:${roomID}:users:${socket.userID}`
-    );
+  socket.on('ready', async ({ userId, roomId }) => {
+    console.log('userId', userId);
+    console.log('roomId', roomId);
 
-    await client.hSet(`rooms:${roomID}:users:${socket.userID}`, {
-      isReady: userInfo.isReady === 'false' ? 'true' : 'false',
+    const userReady = await User.findOne({
+      where: { userId },
+      attributes: ['isReady'],
+      raw: true,
     });
 
-    if (userInfo.isReady === 'false') {
-      //{userId:userId}
-      // `userId`
-      const some = userID;
-      await client.hSet(`rooms:${roomID}`, { [userID]: some });
-      const test2 = await client.hGetAll(`rooms:${roomID}`);
-      console.log('추가', test2);
+    userReady.isReady
+      ? await User.update({ isReady: false }, { where: { userId } })
+      : await User.update({ isReady: true }, { where: { userId } });
 
-      let userLength = await client.hLen(`rooms:${roomID}`);
-      userLength = 2;
+    // let readyCount = await User.findAll({
+    //   where: {
+    //     roomId,
+    //   },
+    //   attributes: ['userId', 'sids', 'userName', 'isReady', 'gameOver'],
+    //   raw: true,
+    // });
+    // console.log('readyCount 값.', readyCount);
+    // console.log('readyCount 값.', readyCount.length);
 
-      if (userLength == 2) {
-        console.log('test');
-        // 유저 별로 socket.Id 찾아서 뿌려주기.
-        io.to(socket.id).emit('game-start');
-      }
-    } else {
-      await client.hDel(`rooms:${roomID}`, `${userID}`);
-
-      const test2 = await client.hGetAll(`rooms:${roomID}`);
-      console.log('삭제', test2);
-    }
-
-    // TODO: ADD_READY :: 방에 설정된 인원값이 모두 ready 했을 때 정보 보내기 + GAME_START 이벤트
+    // // TODO: 방 인원수 받아서 넣기.
+    // if (readyCount.length == 2) {
+    // }
   });
 
   socket.on('first-draw', async (userId, black, roomId, myCard) => {
