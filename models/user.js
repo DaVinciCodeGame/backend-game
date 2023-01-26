@@ -18,6 +18,9 @@ module.exports = (sequelize, DataTypes) => {
       roomId: {
         type: DataTypes.INTEGER,
       },
+      sids: {
+        type: DataTypes.STRING,
+      },
       userName: {
         type: DataTypes.STRING,
         allowNull: false,
@@ -26,7 +29,7 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.BOOLEAN,
         allowNull: false,
       },
-      isAlive: {
+      gameOver: {
         type: DataTypes.BOOLEAN,
         allowNull: false,
       },

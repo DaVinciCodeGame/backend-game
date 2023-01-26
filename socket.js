@@ -65,7 +65,7 @@ let readyCount = 0;
 //         sids: 0,
 //         username: 0,
 //         isReady: false,
-//         isAlive: true,
+//         gameOver: flase,
 //         hand: [], // [ {color: black, value: 3 , isOpen: true}, {color: black, value: 3 , isOpen: true}, {color: black, value: 3 , isOpen: true} ]
 //       },
 //     ],
@@ -103,9 +103,10 @@ io.on('connection', async (socket) => {
     await User.create({
       roomId: 0,
       userId: 7,
+      sids: socket.id,
       userName: 'test',
       isReady: false,
-      isAlive: true,
+      gameOver: false,
       hand: '[{color:black, value:5, isOpen:ture},{color:white, value:3, isOpen:false}]',
     });
   });
@@ -127,9 +128,10 @@ io.on('connection', async (socket) => {
       attributes: [
         'userId',
         'roomId',
+        'sids',
         'userName',
         'isReady',
-        'isAlive',
+        'gameOver',
         'hand',
       ],
       raw: true,
@@ -173,9 +175,10 @@ io.on('connection', async (socket) => {
       await User.create({
         roomId,
         userId,
+        sids: socket.id,
         userName,
         isReady: false,
-        isAlive: true,
+        gameOver: false,
         hand: '[]',
       });
     } else {
@@ -183,6 +186,16 @@ io.on('connection', async (socket) => {
         where: { roomId },
         attributes: ['users'],
         raw: true,
+      });
+
+      await User.create({
+        roomId,
+        userId,
+        sids: socket.id,
+        userName,
+        isReady: false,
+        gameOver: false,
+        hand: '[]',
       });
 
       let usersData = JSON.parse(result.users);
@@ -197,9 +210,32 @@ io.on('connection', async (socket) => {
   });
 
   socket.on('ready', async ({ userId, roomId }) => {
-    //const userInff = await User.findOne({where: userId})
-    
-    
+    console.log('userId', userId);
+    console.log('roomId', roomId);
+
+    const userReady = await User.findOne({
+      where: { userId },
+      attributes: ['isReady'],
+      raw: true,
+    });
+
+    userReady.isReady
+      ? await User.update({ isReady: false }, { where: { userId } })
+      : await User.update({ isReady: true }, { where: { userId } });
+
+    // let readyCount = await User.findAll({
+    //   where: {
+    //     roomId,
+    //   },
+    //   attributes: ['userId', 'sids', 'userName', 'isReady', 'gameOver'],
+    //   raw: true,
+    // });
+    // console.log('readyCount 값.', readyCount);
+    // console.log('readyCount 값.', readyCount.length);
+
+    // // TODO: 방 인원수 받아서 넣기.
+    // if (readyCount.length == 2) {
+    // }
   });
 
   socket.on('first-draw', async (userId, black, roomId, myCard) => {
