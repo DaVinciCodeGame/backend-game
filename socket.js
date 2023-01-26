@@ -213,7 +213,6 @@ io.on('connection', async (socket) => {
   });
 
   socket.on('ready', async (userId) => {
-    const userId = socket.data.userId;
     const roomId = socket.data.roomId;
     console.log('userId', userId);
     console.log('roomId', roomId);
