@@ -1,4 +1,4 @@
-const mongoose = require("mongoose");
+const mongoose = require('mongoose');
 
 const roomSchema = new mongoose.Schema({
   roomId: {
@@ -16,6 +16,17 @@ const roomSchema = new mongoose.Schema({
     whiteCards: [Number],
     users: [Number],
   },
+
+  users: [
+    {
+      userId: Number,
+      sids: Number,
+      username: String,
+      isReady: Boolean,
+      isAlive: Boolean,
+      hand: [{ color: String, value: Number, isOpen: Boolean }],
+    },
+  ],
 });
 
-module.exports = mongoose.model("room", roomSchema);
+module.exports = mongoose.model('room', roomSchema);

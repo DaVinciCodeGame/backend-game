@@ -6,7 +6,9 @@ const cors = require('cors');
 const dotenv = require('dotenv');
 const { log } = require('console');
 const { type } = require('os');
-const connect = require('./schemas');
+const User = require('./schemas/users');
+const Room = require('./schemas/rooms');
+
 const { mongoose } = require('mongoose');
 //-connect();
 
@@ -38,6 +40,23 @@ const io = new Server(server, {
     method: ['GET', 'POST'],
   },
 });
+
+// const me = new User({
+//   userId: 2,
+//   sids: "sids-connect-test",
+//   username: "haha",
+//   isReady: false,
+//   isAlive: true,
+//   hand: [],
+// });
+
+// me.save()
+//   .then(() => {
+//     console.log(me);
+//   })
+//   .catch((err) => {
+//     console.log("Error : " + err);
+//   });
 
 let userCount = 0;
 let readyCount = 0;
