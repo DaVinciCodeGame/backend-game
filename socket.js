@@ -3,7 +3,7 @@ const app = express();
 const http = require('http');
 const { Server } = require('socket.io');
 const cors = require('cors');
-const dotenv = require('dotenv');
+
 const { log } = require('console');
 const { type } = require('os');
 const User = require('./schemas/users');
