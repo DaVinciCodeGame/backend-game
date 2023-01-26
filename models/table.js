@@ -2,15 +2,15 @@
 const { Model } = require('sequelize');
 
 module.exports = (sequelize, DataTypes) => {
-  class User extends Model {
+  class Table extends Model {
     static associate(models) {
       this.belongsTo(models.Room, { foreignKey: 'roomId' });
     }
   }
 
-  User.init(
+  Table.init(
     {
-      userId: {
+      tableId: {
         type: DataTypes.INTEGER,
         primaryKey: true,
         allowNull: false,
@@ -19,27 +19,21 @@ module.exports = (sequelize, DataTypes) => {
       roomId: {
         type: DataTypes.INTEGER,
       },
-      username: {
+      blackCard: {
         type: DataTypes.STRING,
-        allowNull: false,
       },
-      isReady: {
-        type: DataTypes.BOOLEAN,
-        allowNull: false,
+      whiteCard: {
+        type: DataTypes.STRING,
       },
-      isAlive: {
-        type: DataTypes.BOOLEAN,
-        allowNull: false,
-      },
-      hand: {
+      users: {
         type: DataTypes.STRING,
       },
     },
     {
       sequelize,
-      modelName: 'User',
+      modelName: 'Table',
     }
   );
 
-  return User;
+  return Table;
 };

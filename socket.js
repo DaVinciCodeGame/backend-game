@@ -3,36 +3,42 @@ const app = express();
 const http = require('http');
 const { Server } = require('socket.io');
 const cors = require('cors');
+require('dotenv');
 
-const { log } = require('console');
-const { type } = require('os');
-const User = require('./schemas/users');
-const Room = require('./schemas/rooms');
+// const { log } = require('console');
+// const { type } = require('os');
+// const User = require('./schemas/users');
+// const Room = require('./schemas/rooms');
+// const { mongoose } = require('mongoose');
+// mongoose.set('strictQuery', false);
 
-const { mongoose } = require('mongoose');
-//-connect();
-
-dotenv.config();
+//dotenv.config();
 app.use(cors());
-mongoose.set('strictQuery', false);
 
 app.get('/', (req, res) => {
   res.send('OK');
 });
 
 const server = http.createServer(app);
-
-//DB settings
-mongoose.connect(process.env.MONGO_URL);
-var DB = mongoose.connection;
-
-DB.once('open', function () {
-  console.log('DB connected');
+console.log(2);
+// db 연결
+const DB = require('./models');
+console.log(3);
+// db 연결 확인
+DB.sequelize
+  .sync()
+  .then(() => {
+    console.log('database 연결 성공');
+  })
+  .catch(console.error);
+console.log(4);
+// sequelize model sync(), 테이블 수정 적용 여부
+// https://medium.com/@smallbee/how-to-use-sequelize-sync-without-difficulties-4645a8d96841
+DB.sequelize.sync({
+  force: false, // default가 false, force: true -> 테이블을 생성하고 이미 존재하는 경우 먼저 삭제합니다. (공식문서 참고: https://sequelize.org/docs/v6/core-concepts/model-basics/#model-synchronization)
 });
+console.log(5);
 
-DB.on('error', function (err) {
-  console.log('DB ERROR: ', err);
-});
 
 const io = new Server(server, {
   cors: {
@@ -41,22 +47,7 @@ const io = new Server(server, {
   },
 });
 
-// const me = new User({
-//   userId: 2,
-//   sids: "sids-connect-test",
-//   username: "haha",
-//   isReady: false,
-//   isAlive: true,
-//   hand: [],
-// });
 
-// me.save()
-//   .then(() => {
-//     console.log(me);
-//   })
-//   .catch((err) => {
-//     console.log("Error : " + err);
-//   });
 
 let userCount = 0;
 let readyCount = 0;
