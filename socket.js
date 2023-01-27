@@ -282,8 +282,7 @@ io.on('connection', async (socket) => {
   });
 
   socket.on('first-draw', async (userId, black, myCard) => {
-    // fn (본인 카드 & 잔여 카드 )
-    // socket.to(roomId).emit("all-users-cards", [사람들 카드 + 잔여 카드])
+    const roomId = socket.data.roomId;
     const white = 3 - black;
     console.log('userId', userId);
     console.log('black', black);
@@ -308,12 +307,10 @@ io.on('connection', async (socket) => {
       cards.splice(CardIndex, 1);
     }
 
-    //console.log('이후 cards 목록: ', cards);
     await Table.update(
       { blackCard: JSON.stringify(cards) },
       { where: { roomId } }
     );
-    console.log('뽑힌 카드 목록', getCards);
 
     cards = JSON.parse(cardResult.whiteCard);
     // white 뽑기
@@ -333,8 +330,6 @@ io.on('connection', async (socket) => {
       { where: { roomId } }
     );
 
-    console.log('뽑힌 모든 카드 목록', getCards);
-
     getCards
       .sort((a, b) => a.value - b.value)
       .sort((a, b) => {
@@ -344,8 +339,6 @@ io.on('connection', async (socket) => {
           else return 0;
         }
       });
-
-    console.log('정렬된 카드 목록', getCards);
 
     await User.update(
       { hand: JSON.stringify(getCards) },
@@ -366,89 +359,72 @@ io.on('connection', async (socket) => {
 
     let userInfo = await User.findAll({
       where: { roomId },
-      attributes: ['userId', 'userName', 'gameOver', 'hand'],
+      attributes: ['userId', 'userName', 'gameOver', 'hand', 'sids'],
       raw: true,
     });
 
-    let userInfoV2 = userInfo.map((el) => {
+    let otherInfo = userInfo.map((el) => {
       return {
         userId: el.userId,
         userName: el.userName,
-        gameOver: el.gameOver,
-        hand: JSON.parse(el.hand),
+        gameOver: el.gameOver ? true : false,
+        hand: JSON.parse(el.hand).map((card) => {
+          if (!card.isOpen) {
+            return {
+              color: card.color,
+              value: 'Back',
+              isOpen: card.isOpen,
+            };
+          } else {
+            return {
+              color: card.color,
+              value: card.value,
+              isOpen: card.isOpen,
+            };
+          }
+        }),
       };
     });
 
-    //console.log(roomInfo);
-    //console.log(tableInfo);
-    console.log('test here', userInfo);
+    let myInfo = userInfo.map((el) => {
+      if (el.userId === userId) {
+        return {
+          userId: el.userId,
+          userName: el.userName,
+          gameOver: el.gameOver ? true : false,
+          hand: JSON.parse(el.hand).map((card) => {
+            return {
+              color: card.color,
+              value: card.value,
+              isOpen: card.isOpen,
+            };
+          }),
+        };
+      }
+    });
 
     cardResult = {
       blackCard: JSON.parse(tableInfo.blackCard).length,
       whiteCard: JSON.parse(tableInfo.whiteCard).length,
       turn: roomInfo.turn,
+      users: otherInfo,
     };
 
-    //console.log('qwerqwer', cardResult);
-    // cardResult = await Room.findAll(
-    //   {
-    //     where: { roomId },
-    //     attributes: [
-    //       'turn',
-    //       [Sequelize.col('Tables.blackCard'), 'blackCard'],
-    //       [Sequelize.col('Tables.whiteCard'), 'whiteCard'],
-    //       [Sequelize.col('Users.userId'), 'userId'],
-    //       [Sequelize.col('Users.userName'), 'userName'],
-    //       [Sequelize.col('Users.gameOver'), 'gameOver'],
-    //       [Sequelize.col('Users.hand'), 'hand'],
-    //     ],
-    //     raw: true,
-    //     include: [
-    //       {
-    //         model: Table,
-    //         as: 'Tables',
-    //         attributes: [],
-    //       },
-    //       {
-    //         model: User,
-    //         attributes: [],
-    //       },
-    //     ],
-    //   },
-    //   { group: 'roomId' }
-    // );
-    // console.log('cardResult', cardResult);
-    // console.log(cardResult.blackCard);
+    let mycardResult = {
+      blackCard: JSON.parse(tableInfo.blackCard).length,
+      whiteCard: JSON.parse(tableInfo.whiteCard).length,
+      turn: roomInfo.turn,
+      users: myInfo,
+    };
 
-    // let test = {
-    //   blackCard: cardResult.Table.blackCard.length,
-    //   whiteCard: cardResult.Table.whiteCard.length,
-    //   uesrs: [
-    //     {
-    //       userId: cardResult.Users.userId,
-    //       userName: cardResult.Users.userName,
-    //       gameOver: cardResult.Users.userName,
-    //       hand: JSON.parse(cardResult.Users.hand),
-    //     },
-    //   ],
-    // };
-    //console.log('test하고 있는 부분 표시', test);
+    userInfo.forEach((el) =>
+      socket.to(el.sids).emit('draw-result', cardResult)
+    );
 
-    // myCard(getCards);
-
-    // // FIXME 나머지 사람들의 카드 보내주기
-    // // forEach_myCard(data);
-    // // io.to.(개인의 socket.Id).emit("draw-result", gameInfo)
-    // let sendAllData = {};
+    myCard(mycardResult);
   });
 
-  socket.on('color-selected', (userId, color) => {
-    if (color === 'black') {
-    } else {
-    }
-
-    // io.to.(개인의 socket.Id).emit("selected-result", gameInfo)
-  });
+  socket.on('color-selected', async (userId, color, myCard) => {});
 
   socket.on('select-card-as-security', (userId, color, value) => {
     socket.data.security = { color: color, value: value };
