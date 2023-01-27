@@ -58,8 +58,8 @@ let readyCount = 0;
 //     roomId: 0,
 //     turn: 0,
 //     table: {
-//       blackCards: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
-//       whiteCards: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
+//       blackCardss: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
+//       whiteCardss: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
 //       users: [], //[{userId:1}, {userId:4}, {userId:3}, {userId:2}]
 //     },
 
@@ -99,8 +99,8 @@ io.on('connection', async (socket) => {
 
     await Table.create({
       roomId: 0,
-      blackCard: JSON.stringify([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]),
-      whiteCard: JSON.stringify([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]),
+      blackCards: JSON.stringify([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]),
+      whiteCards: JSON.stringify([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]),
       users: '[{userId:0},{userId:1},{userId:2},{userId:3},]',
     });
 
@@ -123,7 +123,7 @@ io.on('connection', async (socket) => {
     });
     const tabeltest = await Table.findOne({
       where: { roomId: 0 },
-      attributes: ['roomId', 'blackCard', 'whiteCard', 'users'],
+      attributes: ['roomId', 'blackCards', 'whiteCards', 'users'],
       raw: true,
     });
 
@@ -174,8 +174,8 @@ io.on('connection', async (socket) => {
 
       await Table.create({
         roomId,
-        blackCard: JSON.stringify([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]),
-        whiteCard: JSON.stringify([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]),
+        blackCards: JSON.stringify([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]),
+        whiteCards: JSON.stringify([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]),
         users: JSON.stringify([{ userId }]),
       });
 
@@ -223,7 +223,7 @@ io.on('connection', async (socket) => {
 
     let tableInfo = await Table.findOne({
       where: { roomId },
-      attributes: ['blackCard', 'whiteCard'],
+      attributes: ['blackCards', 'whiteCards'],
       raw: true,
     });
 
@@ -245,8 +245,8 @@ io.on('connection', async (socket) => {
     });
 
     let cardResult = {
-      blackCard: JSON.parse(tableInfo.blackCard).length,
-      whiteCard: JSON.parse(tableInfo.whiteCard).length,
+      blackCards: JSON.parse(tableInfo.blackCards).length,
+      whiteCards: JSON.parse(tableInfo.whiteCards).length,
       turn: roomInfo.turn,
       users: userInfoV2,
     };
@@ -288,7 +288,7 @@ io.on('connection', async (socket) => {
 
     let tableInfo = await Table.findOne({
       where: { roomId },
-      attributes: ['blackCard', 'whiteCard'],
+      attributes: ['blackCards', 'whiteCards'],
       raw: true,
     });
 
@@ -309,8 +309,8 @@ io.on('connection', async (socket) => {
     });
 
     let cardResult = {
-      blackCard: JSON.parse(tableInfo.blackCard).length,
-      whiteCard: JSON.parse(tableInfo.whiteCard).length,
+      blackCards: JSON.parse(tableInfo.blackCards).length,
+      whiteCards: JSON.parse(tableInfo.whiteCards).length,
       turn: roomInfo.turn,
       users: userInfoV2,
     };
@@ -330,15 +330,15 @@ io.on('connection', async (socket) => {
 
     let cardResult = await Table.findOne({
       where: { roomId },
-      attributes: ['blackCard', 'whiteCard'],
+      attributes: ['blackCards', 'whiteCards'],
       raw: true,
     });
-    let cards = JSON.parse(cardResult.blackCard);
+    let cards = JSON.parse(cardResult.blackCards);
 
     // black 뽑기
     for (let i = 0; i < black; i++) {
       let cardLength = cards.length;
-      let CardIndex = Math.floor(Math.random() * Number(cardLength)-1);
+      let CardIndex = Math.floor(Math.random() * Number(cardLength) - 1);
       let randomCard = cards[CardIndex];
       getCards = [
         ...getCards,
@@ -348,15 +348,15 @@ io.on('connection', async (socket) => {
     }
 
     await Table.update(
-      { blackCard: JSON.stringify(cards) },
+      { blackCards: JSON.stringify(cards) },
       { where: { roomId } }
     );
 
-    cards = JSON.parse(cardResult.whiteCard);
+    cards = JSON.parse(cardResult.whiteCards);
     // white 뽑기
     for (let i = 0; i < white; i++) {
       let cardLength = cards.length;
-      let CardIndex = Math.floor(Math.random() * Number(cardLength)-1);
+      let CardIndex = Math.floor(Math.random() * Number(cardLength) - 1);
       let randomCard = cards[CardIndex];
       getCards = [
         ...getCards,
@@ -366,7 +366,7 @@ io.on('connection', async (socket) => {
     }
 
     await Table.update(
-      { whiteCard: JSON.stringify(cards) },
+      { whiteCards: JSON.stringify(cards) },
       { where: { roomId } }
     );
 
@@ -393,7 +393,7 @@ io.on('connection', async (socket) => {
 
     let tableInfo = await Table.findOne({
       where: { roomId },
-      attributes: ['blackCard', 'whiteCard', 'users'],
+      attributes: ['blackCards', 'whiteCards', 'users'],
       raw: true,
     });
 
@@ -460,15 +460,15 @@ io.on('connection', async (socket) => {
     });
 
     cardResult = {
-      blackCard: JSON.parse(tableInfo.blackCard).length,
-      whiteCard: JSON.parse(tableInfo.whiteCard).length,
+      blackCards: JSON.parse(tableInfo.blackCards).length,
+      whiteCards: JSON.parse(tableInfo.whiteCards).length,
       turn: roomInfo.turn,
       users: otherInfo,
     };
 
     let mycardResult = {
-      blackCard: JSON.parse(tableInfo.blackCard).length,
-      whiteCard: JSON.parse(tableInfo.whiteCard).length,
+      blackCards: JSON.parse(tableInfo.blackCards).length,
+      whiteCards: JSON.parse(tableInfo.whiteCards).length,
       turn: roomInfo.turn,
       users: myInfo,
     };
@@ -481,9 +481,7 @@ io.on('connection', async (socket) => {
     ).length;
 
     if (completion === 0) {
-      userInfo.forEach((el) =>
-        io.to(el.sids).emit('draw-result', cardResult)
-      );
+      userInfo.forEach((el) => io.to(el.sids).emit('draw-result', cardResult));
     }
   });
 
@@ -493,12 +491,12 @@ io.on('connection', async (socket) => {
 
     let cardResult = await Table.findOne({
       where: { roomId },
-      attributes: ['blackCard', 'whiteCard'],
+      attributes: ['blackCards', 'whiteCards'],
       raw: true,
     });
 
     if (color === 'black') {
-      let cards = JSON.parse(cardResult.blackCard);
+      let cards = JSON.parse(cardResult.blackCards);
       let cardLength = cards.length;
       let cardIndex = Math.floor(Math.random() * Number(cardLength));
       let randomCard = cards[cardIndex];
@@ -509,11 +507,11 @@ io.on('connection', async (socket) => {
       cards.splice(cardIndex, 1);
 
       await Table.update(
-        { blackCard: JSON.stringify(cards) },
+        { blackCards: JSON.stringify(cards) },
         { where: { roomId } }
       );
     } else {
-      let cards = JSON.parse(cardResult.whiteCard);
+      let cards = JSON.parse(cardResult.whiteCards);
       let cardLength = cards.length;
       let cardIndex = Math.floor(Math.random() * Number(cardLength));
       let randomCard = cards[cardIndex];
@@ -524,7 +522,7 @@ io.on('connection', async (socket) => {
       cards.splice(cardIndex, 1);
 
       await Table.update(
-        { whiteCard: JSON.stringify(cards) },
+        { whiteCards: JSON.stringify(cards) },
         { where: { roomId } }
       );
     }

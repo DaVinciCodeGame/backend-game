@@ -16,10 +16,10 @@ module.exports = (sequelize, DataTypes) => {
         allowNull: false,
         autoIncrement: true,
       },
-      blackCard: {
+      blackCards: {
         type: DataTypes.STRING,
       },
-      whiteCard: {
+      whiteCards: {
         type: DataTypes.STRING,
       },
       users: {
