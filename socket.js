@@ -338,7 +338,7 @@ io.on('connection', async (socket) => {
     // black 뽑기
     for (let i = 0; i < black; i++) {
       let cardLength = cards.length;
-      let CardIndex = Math.floor(Math.random() * Number(cardLength));
+      let CardIndex = Math.floor(Math.random() * Number(cardLength)-1);
       let randomCard = cards[CardIndex];
       getCards = [
         ...getCards,
@@ -356,7 +356,7 @@ io.on('connection', async (socket) => {
     // white 뽑기
     for (let i = 0; i < white; i++) {
       let cardLength = cards.length;
-      let CardIndex = Math.floor(Math.random() * Number(cardLength));
+      let CardIndex = Math.floor(Math.random() * Number(cardLength)-1);
       let randomCard = cards[CardIndex];
       getCards = [
         ...getCards,
