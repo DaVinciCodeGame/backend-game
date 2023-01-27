@@ -249,9 +249,7 @@ io.on('connection', async (socket) => {
       users: userInfoV2,
     };
 
-    userInfo.forEach((el) =>
-      socket.to(el.sids).emit('result-joined', cardResult)
-    );
+    userInfo.forEach((el) => socket.to(el.sids).emit('add-ready', cardResult));
     fn(cardResult);
   });
 
