@@ -452,8 +452,7 @@ io.on('connection', async (socket) => {
     ).length;
 
     if (completion === 0) {
-      userInfo.forEach((el) => {
-        console.log(el);
+      function a(temp) {
         const gameInfo = userInfo.map((el) => {
           return {
             userId: el.userId,
@@ -461,7 +460,7 @@ io.on('connection', async (socket) => {
             userProfileImg: '',
             gameOver: el.gameOver ? true : false,
             hand: JSON.parse(el.hand).map((card) => {
-              if (el.userId === userId) {
+              if (el.userId === temp.userId) {
                 return {
                   color: card.color,
                   value: card.value,
@@ -489,7 +488,11 @@ io.on('connection', async (socket) => {
           turn: roomInfo.turn,
           users: gameInfo,
         };
-        io.to(el.sids).emit('draw-result', cardResult);
+        return cardResult;
+      }
+      userInfo.forEach((el) => {
+        const result = a(el);
+        io.to(el.sids).emit('draw-result', result);
       });
     }
   });
