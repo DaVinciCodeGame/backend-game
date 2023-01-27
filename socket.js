@@ -3,6 +3,7 @@ const app = express();
 const http = require('http');
 const { Server } = require('socket.io');
 const cors = require('cors');
+const { Op, Sequelize } = require('sequelize');
 require('dotenv');
 const { User, Room, Table } = require('./models');
 
@@ -24,6 +25,8 @@ const server = http.createServer(app);
 
 // db 연결
 const DB = require('./models');
+const { json } = require('sequelize');
+const e = require('express');
 
 // db 연결 확인
 DB.sequelize
@@ -95,8 +98,8 @@ io.on('connection', async (socket) => {
 
     await Table.create({
       roomId: 0,
-      blackCard: '[0,1,2,3,4,5,6,7,8,9,10,11,12]',
-      whiteCard: '[0,1,2,3,4,5,6,7,8,9,10,11,12]',
+      blackCard: JSON.stringify([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]),
+      whiteCard: JSON.stringify([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]),
       users: '[{userId:0},{userId:1},{userId:2},{userId:3},]',
     });
 
@@ -165,13 +168,13 @@ io.on('connection', async (socket) => {
     if (!result) {
       await Room.create({
         roomId,
-        turn: 9999,
+        turn: userId,
       });
 
       await Table.create({
         roomId,
-        blackCard: '[0,1,2,3,4,5,6,7,8,9,10,11,12]',
-        whiteCard: '[0,1,2,3,4,5,6,7,8,9,10,11,12]',
+        blackCard: JSON.stringify([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]),
+        whiteCard: JSON.stringify([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]),
         users: JSON.stringify([{ userId }]),
       });
 
@@ -182,7 +185,7 @@ io.on('connection', async (socket) => {
         userName,
         isReady: false,
         gameOver: false,
-        hand: '[]',
+        hand: JSON.stringify([]),
       });
     } else {
       const result = await Table.findOne({
@@ -198,7 +201,7 @@ io.on('connection', async (socket) => {
         userName,
         isReady: false,
         gameOver: false,
-        hand: '[]',
+        hand: JSON.stringify([]),
       });
 
       let usersData = JSON.parse(result.users);
@@ -212,7 +215,7 @@ io.on('connection', async (socket) => {
     }
   });
 
-  socket.on('ready', async (userId) => {
+  socket.on('ready', async (userId, myCard) => {
     const roomId = socket.data.roomId;
     console.log('userId', userId);
     console.log('roomId', roomId);
@@ -227,62 +230,109 @@ io.on('connection', async (socket) => {
       ? await User.update({ isReady: false }, { where: { userId } })
       : await User.update({ isReady: true }, { where: { userId } });
 
-    
-    
-    // let readyCount = await User.findAll({
-    //   where: {
-    //     roomId,
-    //   },
-    //   attributes: ['userId', 'sids', 'userName', 'isReady', 'gameOver'],
-    //   raw: true,
-    // });
-    // console.log('readyCount 값.', readyCount);
-    // console.log('readyCount 값.', readyCount.length);
+    let readyCount = await User.findAll({
+      where: {
+        roomId,
+        [Op.or]: [{ isReady: 1 }],
+      },
+      attributes: ['isReady'],
 
-    // // TODO: 방 인원수 받아서 넣기.
-    // if (readyCount.length == 2) {
-    // }
+      raw: true,
+    });
+
+    let roomInfo = await Room.findOne({
+      where: { roomId },
+      attributes: ['turn'],
+      raw: true,
+    });
+
+    let tableInfo = await Table.findOne({
+      where: { roomId },
+      attributes: ['blackCard', 'whiteCard'],
+      raw: true,
+    });
+
+    let userInfo = await User.findAll({
+      where: { roomId },
+      attributes: ['userId', 'userName', 'isReady', 'gameOver', 'hand', 'sids'],
+      raw: true,
+    });
+
+    let userInfoV2 = userInfo.map((el) => {
+      return {
+        userId: el.userId,
+        userName: el.userName,
+        isReady: el.isReady ? true : false,
+        gameOver: el.gameOver ? true : false,
+        hand: JSON.parse(el.hand),
+      };
+    });
+
+    let cardResult = {
+      blackCard: JSON.parse(tableInfo.blackCard).length,
+      whiteCard: JSON.parse(tableInfo.whiteCard).length,
+      turn: roomInfo.turn,
+      users: userInfoV2,
+    };
+    myCard(cardResult);
+    userInfo.forEach((el) => io.to(el.sids).emit('add-ready', cardResult));
+    if (readyCount.length === 2) {
+      userInfo.forEach((el) => io.to(el.sids).emit('game-start'));
+    }
   });
 
-  socket.on('first-draw', async (userId, black, roomId, myCard) => {
+  socket.on('first-draw', async ({ userId, black, roomId }, myCard) => {
     // fn (본인 카드 & 잔여 카드 )
     // socket.to(roomId).emit("all-users-cards", [사람들 카드 + 잔여 카드])
     const white = 3 - black;
 
     let getCards = [];
-    let roomIndex = 0;
-    let uesrIndex = 0;
 
-    for (let j = 0; j < DB.length; j++) {
-      if (DB[j].roomId === roomId) {
-        roomIndex = j;
-        break;
-      }
-    }
+    let cardResult = await Table.findOne({
+      where: { roomId },
+      attributes: ['blackCard', 'whiteCard'],
+      raw: true,
+    });
+    let cards = JSON.parse(cardResult.blackCard);
 
     // black 뽑기
     for (let i = 0; i < black; i++) {
-      let cardLength = DB[roomIndex].table.blackCards.length;
+      let cardLength = cards.length;
       let CardIndex = Math.floor(Math.random() * Number(cardLength));
-      let randomCard = DB[roomIndex].table.blackCards[CardIndex];
+      let randomCard = cards[CardIndex];
       getCards = [
         ...getCards,
         { color: 'black', value: Number(randomCard), isOpen: false },
       ];
-      DB[roomIndex].table.blackCards.splice(CardIndex, 1);
+      cards.splice(CardIndex, 1);
     }
 
+    //console.log('이후 cards 목록: ', cards);
+    await Table.update(
+      { blackCard: JSON.stringify(cards) },
+      { where: { roomId } }
+    );
+    console.log('뽑힌 카드 목록', getCards);
+
+    cards = JSON.parse(cardResult.whiteCard);
     // white 뽑기
     for (let i = 0; i < white; i++) {
-      let cardLength = DB[roomIndex].table.whiteCards.length;
+      let cardLength = cards.length;
       let CardIndex = Math.floor(Math.random() * Number(cardLength));
-      let randomCard = DB[roomIndex].table.whiteCards[CardIndex];
+      let randomCard = cards[CardIndex];
       getCards = [
         ...getCards,
         { color: 'white', value: Number(randomCard), isOpen: false },
       ];
-      DB[roomIndex].table.whiteCards.splice(CardIndex, 1);
+      cards.splice(CardIndex, 1);
     }
+
+    await Table.update(
+      { whiteCard: JSON.stringify(cards) },
+      { where: { roomId } }
+    );
+
+    console.log('뽑힌 모든 카드 목록', getCards);
 
     getCards
       .sort((a, b) => a.value - b.value)
@@ -294,19 +344,101 @@ io.on('connection', async (socket) => {
         }
       });
 
-    for (let i = 0; i < 4; i++) {
-      if (DB[roomIndex].users[i].userId === userId) {
-        uesrIndex = i;
-        break;
-      }
-    }
-    DB[roomIndex].users[uesrIndex].hand = getCards;
-    myCard(getCards);
+    console.log('정렬된 카드 목록', getCards);
 
-    // FIXME 나머지 사람들의 카드 보내주기
-    // forEach_myCard(data);
-    // io.to.(개인의 socket.Id).emit("draw-result", gameInfo)
-    let sendAllData = {};
+    await User.update(
+      { hand: JSON.stringify(getCards) },
+      { where: { userId } }
+    );
+
+    let roomInfo = await Room.findOne({
+      where: { roomId },
+      attributes: ['turn'],
+      raw: true,
+    });
+
+    let tableInfo = await Table.findOne({
+      where: { roomId },
+      attributes: ['blackCard', 'whiteCard'],
+      raw: true,
+    });
+
+    let userInfo = await User.findAll({
+      where: { roomId },
+      attributes: ['userId', 'userName', 'gameOver', 'hand'],
+      raw: true,
+    });
+
+    let userInfoV2 = userInfo.map((el) => {
+      return {
+        userId: el.userId,
+        userName: el.userName,
+        gameOver: el.gameOver,
+        hand: JSON.parse(el.hand),
+      };
+    });
+
+    //console.log(roomInfo);
+    //console.log(tableInfo);
+    console.log('test here', userInfo);
+
+    cardResult = {
+      blackCard: JSON.parse(tableInfo.blackCard).length,
+      whiteCard: JSON.parse(tableInfo.whiteCard).length,
+      turn: roomInfo.turn,
+    };
+
+    //console.log('qwerqwer', cardResult);
+    // cardResult = await Room.findAll(
+    //   {
+    //     where: { roomId },
+    //     attributes: [
+    //       'turn',
+    //       [Sequelize.col('Tables.blackCard'), 'blackCard'],
+    //       [Sequelize.col('Tables.whiteCard'), 'whiteCard'],
+    //       [Sequelize.col('Users.userId'), 'userId'],
+    //       [Sequelize.col('Users.userName'), 'userName'],
+    //       [Sequelize.col('Users.gameOver'), 'gameOver'],
+    //       [Sequelize.col('Users.hand'), 'hand'],
+    //     ],
+    //     raw: true,
+    //     include: [
+    //       {
+    //         model: Table,
+    //         as: 'Tables',
+    //         attributes: [],
+    //       },
+    //       {
+    //         model: User,
+    //         attributes: [],
+    //       },
+    //     ],
+    //   },
+    //   { group: 'roomId' }
+    // );
+    // console.log('cardResult', cardResult);
+    // console.log(cardResult.blackCard);
+
+    // let test = {
+    //   blackCard: cardResult.Table.blackCard.length,
+    //   whiteCard: cardResult.Table.whiteCard.length,
+    //   uesrs: [
+    //     {
+    //       userId: cardResult.Users.userId,
+    //       userName: cardResult.Users.userName,
+    //       gameOver: cardResult.Users.userName,
+    //       hand: JSON.parse(cardResult.Users.hand),
+    //     },
+    //   ],
+    // };
+    //console.log('test하고 있는 부분 표시', test);
+
+    // myCard(getCards);
+
+    // // FIXME 나머지 사람들의 카드 보내주기
+    // // forEach_myCard(data);
+    // // io.to.(개인의 socket.Id).emit("draw-result", gameInfo)
+    // let sendAllData = {};
   });
 
   socket.on('color-selected', (userId, color) => {
