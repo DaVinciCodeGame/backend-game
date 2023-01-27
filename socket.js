@@ -215,7 +215,7 @@ io.on('connection', async (socket) => {
     }
   });
 
-  socket.on('ready', async (userId, myCard) => {
+  socket.on('ready', async (userId) => {
     const roomId = socket.data.roomId;
     console.log('userId', userId);
     console.log('roomId', roomId);
@@ -274,7 +274,7 @@ io.on('connection', async (socket) => {
       turn: roomInfo.turn,
       users: userInfoV2,
     };
-    myCard(cardResult);
+    
     userInfo.forEach((el) => io.to(el.sids).emit('add-ready', cardResult));
     if (readyCount.length === 2) {
       userInfo.forEach((el) => io.to(el.sids).emit('game-start'));
