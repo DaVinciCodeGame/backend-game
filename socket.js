@@ -274,18 +274,19 @@ io.on('connection', async (socket) => {
       turn: roomInfo.turn,
       users: userInfoV2,
     };
-    
+
     userInfo.forEach((el) => io.to(el.sids).emit('add-ready', cardResult));
     if (readyCount.length === 2) {
       userInfo.forEach((el) => io.to(el.sids).emit('game-start'));
     }
   });
 
-  socket.on('first-draw', async ({ userId, black, roomId }, myCard) => {
+  socket.on('first-draw', async (userId, black, myCard) => {
     // fn (본인 카드 & 잔여 카드 )
     // socket.to(roomId).emit("all-users-cards", [사람들 카드 + 잔여 카드])
     const white = 3 - black;
-
+    console.log('userId', userId);
+    console.log('black', black);
     let getCards = [];
 
     let cardResult = await Table.findOne({
