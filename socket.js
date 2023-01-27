@@ -403,30 +403,6 @@ io.on('connection', async (socket) => {
       raw: true,
     });
 
-    let otherInfo = userInfo.map((el) => {
-      return {
-        userId: el.userId,
-        userName: el.userName,
-        userProfileImg: '',
-        gameOver: el.gameOver ? true : false,
-        hand: JSON.parse(el.hand).map((card) => {
-          if (!card.isOpen) {
-            return {
-              color: card.color,
-              value: 'Back',
-              isOpen: card.isOpen,
-            };
-          } else {
-            return {
-              color: card.color,
-              value: card.value,
-              isOpen: card.isOpen,
-            };
-          }
-        }),
-      };
-    });
-
     let myInfo = userInfo.map((el) => {
       if (el.userId === userId) {
         return {
@@ -459,13 +435,6 @@ io.on('connection', async (socket) => {
       }
     });
 
-    cardResult = {
-      blackCards: JSON.parse(tableInfo.blackCards).length,
-      whiteCards: JSON.parse(tableInfo.whiteCards).length,
-      turn: roomInfo.turn,
-      users: otherInfo,
-    };
-
     let mycardResult = {
       blackCards: JSON.parse(tableInfo.blackCards).length,
       whiteCards: JSON.parse(tableInfo.whiteCards).length,
@@ -481,7 +450,45 @@ io.on('connection', async (socket) => {
     ).length;
 
     if (completion === 0) {
-      userInfo.forEach((el) => io.to(el.sids).emit('draw-result', cardResult));
+      userInfo.forEach((el) => {
+        console.log(el);
+        const gameInfo = userInfo.map((el) => {
+          return {
+            userId: el.userId,
+            userName: el.userName,
+            userProfileImg: '',
+            gameOver: el.gameOver ? true : false,
+            hand: JSON.parse(el.hand).map((card) => {
+              if (socket.id === el.sids) {
+                return {
+                  color: card.color,
+                  value: card.value,
+                  isOpen: card.isOpen,
+                };
+              } else if (!card.isOpen) {
+                return {
+                  color: card.color,
+                  value: 'Back',
+                  isOpen: card.isOpen,
+                };
+              } else {
+                return {
+                  color: card.color,
+                  value: card.value,
+                  isOpen: card.isOpen,
+                };
+              }
+            }),
+          };
+        });
+        cardResult = {
+          blackCards: JSON.parse(tableInfo.blackCards).length,
+          whiteCards: JSON.parse(tableInfo.whiteCards).length,
+          turn: roomInfo.turn,
+          users: gameInfo,
+        };
+        io.to(el.sids).emit('draw-result', cardResult);
+      });
     }
   });
 
