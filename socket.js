@@ -482,7 +482,7 @@ io.on('connection', async (socket) => {
 
     if (completion === 0) {
       userInfo.forEach((el) =>
-        socket.to(el.sids).emit('draw-result', cardResult)
+        io.to(el.sids).emit('draw-result', cardResult)
       );
     }
   });
