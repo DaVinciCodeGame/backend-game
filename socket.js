@@ -338,7 +338,8 @@ io.on('connection', async (socket) => {
     // black 뽑기
     for (let i = 0; i < black; i++) {
       let cardLength = cards.length;
-      let CardIndex = Math.floor(Math.random() * Number(cardLength) - 1);
+      let CardIndex = Math.floor(Math.random() * Number(cardLength));
+
       let randomCard = cards[CardIndex];
       getCards = [
         ...getCards,
@@ -356,7 +357,7 @@ io.on('connection', async (socket) => {
     // white 뽑기
     for (let i = 0; i < white; i++) {
       let cardLength = cards.length;
-      let CardIndex = Math.floor(Math.random() * Number(cardLength) - 1);
+      let CardIndex = Math.floor(Math.random() * Number(cardLength));
       let randomCard = cards[CardIndex];
       getCards = [
         ...getCards,
@@ -411,6 +412,7 @@ io.on('connection', async (socket) => {
           userProfileImg: '',
           gameOver: el.gameOver ? true : false,
           hand: JSON.parse(el.hand).map((card) => {
+            console.log('카드 value:', card.value);
             return {
               color: card.color,
               value: card.value,
