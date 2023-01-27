@@ -424,7 +424,56 @@ io.on('connection', async (socket) => {
     myCard(mycardResult);
   });
 
-  socket.on('color-selected', async (userId, color, myCard) => {});
+  socket.on('color-selected', async (userId, color, myCard) => {
+    let roomId = socket.data.roomId;
+    let oneCard = {};
+
+    let cardResult = await Table.findOne({
+      where: { roomId },
+      attributes: ['blackCard', 'whiteCard'],
+      raw: true,
+    });
+
+    if (color === 'black') {
+      let cards = JSON.parse(cardResult.blackCard);
+      let cardLength = cards.length;
+      let cardIndex = Math.floor(Math.random() * Number(cardLength));
+      let randomCard = cards[cardIndex];
+      myCard({ color: 'black', value: Number(randomCard) });
+      oneCard = { color: 'black', value: Number(randomCard), isOpen: false };
+
+      cards.splice(cardIndex, 1);
+
+      await Table.update(
+        { blackCard: JSON.stringify(cards) },
+        { where: { roomId } }
+      );
+    } else {
+      let cards = JSON.parse(cardResult.whiteCard);
+      let cardLength = cards.length;
+      let cardIndex = Math.floor(Math.random() * Number(cardLength));
+      let randomCard = cards[cardIndex];
+      myCard({ color: 'white', value: Number(randomCard) });
+      oneCard = { color: 'white', value: Number(randomCard), isOpen: false };
+
+      cards.splice(cardIndex, 1);
+
+      await Table.update(
+        { whiteCard: JSON.stringify(cards) },
+        { where: { roomId } }
+      );
+    }
+
+    let userInfo = await User.findAll({
+      where: { roomId },
+      attributes: ['userId', 'userName', 'gameOver', 'hand', 'sids'],
+      raw: true,
+    });
+
+    userInfo.forEach((el) =>
+      socket.to(el.sids).emit('result-select', { userId, color })
+    );
+  });
 
   socket.on('select-card-as-security', (userId, color, value) => {
     socket.data.security = { color: color, value: value };
