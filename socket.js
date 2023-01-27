@@ -27,6 +27,7 @@ const server = http.createServer(app);
 const DB = require('./models');
 const { json } = require('sequelize');
 const e = require('express');
+const { table } = require('console');
 
 // db 연결 확인
 DB.sequelize
@@ -392,7 +393,7 @@ io.on('connection', async (socket) => {
 
     let tableInfo = await Table.findOne({
       where: { roomId },
-      attributes: ['blackCard', 'whiteCard'],
+      attributes: ['blackCard', 'whiteCard', 'users'],
       raw: true,
     });
 
@@ -472,12 +473,18 @@ io.on('connection', async (socket) => {
       users: myInfo,
     };
 
-    userInfo.forEach((el) =>
-      socket.to(el.sids).emit('draw-result', cardResult)
-    );
-    console.log('otherCardResult', cardResult);
-    console.log('mycardResult', mycardResult);
     myCard(mycardResult);
+    // length 가 0
+
+    const completion = userInfo.filter(
+      (el) => JSON.parse(el.hand).length === 0
+    ).length;
+
+    if (completion === 0) {
+      userInfo.forEach((el) =>
+        socket.to(el.sids).emit('draw-result', cardResult)
+      );
+    }
   });
 
   socket.on('color-selected', async (userId, color, myCard) => {
