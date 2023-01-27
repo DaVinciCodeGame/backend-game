@@ -231,11 +231,12 @@ io.on('connection', async (socket) => {
       attributes: ['userId', 'userName', 'isReady', 'gameOver', 'hand', 'sids'],
       raw: true,
     });
-
+    // TODO: userProfileImg
     let userInfoV2 = userInfo.map((el) => {
       return {
         userId: el.userId,
         userName: el.userName,
+        userProfileImg: '',
         isReady: el.isReady ? true : false,
         gameOver: el.gameOver ? true : false,
         hand: JSON.parse(el.hand),
@@ -405,6 +406,7 @@ io.on('connection', async (socket) => {
       return {
         userId: el.userId,
         userName: el.userName,
+        userProfileImg: '',
         gameOver: el.gameOver ? true : false,
         hand: JSON.parse(el.hand).map((card) => {
           if (!card.isOpen) {
@@ -429,6 +431,7 @@ io.on('connection', async (socket) => {
         return {
           userId: el.userId,
           userName: el.userName,
+          userProfileImg: '',
           gameOver: el.gameOver ? true : false,
           hand: JSON.parse(el.hand).map((card) => {
             return {
@@ -442,6 +445,7 @@ io.on('connection', async (socket) => {
         return {
           userId: el.userId,
           userName: el.userName,
+          userProfileImg: '',
           gameOver: el.gameOver ? true : false,
           hand: JSON.parse(el.hand).map((card) => {
             return {
