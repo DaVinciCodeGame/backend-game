@@ -440,6 +440,7 @@ io.on('connection', async (socket) => {
       let cardIndex = Math.floor(Math.random() * Number(cardLength));
       let randomCard = cards[cardIndex];
       myCard({ color: 'black', value: Number(randomCard) });
+      socket.data.security = { color: 'black', value: Number(randomCard) };
       oneCard = { color: 'black', value: Number(randomCard), isOpen: false };
 
       cards.splice(cardIndex, 1);
@@ -454,6 +455,7 @@ io.on('connection', async (socket) => {
       let cardIndex = Math.floor(Math.random() * Number(cardLength));
       let randomCard = cards[cardIndex];
       myCard({ color: 'white', value: Number(randomCard) });
+      socket.data.security = { color: 'black', value: Number(randomCard) };
       oneCard = { color: 'white', value: Number(randomCard), isOpen: false };
 
       cards.splice(cardIndex, 1);
