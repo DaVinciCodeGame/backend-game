@@ -400,6 +400,19 @@ io.on('connection', async (socket) => {
             };
           }),
         };
+      } else {
+        return {
+          userId: el.userId,
+          userName: el.userName,
+          gameOver: el.gameOver ? true : false,
+          hand: JSON.parse(el.hand).map((card) => {
+            return {
+              color: card.color,
+              value: 'Back',
+              isOpen: card.isOpen,
+            };
+          }),
+        };
       }
     });
 
@@ -420,7 +433,8 @@ io.on('connection', async (socket) => {
     userInfo.forEach((el) =>
       socket.to(el.sids).emit('draw-result', cardResult)
     );
-
+    console.log('otherCardResult', cardResult);
+    console.log('mycardResult', mycardResult);
     myCard(mycardResult);
   });
 
