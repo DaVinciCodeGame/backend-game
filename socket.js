@@ -152,7 +152,7 @@ io.on('connection', async (socket) => {
     await Table.destroy({ where: { roomId: 0 } });
   });
 
-  socket.on('joined', async ({ userId, roomId }) => {
+  socket.on('joined', async (userId, roomId, fn) => {
     // TODO:
     // game-info 필요
     // roomId에 따른 방 제목 -> 게임 시작시 상단 바 정보(비공개, 인원, 방제목)
@@ -213,6 +213,46 @@ io.on('connection', async (socket) => {
         { where: { roomId } }
       );
     }
+
+    let roomInfo = await Room.findOne({
+      where: { roomId },
+      attributes: ['turn'],
+      raw: true,
+    });
+
+    let tableInfo = await Table.findOne({
+      where: { roomId },
+      attributes: ['blackCard', 'whiteCard'],
+      raw: true,
+    });
+
+    let userInfo = await User.findAll({
+      where: { roomId },
+      attributes: ['userId', 'userName', 'isReady', 'gameOver', 'hand', 'sids'],
+      raw: true,
+    });
+
+    let userInfoV2 = userInfo.map((el) => {
+      return {
+        userId: el.userId,
+        userName: el.userName,
+        isReady: el.isReady ? true : false,
+        gameOver: el.gameOver ? true : false,
+        hand: JSON.parse(el.hand),
+      };
+    });
+
+    let cardResult = {
+      blackCard: JSON.parse(tableInfo.blackCard).length,
+      whiteCard: JSON.parse(tableInfo.whiteCard).length,
+      turn: roomInfo.turn,
+      users: userInfoV2,
+    };
+
+    userInfo.forEach((el) =>
+      socket.to(el.sids).emit('result-joined', cardResult)
+    );
+    fn(cardResult);
   });
 
   socket.on('ready', async (userId) => {
