@@ -621,6 +621,9 @@ io.on('connection', async (socket) => {
 
   socket.on('guess', async (userId, index, value) => {
     const roomId = socket.data.roomId;
+    console.log(userId);
+    console.log(index);
+    console.log(value);
     let targetHand = JSON.parse(
       (
         await User.findOne({
