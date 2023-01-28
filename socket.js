@@ -536,7 +536,16 @@ io.on('connection', async (socket) => {
       let cardIndex = Math.floor(Math.random() * Number(cardLength));
       let randomCard = cards[cardIndex];
       myCard({ color: 'black', value: Number(randomCard) });
-      socket.data.security = { color: 'black', value: Number(randomCard) };
+      await User.update(
+        {
+          security: JSON.stringify({
+            color: 'black',
+            value: Number(randomCard),
+          }),
+        },
+        { where: { userId } }
+      );
+
       oneCard = { color: 'black', value: Number(randomCard), isOpen: false };
 
       cards.splice(cardIndex, 1);
@@ -551,7 +560,15 @@ io.on('connection', async (socket) => {
       let cardIndex = Math.floor(Math.random() * Number(cardLength));
       let randomCard = cards[cardIndex];
       myCard({ color: 'white', value: Number(randomCard) });
-      socket.data.security = { color: 'black', value: Number(randomCard) };
+      await User.update(
+        {
+          security: JSON.stringify({
+            color: 'white',
+            value: Number(randomCard),
+          }),
+        },
+        { where: { userId } }
+      );
       oneCard = { color: 'white', value: Number(randomCard), isOpen: false };
 
       cards.splice(cardIndex, 1);
@@ -573,10 +590,7 @@ io.on('connection', async (socket) => {
     );
   });
 
-  socket.on('select-card-as-security', (userId, color, value) => {
-    socket.data.security = { color: color, value: value };
-    io.to(socket.Id).emit('select-target');
-  });
+  socket.on('guess', async (userId, index, value) => {});
 });
 
 server.listen(process.env.PORT, () => {
