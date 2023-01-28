@@ -619,7 +619,7 @@ io.on('connection', async (socket) => {
     );
   });
 
-  socket.on('guess', async (userId, index, value) => {
+  socket.on('guess', async ({index, value},userId) => {
     const roomId = socket.data.roomId;
     console.log(userId);
     console.log(index);
