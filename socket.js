@@ -643,22 +643,7 @@ io.on('connection', async (socket) => {
       raw: true,
     });
 
-    let targetInfo = await User.findOne({
-      where: { userId },
-      attributes: [
-        'userId',
-        'userName',
-        'isReady',
-        'gameOver',
-        'hand',
-        'sids',
-        'userProfileImg',
-        'security',
-      ],
-      raw: true,
-    });
     let result = false;
-    let security = '';
     let guessResult = {};
     let userCard;
     // console.log(userHand[index].value);
@@ -685,8 +670,6 @@ io.on('connection', async (socket) => {
 
       let tempHand = JSON.parse(userCard.hand);
 
-      console.log(tempSecurity);
-      console.log(tempHand);
       tempHand.push(tempSecurity);
       let jokerIndex = [];
       let jokerCard = [];
@@ -716,7 +699,7 @@ io.on('connection', async (socket) => {
       }
 
       await User.update(
-        { hand: JSON.stringify(tempHand) },
+        { hand: JSON.stringify(tempHand), security: '' },
         { where: { userId: socket.data.userId } }
       );
     }
@@ -786,6 +769,13 @@ io.on('connection', async (socket) => {
 
   socket.on('place-joker', async (userId, hand) => {
     await User.update({ hand: JSON.stringify(hand) }, { where: { userId } });
+  });
+
+  socket.on('select-card-as-security', async (userId, color, value) => {
+    await User.update(
+      { security: JSON.stringify({ color, value }) },
+      { where: { userId } }
+    );
   });
 });
 
