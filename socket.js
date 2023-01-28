@@ -637,7 +637,7 @@ io.on('connection', async (socket) => {
     let result = false;
     let guessResult = {};
     let userCard;
-
+    console.log(targetHand[index]);
     // HACK: 타겟유저의 카드를 맞췄을 때
     if (targetHand[index].value === value) {
       console.log('result true');
