@@ -777,6 +777,82 @@ io.on('connection', async (socket) => {
       { where: { userId } }
     );
   });
+
+  socket.on('next-turn', async () => {
+    const roomId = socket.data.roomId;
+    let tableInfo = await Table.findOne({
+      where: { roomId },
+      attributes: ['blackCards', 'whiteCards', 'users'],
+      raw: true,
+    });
+
+    let roomInfo = await Room.findOne({
+      where: { roomId },
+      attributes: ['turn'],
+      raw: true,
+    });
+
+    let turns = JSON.parse(tableInfo.users);
+    let netxTurn = roomInfo.turn;
+
+    for (let i = 0; i < turns.length; i++) {
+      if (turns[i].userId === netxTurn) {
+        netxTurn = turns[(i + 1) % turns.length].userId;
+        break;
+      }
+    }
+
+    await Room.update({ turn: netxTurn }, { where: { roomId } });
+
+    let userInfo = await User.findAll({
+      where: { roomId },
+      attributes: ['userId', 'userName', 'gameOver', 'hand', 'sids'],
+      raw: true,
+    });
+
+    function info(temp) {
+      const gameInfo = userInfo.map((el) => {
+        return {
+          userId: el.userId,
+          userName: el.userName,
+          userProfileImg: '',
+          gameOver: el.gameOver ? true : false,
+          hand: JSON.parse(el.hand).map((card) => {
+            if (el.userId === temp.userId) {
+              return {
+                color: card.color,
+                value: card.value,
+                isOpen: card.isOpen,
+              };
+            } else if (!card.isOpen) {
+              return {
+                color: card.color,
+                value: 'Back',
+                isOpen: card.isOpen,
+              };
+            } else {
+              return {
+                color: card.color,
+                value: card.value,
+                isOpen: card.isOpen,
+              };
+            }
+          }),
+        };
+      });
+      cardResult = {
+        blackCards: JSON.parse(tableInfo.blackCards).length,
+        whiteCards: JSON.parse(tableInfo.whiteCards).length,
+        turn: netxTurn,
+        users: gameInfo,
+      };
+      return cardResult;
+    }
+    userInfo.forEach((el) => {
+      const result = info(el);
+      io.to(el.sids).emit('draw-result', result);
+    });
+  });
 });
 
 server.listen(process.env.PORT, () => {
