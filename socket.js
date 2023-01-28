@@ -619,7 +619,7 @@ io.on('connection', async (socket) => {
     );
   });
 
-  socket.on('guess', async (userId, {index, value}) => {
+  socket.on('guess', async (userId, { index, value }) => {
     const roomId = socket.data.roomId;
     console.log(userId);
     console.log(index);
@@ -640,6 +640,7 @@ io.on('connection', async (socket) => {
 
     // HACK: 타겟유저의 카드를 맞췄을 때
     if (targetHand[index].value === value) {
+      console.log('result true');
       targetHand[index].isOpen = true;
       if (targetHand.filter((card) => card.isOpen === false).length) {
         await User.update(
@@ -648,6 +649,7 @@ io.on('connection', async (socket) => {
         );
         console.log({ hand: JSON.stringify(targetHand) });
       } else {
+        console.log('result false');
         await User.update(
           { hand: JSON.stringify(targetHand), gameOver: true },
           { where: { userId } }
