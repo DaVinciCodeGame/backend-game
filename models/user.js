@@ -36,6 +36,12 @@ module.exports = (sequelize, DataTypes) => {
       hand: {
         type: DataTypes.STRING,
       },
+      userProfileImg: {
+        type: DataTypes.STRING,
+      },
+      security: {
+        type: DataTypes.STRING,
+      },
     },
     {
       sequelize,

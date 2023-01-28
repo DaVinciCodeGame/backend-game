@@ -75,6 +75,33 @@ let readyCount = 0;
 //     ],
 //   },
 // ];
+async function allInfo(roomId) {
+  let roomInfo = await Room.findOne({
+    where: { roomId },
+    attributes: ['turn'],
+    raw: true,
+  });
+
+  let tableInfo = await Table.findOne({
+    where: { roomId },
+    attributes: ['blackCards', 'whiteCards'],
+    raw: true,
+  });
+
+  let userInfo = await User.findAll({
+    where: { roomId },
+    attributes: [
+      'userId',
+      'userName',
+      'isReady',
+      'gameOver',
+      'hand',
+      'sids',
+      'userProfileImg',
+    ],
+    raw: true,
+  });
+}
 
 io.on('connection', async (socket) => {
   console.log('connect', socket.id);
@@ -160,6 +187,8 @@ io.on('connection', async (socket) => {
     // room 정보 마지막 함수로
     // userName은 main DB에서 추출
     userName = 'hohoho';
+    userProfileImg = '@#$@#$@#$임시';
+    security = '';
     console.log('roomId: ', roomId);
     socket.join(roomId);
     socket.data.roomId = roomId;
@@ -184,6 +213,8 @@ io.on('connection', async (socket) => {
         userId,
         sids: socket.id,
         userName,
+        userProfileImg,
+        security,
         isReady: false,
         gameOver: false,
         hand: JSON.stringify([]),
@@ -200,6 +231,8 @@ io.on('connection', async (socket) => {
         userId,
         sids: socket.id,
         userName,
+        userProfileImg,
+        security,
         isReady: false,
         gameOver: false,
         hand: JSON.stringify([]),
@@ -229,15 +262,23 @@ io.on('connection', async (socket) => {
 
     let userInfo = await User.findAll({
       where: { roomId },
-      attributes: ['userId', 'userName', 'isReady', 'gameOver', 'hand', 'sids'],
+      attributes: [
+        'userId',
+        'userName',
+        'isReady',
+        'gameOver',
+        'hand',
+        'sids',
+        'userProfileImg',
+      ],
       raw: true,
     });
-    // TODO: userProfileImg
+
     let userInfoV2 = userInfo.map((el) => {
       return {
         userId: el.userId,
         userName: el.userName,
-        userProfileImg: '',
+        userProfileImg,
         isReady: el.isReady ? true : false,
         gameOver: el.gameOver ? true : false,
         hand: JSON.parse(el.hand),
@@ -294,7 +335,15 @@ io.on('connection', async (socket) => {
 
     let userInfo = await User.findAll({
       where: { roomId },
-      attributes: ['userId', 'userName', 'isReady', 'gameOver', 'hand', 'sids'],
+      attributes: [
+        'userId',
+        'userName',
+        'isReady',
+        'gameOver',
+        'hand',
+        'sids',
+        'userProfileImg',
+      ],
       raw: true,
     });
 
@@ -302,6 +351,7 @@ io.on('connection', async (socket) => {
       return {
         userId: el.userId,
         userName: el.userName,
+        userProfileImg: el.userProfileImg,
         isReady: el.isReady ? true : false,
         gameOver: el.gameOver ? true : false,
         hand: JSON.parse(el.hand),
@@ -338,6 +388,7 @@ io.on('connection', async (socket) => {
     // black 뽑기
     for (let i = 0; i < black; i++) {
       let cardLength = cards.length;
+      if (cardLength === 13) cardLength--;
       let CardIndex = Math.floor(Math.random() * Number(cardLength));
 
       let randomCard = cards[CardIndex];
@@ -357,6 +408,7 @@ io.on('connection', async (socket) => {
     // white 뽑기
     for (let i = 0; i < white; i++) {
       let cardLength = cards.length;
+      if (cardLength === 13) cardLength--;
       let CardIndex = Math.floor(Math.random() * Number(cardLength));
       let randomCard = cards[CardIndex];
       getCards = [
@@ -452,7 +504,7 @@ io.on('connection', async (socket) => {
     ).length;
 
     if (completion === 0) {
-      function a(temp) {
+      function info(temp) {
         const gameInfo = userInfo.map((el) => {
           return {
             userId: el.userId,
@@ -491,7 +543,7 @@ io.on('connection', async (socket) => {
         return cardResult;
       }
       userInfo.forEach((el) => {
-        const result = a(el);
+        const result = info(el);
         io.to(el.sids).emit('draw-result', result);
       });
     }
@@ -513,7 +565,16 @@ io.on('connection', async (socket) => {
       let cardIndex = Math.floor(Math.random() * Number(cardLength));
       let randomCard = cards[cardIndex];
       myCard({ color: 'black', value: Number(randomCard) });
-      socket.data.security = { color: 'black', value: Number(randomCard) };
+      await User.update(
+        {
+          security: JSON.stringify({
+            color: 'black',
+            value: Number(randomCard),
+          }),
+        },
+        { where: { userId } }
+      );
+
       oneCard = { color: 'black', value: Number(randomCard), isOpen: false };
 
       cards.splice(cardIndex, 1);
@@ -528,7 +589,15 @@ io.on('connection', async (socket) => {
       let cardIndex = Math.floor(Math.random() * Number(cardLength));
       let randomCard = cards[cardIndex];
       myCard({ color: 'white', value: Number(randomCard) });
-      socket.data.security = { color: 'black', value: Number(randomCard) };
+      await User.update(
+        {
+          security: JSON.stringify({
+            color: 'white',
+            value: Number(randomCard),
+          }),
+        },
+        { where: { userId } }
+      );
       oneCard = { color: 'white', value: Number(randomCard), isOpen: false };
 
       cards.splice(cardIndex, 1);
@@ -550,9 +619,169 @@ io.on('connection', async (socket) => {
     );
   });
 
-  socket.on('select-card-as-security', (userId, color, value) => {
-    socket.data.security = { color: color, value: value };
-    io.to(socket.Id).emit('select-target');
+  socket.on('guess', async (userId, index, value) => {
+    const roomId = socket.data.roomId;
+    let targetHand = JSON.parse(
+      (
+        await User.findOne({
+          where: { userId },
+          attributes: ['hand'],
+          raw: true,
+        })
+      ).hand
+    );
+
+    let roomInfo = await Room.findOne({
+      where: { roomId },
+      attributes: ['turn'],
+      raw: true,
+    });
+
+    let tableInfo = await Table.findOne({
+      where: { roomId },
+      attributes: ['blackCards', 'whiteCards'],
+      raw: true,
+    });
+
+    let targetInfo = await User.findOne({
+      where: { userId },
+      attributes: [
+        'userId',
+        'userName',
+        'isReady',
+        'gameOver',
+        'hand',
+        'sids',
+        'userProfileImg',
+        'security',
+      ],
+      raw: true,
+    });
+    let result = false;
+    let security = '';
+    let guessResult = {};
+    let userCard;
+    // console.log(userHand[index].value);
+    // console.log(value);
+    if (targetHand[index].value === value) {
+      targetHand[index].isOpen = true;
+      await User.update(
+        { hand: JSON.stringify(targetHand) },
+        { where: { userId } }
+      );
+      result = true;
+    } else {
+      userCard = await User.findOne({
+        where: { userId: socket.data.userId },
+        attributes: ['hand', 'security'],
+        raw: true,
+      });
+      result = false;
+      let tempSecurity;
+      if (userCard.security.length > 0) {
+        tempSecurity = JSON.parse(userCard.security);
+        tempSecurity.isOpen = true;
+      }
+
+      let tempHand = JSON.parse(userCard.hand);
+
+      console.log(tempSecurity);
+      console.log(tempHand);
+      tempHand.push(tempSecurity);
+      let jokerIndex = [];
+      let jokerCard = [];
+      for (let i = 0; i < tempHand.length; i++) {
+        if (tempHand[i].value === 12) {
+          jokerIndex.push(i);
+          jokerCard.push(tempHand[i].value);
+        }
+      }
+
+      jokerIndex.map((el, i) => {
+        tempHand.splice(el - i, 1);
+      });
+
+      tempHand
+        .sort((a, b) => a.value - b.value)
+        .sort((a, b) => {
+          if (a.value === b.value) {
+            if (a.color < b.color) return -1;
+            else if (b.color < a.color) return 1;
+            else return 0;
+          }
+        });
+
+      for (let i = 0; i < jokerIndex.length; i++) {
+        tempHand.splice(jokerIndex[i], 0, jokerCard[i]);
+      }
+
+      await User.update(
+        { hand: JSON.stringify(tempHand) },
+        { where: { userId: socket.data.userId } }
+      );
+    }
+
+    let userInfo = await User.findAll({
+      where: { roomId },
+      attributes: [
+        'userId',
+        'userName',
+        'isReady',
+        'gameOver',
+        'hand',
+        'sids',
+        'userProfileImg',
+        'security',
+      ],
+      raw: true,
+    });
+
+    function info(temp) {
+      const some = userInfo.map((el) => {
+        return {
+          userId: el.userId,
+          userName: el.userName,
+          userProfileImg: '',
+          gameOver: el.gameOver ? true : false,
+          hand: JSON.parse(el.hand).map((card) => {
+            if (el.userId === temp.userId) {
+              return {
+                color: card.color,
+                value: card.value,
+                isOpen: card.isOpen,
+              };
+            } else if (!card.isOpen) {
+              return {
+                color: card.color,
+                value: 'Back',
+                isOpen: card.isOpen,
+              };
+            } else {
+              return {
+                color: card.color,
+                value: card.value,
+                isOpen: card.isOpen,
+              };
+            }
+          }),
+        };
+      });
+      guessResult = {
+        result: result,
+        no_security: userCard.security.length === 0 ? false : true,
+        gameInfo: {
+          blackCards: JSON.parse(tableInfo.blackCards).length,
+          whiteCards: JSON.parse(tableInfo.whiteCards).length,
+          turn: roomInfo.turn,
+          users: some,
+        },
+      };
+      return guessResult;
+    }
+    userInfo.forEach((el) => {
+      const result = info(el);
+      io.to(el.sids).emit('result-guess', result);
+    });
   });
 });
 
