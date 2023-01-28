@@ -783,6 +783,10 @@ io.on('connection', async (socket) => {
       io.to(el.sids).emit('result-guess', result);
     });
   });
+
+  socket.on('place-joker', async (userId, hand) => {
+    await User.update({ hand: JSON.stringify(hand) }, { where: { userId } });
+  });
 });
 
 server.listen(process.env.PORT, () => {
