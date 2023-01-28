@@ -787,6 +787,13 @@ io.on('connection', async (socket) => {
   socket.on('place-joker', async (userId, hand) => {
     await User.update({ hand: JSON.stringify(hand) }, { where: { userId } });
   });
+
+  socket.on('select-card-as-security', async (userId, color, value) => {
+    await User.update(
+      { security: JSON.stringify({ color, value, isOpen: false }) },
+      { where: { userId } }
+    );
+  });
 });
 
 server.listen(process.env.PORT, () => {
