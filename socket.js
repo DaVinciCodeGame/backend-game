@@ -773,7 +773,7 @@ io.on('connection', async (socket) => {
 
   socket.on('select-card-as-security', async (userId, color, value) => {
     await User.update(
-      { security: JSON.stringify({ color, value, isOpen: false }) },
+      { security: JSON.stringify({ color, value }) },
       { where: { userId } }
     );
   });
