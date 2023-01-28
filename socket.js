@@ -630,7 +630,7 @@ io.on('connection', async (socket) => {
         })
       ).hand
     );
-
+    console.log('target유저 이전 값:', targetHand);
     let result = false;
     let guessResult = {};
     let userCard;
@@ -643,11 +643,13 @@ io.on('connection', async (socket) => {
           { hand: JSON.stringify(targetHand) },
           { where: { userId } }
         );
+        console.log({ hand: JSON.stringify(targetHand) });
       } else {
         await User.update(
           { hand: JSON.stringify(targetHand), gameOver: true },
           { where: { userId } }
         );
+        console.log({ hand: JSON.stringify(targetHand), gameOver: true });
       }
 
       result = true;
@@ -698,11 +700,17 @@ io.on('connection', async (socket) => {
           { hand: JSON.stringify(tempHand), security: '' },
           { where: { userId: socket.data.userId } }
         );
+        console.log({ hand: JSON.stringify(tempHand), security: '' });
       } else {
         await User.update(
           { hand: JSON.stringify(tempHand), security: '', gameOver: true },
           { where: { userId: socket.data.userId } }
         );
+        console.log({
+          hand: JSON.stringify(tempHand),
+          security: '',
+          gameOver: true,
+        });
       }
     }
 
@@ -721,7 +729,7 @@ io.on('connection', async (socket) => {
       ],
       raw: true,
     });
-
+    console.log('전체 유저 이후 값', userInfo);
     let roomInfo = await Room.findOne({
       where: { roomId },
       attributes: ['turn'],
@@ -777,7 +785,7 @@ io.on('connection', async (socket) => {
       return guessResult;
     }
 
-    if (usersAlive.filter((user) => user.gameOver === false).length === 1) {
+    if (userInfo.filter((user) => user.gameOver == false).length === 1) {
       userInfo.forEach((el) => {
         const result = info(el);
         io.to(el.sids).emit('gameover', result);
