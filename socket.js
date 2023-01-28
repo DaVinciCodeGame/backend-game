@@ -782,6 +782,7 @@ io.on('connection', async (socket) => {
         const result = info(el);
         io.to(el.sids).emit('gameover', result);
       });
+      await Room.destroy({ where: { roomId } });
     } else {
       userInfo.forEach((el) => {
         const result = info(el);
@@ -873,7 +874,7 @@ io.on('connection', async (socket) => {
     }
     userInfo.forEach((el) => {
       const result = info(el);
-      io.to(el.sids).emit('draw-result', result);
+      io.to(el.sids).emit('next-gameinfo', result);
     });
   });
 });
