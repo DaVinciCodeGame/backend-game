@@ -160,6 +160,8 @@ io.on('connection', async (socket) => {
     // room 정보 마지막 함수로
     // userName은 main DB에서 추출
     userName = 'hohoho';
+    userProfileImg = '@#$@#$@#$임시';
+    security = '';
     console.log('roomId: ', roomId);
     socket.join(roomId);
     socket.data.roomId = roomId;
@@ -184,6 +186,8 @@ io.on('connection', async (socket) => {
         userId,
         sids: socket.id,
         userName,
+        userProfileImg,
+        security,
         isReady: false,
         gameOver: false,
         hand: JSON.stringify([]),
@@ -200,6 +204,8 @@ io.on('connection', async (socket) => {
         userId,
         sids: socket.id,
         userName,
+        userProfileImg,
+        security,
         isReady: false,
         gameOver: false,
         hand: JSON.stringify([]),
@@ -229,15 +235,23 @@ io.on('connection', async (socket) => {
 
     let userInfo = await User.findAll({
       where: { roomId },
-      attributes: ['userId', 'userName', 'isReady', 'gameOver', 'hand', 'sids'],
+      attributes: [
+        'userId',
+        'userName',
+        'isReady',
+        'gameOver',
+        'hand',
+        'sids',
+        'userProfileImg',
+      ],
       raw: true,
     });
-    // TODO: userProfileImg
+
     let userInfoV2 = userInfo.map((el) => {
       return {
         userId: el.userId,
         userName: el.userName,
-        userProfileImg: '',
+        userProfileImg,
         isReady: el.isReady ? true : false,
         gameOver: el.gameOver ? true : false,
         hand: JSON.parse(el.hand),
@@ -294,7 +308,15 @@ io.on('connection', async (socket) => {
 
     let userInfo = await User.findAll({
       where: { roomId },
-      attributes: ['userId', 'userName', 'isReady', 'gameOver', 'hand', 'sids'],
+      attributes: [
+        'userId',
+        'userName',
+        'isReady',
+        'gameOver',
+        'hand',
+        'sids',
+        'userProfileImg',
+      ],
       raw: true,
     });
 
@@ -302,6 +324,7 @@ io.on('connection', async (socket) => {
       return {
         userId: el.userId,
         userName: el.userName,
+        userProfileImg: el.userProfileImg,
         isReady: el.isReady ? true : false,
         gameOver: el.gameOver ? true : false,
         hand: JSON.parse(el.hand),
