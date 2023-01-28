@@ -631,29 +631,25 @@ io.on('connection', async (socket) => {
       ).hand
     );
 
-    let roomInfo = await Room.findOne({
-      where: { roomId },
-      attributes: ['turn'],
-      raw: true,
-    });
-
-    let tableInfo = await Table.findOne({
-      where: { roomId },
-      attributes: ['blackCards', 'whiteCards'],
-      raw: true,
-    });
-
     let result = false;
     let guessResult = {};
     let userCard;
-    // console.log(userHand[index].value);
-    // console.log(value);
+
+    // HACK: 타겟유저의 카드를 맞췄을 때
     if (targetHand[index].value === value) {
       targetHand[index].isOpen = true;
-      await User.update(
-        { hand: JSON.stringify(targetHand) },
-        { where: { userId } }
-      );
+      if (targetHand.filter((card) => card.isOpen === false).length) {
+        await User.update(
+          { hand: JSON.stringify(targetHand) },
+          { where: { userId } }
+        );
+      } else {
+        await User.update(
+          { hand: JSON.stringify(targetHand), gameOver: true },
+          { where: { userId } }
+        );
+      }
+
       result = true;
     } else {
       userCard = await User.findOne({
@@ -697,13 +693,20 @@ io.on('connection', async (socket) => {
       for (let i = 0; i < jokerIndex.length; i++) {
         tempHand.splice(jokerIndex[i], 0, jokerCard[i]);
       }
-
-      await User.update(
-        { hand: JSON.stringify(tempHand), security: '' },
-        { where: { userId: socket.data.userId } }
-      );
+      if (tempHand.filter((card) => card.isOpen === false).length) {
+        await User.update(
+          { hand: JSON.stringify(tempHand), security: '' },
+          { where: { userId: socket.data.userId } }
+        );
+      } else {
+        await User.update(
+          { hand: JSON.stringify(tempHand), security: '', gameOver: true },
+          { where: { userId: socket.data.userId } }
+        );
+      }
     }
 
+    // TODO: 전체적으로 뿌려주기 전에 상태값 다 입히기.
     let userInfo = await User.findAll({
       where: { roomId },
       attributes: [
@@ -716,6 +719,18 @@ io.on('connection', async (socket) => {
         'userProfileImg',
         'security',
       ],
+      raw: true,
+    });
+
+    let roomInfo = await Room.findOne({
+      where: { roomId },
+      attributes: ['turn'],
+      raw: true,
+    });
+
+    let tableInfo = await Table.findOne({
+      where: { roomId },
+      attributes: ['blackCards', 'whiteCards'],
       raw: true,
     });
 
@@ -761,10 +776,18 @@ io.on('connection', async (socket) => {
       };
       return guessResult;
     }
-    userInfo.forEach((el) => {
-      const result = info(el);
-      io.to(el.sids).emit('result-guess', result);
-    });
+
+    if (usersAlive.filter((user) => user.gameOver === false).length === 1) {
+      userInfo.forEach((el) => {
+        const result = info(el);
+        io.to(el.sids).emit('gameover', result);
+      });
+    } else {
+      userInfo.forEach((el) => {
+        const result = info(el);
+        io.to(el.sids).emit('result-guess', result);
+      });
+    }
   });
 
   socket.on('place-joker', async (userId, hand) => {
