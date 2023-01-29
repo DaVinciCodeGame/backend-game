@@ -649,15 +649,24 @@ io.on('connection', async (socket) => {
           { hand: JSON.stringify(targetHand) },
           { where: { userId } }
         );
-        console.log({ hand: JSON.stringify(targetHand) });
+        console.log('1번콘솔', { hand: JSON.stringify(targetHand) });
       } else {
         await User.update(
           { hand: JSON.stringify(targetHand), gameOver: true },
           { where: { userId } }
         );
 
-        console.log({ hand: JSON.stringify(targetHand), gameOver: true });
+        console.log('2번콘솔', {
+          hand: JSON.stringify(targetHand),
+          gameOver: true,
+        });
       }
+
+      userCard = await User.findOne({
+        where: { userId },
+        attributes: ['hand', 'security'],
+        raw: true,
+      });
 
       result = true;
     } else {
@@ -705,18 +714,22 @@ io.on('connection', async (socket) => {
       for (let i = 0; i < jokerIndex.length; i++) {
         tempHand.splice(jokerIndex[i], 0, jokerCard[i]);
       }
+
       if (tempHand.filter((card) => card.isOpen === false).length) {
         await User.update(
           { hand: JSON.stringify(tempHand), security: '' },
           { where: { userId: socket.data.userId } }
         );
-        console.log({ hand: JSON.stringify(tempHand), security: '' });
+        console.log('3번콘솔', {
+          hand: JSON.stringify(tempHand),
+          security: '',
+        });
       } else {
         await User.update(
           { hand: JSON.stringify(tempHand), security: '', gameOver: true },
           { where: { userId: socket.data.userId } }
         );
-        console.log({
+        console.log('4번콘솔', {
           hand: JSON.stringify(tempHand),
           security: '',
           gameOver: true,
@@ -739,7 +752,8 @@ io.on('connection', async (socket) => {
       ],
       raw: true,
     });
-    console.log('전체 유저 이후 값', userInfo);
+
+    //console.log('전체 유저 이후 값', userInfo);
     let roomInfo = await Room.findOne({
       where: { roomId },
       attributes: ['turn'],
@@ -783,6 +797,11 @@ io.on('connection', async (socket) => {
         };
       });
       console.log('result값 console', result);
+      console.log('testtesttestetsttest', userCard);
+      console.log('testtesttestetsttest', userCard.security);
+      console.log('testtesttestetsttest', userCard.security.length);
+      console.log('testtesttestetsttest', typeof userCard.security.length);
+
       guessResult = {
         result: result,
         no_security: userCard.security.length === 0 ? false : true,
