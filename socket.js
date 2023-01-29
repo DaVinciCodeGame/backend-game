@@ -685,6 +685,31 @@ io.on('connection', async (socket) => {
         attributes: ['hand', 'security'],
         raw: true,
       });
+
+      let roomTurn = await Room.findOne({
+        where: { roomId },
+        attributes: ['turn'],
+        raw: true,
+      });
+
+      let usersTurn = await Table.findOne({
+        where: { roomId },
+        attributes: ['users'],
+        raw: true,
+      });
+
+      let turns = JSON.parse(usersTurn.users);
+      let netxTurn = roomTurn.turn;
+
+      for (let i = 0; i < turns.length; i++) {
+        if (turns[i].userId === netxTurn) {
+          netxTurn = turns[(i + 1) % turns.length].userId;
+          break;
+        }
+      }
+
+      await Room.update({ turn: netxTurn }, { where: { roomId } });
+
       result = false;
       let tempSecurity;
       if (userCard.security.length > 0) {
@@ -845,15 +870,15 @@ io.on('connection', async (socket) => {
 
   socket.on('next-turn', async () => {
     const roomId = socket.data.roomId;
-    let tableInfo = await Table.findOne({
-      where: { roomId },
-      attributes: ['blackCards', 'whiteCards', 'users'],
-      raw: true,
-    });
-
     let roomInfo = await Room.findOne({
       where: { roomId },
       attributes: ['turn'],
+      raw: true,
+    });
+
+    let tableInfo = await Table.findOne({
+      where: { roomId },
+      attributes: ['blackCards', 'whiteCards', 'users'],
       raw: true,
     });
 
