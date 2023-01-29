@@ -782,6 +782,7 @@ io.on('connection', async (socket) => {
           }),
         };
       });
+      console.log('result값 console', result);
       guessResult = {
         result: result,
         no_security: userCard.security.length === 0 ? false : true,
