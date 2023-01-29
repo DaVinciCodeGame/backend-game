@@ -637,10 +637,12 @@ io.on('connection', async (socket) => {
     let result = false;
     let guessResult = {};
     let userCard;
-    console.log(targetHand[index]);
+
     // HACK: 타겟유저의 카드를 맞췄을 때
     if (targetHand[index].value === value) {
       console.log('result true');
+      console.log('타겟의 값', targetHand[index].value);
+      console.log('설정한 값', value);
       targetHand[index].isOpen = true;
       if (targetHand.filter((card) => card.isOpen === false).length) {
         await User.update(
@@ -649,16 +651,19 @@ io.on('connection', async (socket) => {
         );
         console.log({ hand: JSON.stringify(targetHand) });
       } else {
-        console.log('result false');
         await User.update(
           { hand: JSON.stringify(targetHand), gameOver: true },
           { where: { userId } }
         );
+
         console.log({ hand: JSON.stringify(targetHand), gameOver: true });
       }
 
       result = true;
     } else {
+      console.log('result false');
+      console.log('타겟의 값', targetHand[index].value);
+      console.log('설정한 값', value);
       userCard = await User.findOne({
         where: { userId: socket.data.userId },
         attributes: ['hand', 'security'],
