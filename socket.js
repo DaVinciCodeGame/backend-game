@@ -776,13 +776,43 @@ io.on('connection', async (socket) => {
         (
           await Room.findOne({
             where: { roomId },
-            attributes: ['hand'],
+            attributes: ['top'],
             raw: true,
           })
         ).top
       );
 
-      io.to(roomId).emit('gameover', topRank)
+      io.to(roomId).emit('gameover', topRank);
+
+      // TODO: 방 초기화
+      // 입장하고 있는 유저들의 정보는 살려야함.
+      // turn 넘길 때 죽어있는 유저는 빼고 넘겨야한다.
+      await Room.update(
+        {
+          turn: userId,
+          top: JSON.stringify([]),
+        },
+        { where: { roomId } }
+      );
+
+      await Table.create({
+        roomId,
+        blackCards: JSON.stringify([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]),
+        whiteCards: JSON.stringify([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]),
+        users: JSON.stringify([{ userId }]),
+      });
+
+      await User.create({
+        roomId,
+        userId,
+        sids: socket.id,
+        userName,
+        userProfileImg,
+        security,
+        isReady: false,
+        gameOver: false,
+        hand: JSON.stringify([]),
+      });
     } else {
       userInfo.forEach((el) => {
         const table = info(el);
