@@ -940,7 +940,7 @@ io.on('connection', async (socket) => {
     }
     userInfo.forEach((el) => {
       const result = info(el);
-      io.to(el.sids).emit('next-gameinfo', result);
+      io.to(el.sids).emit('next-gameInfo', result);
     });
   });
 });
