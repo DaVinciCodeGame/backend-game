@@ -7,13 +7,6 @@ const { Op, Sequelize } = require('sequelize');
 require('dotenv');
 const { User, Room, Table } = require('./models');
 
-// const { log } = require('console');
-// const { type } = require('os');
-// const User = require('./schemas/users');
-// const Room = require('./schemas/rooms');
-// const { mongoose } = require('mongoose');
-// mongoose.set('strictQuery', false);
-
 //dotenv.config();
 app.use(cors());
 
@@ -50,59 +43,6 @@ const io = new Server(server, {
   },
 });
 
-let userCount = 0;
-let readyCount = 0;
-
-// let DB = [
-//   {
-//     roomId: 0,
-//     turn: 0,
-//     table: {
-//       blackCardss: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
-//       whiteCardss: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
-//       users: [], //[{userId:1}, {userId:4}, {userId:3}, {userId:2}]
-//     },
-
-//     users: [
-//       {
-//         userId: 0,
-//         sids: 0,
-//         username: 0,
-//         isReady: false,
-//         gameOver: flase,
-//         hand: [], // [ {color: black, value: 3 , isOpen: true}, {color: black, value: 3 , isOpen: true}, {color: black, value: 3 , isOpen: true} ]
-//       },
-//     ],
-//   },
-// ];
-async function allInfo(roomId) {
-  let roomInfo = await Room.findOne({
-    where: { roomId },
-    attributes: ['turn'],
-    raw: true,
-  });
-
-  let tableInfo = await Table.findOne({
-    where: { roomId },
-    attributes: ['blackCards', 'whiteCards'],
-    raw: true,
-  });
-
-  let userInfo = await User.findAll({
-    where: { roomId },
-    attributes: [
-      'userId',
-      'userName',
-      'isReady',
-      'gameOver',
-      'hand',
-      'sids',
-      'userProfileImg',
-    ],
-    raw: true,
-  });
-}
-
 io.on('connection', async (socket) => {
   console.log('connect', socket.id);
   socket.onAny(async (e) => {
@@ -116,68 +56,6 @@ io.on('connection', async (socket) => {
 
     socket.to(room).emit('receive-message', nickName, msg);
     addMyMessage(nickName, msg);
-  });
-
-  socket.on('test-line', async (userId) => {
-    await Room.create({
-      roomId: 0,
-      turn: 3,
-    });
-
-    await Table.create({
-      roomId: 0,
-      blackCards: JSON.stringify([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]),
-      whiteCards: JSON.stringify([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]),
-      users: '[{userId:0},{userId:1},{userId:2},{userId:3},]',
-    });
-
-    await User.create({
-      roomId: 0,
-      userId: 7,
-      sids: socket.id,
-      userName: 'test',
-      isReady: false,
-      gameOver: false,
-      hand: '[{color:black, value:5, isOpen:ture},{color:white, value:3, isOpen:false}]',
-    });
-  });
-
-  socket.on('sql-read', async () => {
-    const roomtest = await Room.findOne({
-      where: { roomId: 0 },
-      attributes: ['roomId', 'turn'],
-      raw: true,
-    });
-    const tabeltest = await Table.findOne({
-      where: { roomId: 0 },
-      attributes: ['roomId', 'blackCards', 'whiteCards', 'users'],
-      raw: true,
-    });
-
-    const usertest = await User.findOne({
-      where: { roomId: 0 },
-      attributes: [
-        'userId',
-        'roomId',
-        'sids',
-        'userName',
-        'isReady',
-        'gameOver',
-        'hand',
-      ],
-      raw: true,
-    });
-
-    console.log('roomtest', roomtest);
-    console.log('usertestm', usertest);
-    console.log('tabeltest', tabeltest);
-  });
-
-  socket.on('sql-update', async () => {
-    await Room.update({ turn: 8 }, { where: { roomId: 0 } });
-  });
-  socket.on('sql-delete', async () => {
-    await Table.destroy({ where: { roomId: 0 } });
   });
 
   socket.on('joined', async (userId, roomId, fn) => {
@@ -199,6 +77,7 @@ io.on('connection', async (socket) => {
       await Room.create({
         roomId,
         turn: userId,
+        top: JSON.stringify([]),
       });
 
       await Table.create({
@@ -663,6 +542,31 @@ io.on('connection', async (socket) => {
           { where: { userId } }
         );
 
+        let topRank = JSON.parse(
+          (
+            await Room.findOne({
+              where: { roomId },
+              attributes: ['hand'],
+              raw: true,
+            })
+          ).top
+        );
+
+        let name = (
+          await User.findOne({
+            where: { userId },
+            attributes: ['userName'],
+            raw: true,
+          })
+        ).userName;
+
+        topRank.unshift({ userId: userId, userName: name });
+
+        await Room.update(
+          { top: JSON.stringify(topRank) },
+          { where: { roomId } }
+        );
+
         console.log('2번콘솔', {
           hand: JSON.stringify(targetHand),
           gameOver: true,
@@ -725,7 +629,7 @@ io.on('connection', async (socket) => {
       for (let i = 0; i < tempHand.length; i++) {
         if (tempHand[i].value === 12) {
           jokerIndex.push(i);
-          jokerCard.push(tempHand[i].value);
+          jokerCard.push(tempHand[i]);
         }
       }
 
@@ -761,6 +665,31 @@ io.on('connection', async (socket) => {
           { hand: JSON.stringify(tempHand), security: '', gameOver: true },
           { where: { userId: socket.data.userId } }
         );
+        let topRank = JSON.parse(
+          (
+            await Room.findOne({
+              where: { roomId },
+              attributes: ['hand'],
+              raw: true,
+            })
+          ).top
+        );
+
+        let name = (
+          await User.findOne({
+            where: { userId },
+            attributes: ['userName'],
+            raw: true,
+          })
+        ).userName;
+
+        topRank.unshift({ userId: userId, userName: name });
+
+        await Room.update(
+          { top: JSON.stringify(topRank) },
+          { where: { roomId } }
+        );
+
         console.log('4번콘솔', {
           hand: JSON.stringify(tempHand),
           security: '',
@@ -828,11 +757,7 @@ io.on('connection', async (socket) => {
           }),
         };
       });
-      console.log('result값 console', result);
-      console.log('testtesttestetsttest', userCard);
-      console.log('testtesttestetsttest', userCard.security);
-      console.log('testtesttestetsttest', userCard.security.length);
-      console.log('testtesttestetsttest', typeof userCard.security.length);
+
       (no_security = userCard.security.length === 0 ? false : true),
         (guessResult = {
           blackCards: JSON.parse(tableInfo.blackCards).length,
@@ -844,11 +769,20 @@ io.on('connection', async (socket) => {
     }
 
     if (userInfo.filter((user) => user.gameOver == false).length === 1) {
-      userInfo.forEach((el) => {
-        const table = info(el);
-        io.to(el.sids).emit('gameover', table);
-      });
-      await Room.destroy({ where: { roomId } });
+      // userInfo.forEach((el) => {
+      //   io.to(el.sids).emit('gameover', table);
+      // });
+      let topRank = JSON.parse(
+        (
+          await Room.findOne({
+            where: { roomId },
+            attributes: ['hand'],
+            raw: true,
+          })
+        ).top
+      );
+
+      io.to(roomId).emit('gameover', topRank)
     } else {
       userInfo.forEach((el) => {
         const table = info(el);
@@ -858,7 +792,11 @@ io.on('connection', async (socket) => {
   });
 
   socket.on('place-joker', async (userId, hand) => {
+    console.log(userId);
+    console.log(hand);
     await User.update({ hand: JSON.stringify(hand) }, { where: { userId } });
+    // hand가 있으면 수정해서 보내주고,
+    // 없으면 그냥 전체적인Info  // 없을 때는 Null
   });
 
   socket.on('select-card-as-security', async (userId, color, value) => {

@@ -6,8 +6,6 @@ module.exports = (sequelize, DataTypes) => {
     static associate(models) {
       this.belongsTo(models.Table, { foreignKey: 'roomId' });
       this.hasMany(models.User, { foreignKey: 'roomId' });
-
-     
     }
   }
 
@@ -22,6 +20,9 @@ module.exports = (sequelize, DataTypes) => {
       turn: {
         type: DataTypes.INTEGER,
         allowNull: false,
+      },
+      top: {
+        type: DataTypes.STRING,
       },
     },
     {
