@@ -810,12 +810,10 @@ io.on('connection', async (socket) => {
       console.log('testtesttestetsttest', typeof userCard.security.length);
       (no_security = userCard.security.length === 0 ? false : true),
         (guessResult = {
-          gameInfo: {
-            blackCards: JSON.parse(tableInfo.blackCards).length,
-            whiteCards: JSON.parse(tableInfo.whiteCards).length,
-            turn: roomInfo.turn,
-            users: some,
-          },
+          blackCards: JSON.parse(tableInfo.blackCards).length,
+          whiteCards: JSON.parse(tableInfo.whiteCards).length,
+          turn: roomInfo.turn,
+          users: some,
         });
       return guessResult;
     }
