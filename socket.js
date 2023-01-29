@@ -637,6 +637,7 @@ io.on('connection', async (socket) => {
     let result = false;
     let guessResult = {};
     let userCard;
+    let no_security;
 
     // HACK: 타겟유저의 카드를 맞췄을 때
     if (targetHand[index].value === value) {
@@ -801,30 +802,28 @@ io.on('connection', async (socket) => {
       console.log('testtesttestetsttest', userCard.security);
       console.log('testtesttestetsttest', userCard.security.length);
       console.log('testtesttestetsttest', typeof userCard.security.length);
-
-      guessResult = {
-        result: result,
-        no_security: userCard.security.length === 0 ? false : true,
-        gameInfo: {
-          blackCards: JSON.parse(tableInfo.blackCards).length,
-          whiteCards: JSON.parse(tableInfo.whiteCards).length,
-          turn: roomInfo.turn,
-          users: some,
-        },
-      };
+      (no_security = userCard.security.length === 0 ? false : true),
+        (guessResult = {
+          gameInfo: {
+            blackCards: JSON.parse(tableInfo.blackCards).length,
+            whiteCards: JSON.parse(tableInfo.whiteCards).length,
+            turn: roomInfo.turn,
+            users: some,
+          },
+        });
       return guessResult;
     }
 
     if (userInfo.filter((user) => user.gameOver == false).length === 1) {
       userInfo.forEach((el) => {
-        const result = info(el);
-        io.to(el.sids).emit('gameover', result);
+        const table = info(el);
+        io.to(el.sids).emit('gameover', table);
       });
       await Room.destroy({ where: { roomId } });
     } else {
       userInfo.forEach((el) => {
-        const result = info(el);
-        io.to(el.sids).emit('result-guess', result);
+        const table = info(el);
+        io.to(el.sids).emit('result-guess', result, no_security, table);
       });
     }
   });
