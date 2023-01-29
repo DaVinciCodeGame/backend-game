@@ -388,10 +388,13 @@ io.on('connection', async (socket) => {
     // black 뽑기
     for (let i = 0; i < black; i++) {
       let cardLength = cards.length;
-      if (cardLength === 13) cardLength--;
       let CardIndex = Math.floor(Math.random() * Number(cardLength));
-
       let randomCard = cards[CardIndex];
+      if (randomCard === 12) {
+        i--;
+        continue;
+      }
+
       getCards = [
         ...getCards,
         { color: 'black', value: Number(randomCard), isOpen: false },
@@ -408,9 +411,12 @@ io.on('connection', async (socket) => {
     // white 뽑기
     for (let i = 0; i < white; i++) {
       let cardLength = cards.length;
-      if (cardLength === 13) cardLength--;
       let CardIndex = Math.floor(Math.random() * Number(cardLength));
       let randomCard = cards[CardIndex];
+      if (randomCard === 12) {
+        i--;
+        continue;
+      }
       getCards = [
         ...getCards,
         { color: 'white', value: Number(randomCard), isOpen: false },
