@@ -11,15 +11,17 @@ module.exports = (sequelize, DataTypes) => {
 
   Room.init(
     {
-      roomId: {
-        type: DataTypes.INTEGER,
-        primaryKey: true,
-        allowNull: false,
-        //autoIncrement: true,
-      },
-      isPlaying: {
-        type: DataTypes.BOOLEAN,
-      },
+      roomId: { type: DataTypes.INTEGER, primaryKey: true },
+
+      roomName: DataTypes.STRING,
+
+      maxMembers: DataTypes.INTEGER,
+
+      isPlaying: { type: DataTypes.BOOLEAN, defaultValue: false },
+
+      isPrivate: DataTypes.BOOLEAN,
+
+      password: { type: DataTypes.STRING, allowNull: true },
     },
     {
       sequelize,
