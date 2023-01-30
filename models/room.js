@@ -21,8 +21,8 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.INTEGER,
         allowNull: false,
       },
-      top: {
-        type: DataTypes.STRING,
+      isPlaying:{
+        type: DataTypes.BOOLEAN,
       },
     },
     {

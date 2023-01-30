@@ -5,7 +5,7 @@ const { Server } = require('socket.io');
 const cors = require('cors');
 const { Op, Sequelize } = require('sequelize');
 require('dotenv');
-const { User, Room, Table } = require('./models');
+const { Player, Room, Table } = require('./models');
 
 //dotenv.config();
 app.use(cors());
@@ -77,7 +77,6 @@ io.on('connection', async (socket) => {
       await Room.create({
         roomId,
         turn: userId,
-        top: JSON.stringify([]),
       });
 
       await Table.create({
@@ -85,9 +84,10 @@ io.on('connection', async (socket) => {
         blackCards: JSON.stringify([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]),
         whiteCards: JSON.stringify([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]),
         users: JSON.stringify([{ userId }]),
+        top: JSON.stringify([]),
       });
 
-      await User.create({
+      await Player.create({
         roomId,
         userId,
         sids: socket.id,
@@ -105,7 +105,7 @@ io.on('connection', async (socket) => {
         raw: true,
       });
 
-      await User.create({
+      await Player.create({
         roomId,
         userId,
         sids: socket.id,
@@ -139,7 +139,7 @@ io.on('connection', async (socket) => {
       raw: true,
     });
 
-    let userInfo = await User.findAll({
+    let userInfo = await Player.findAll({
       where: { roomId },
       attributes: [
         'userId',
@@ -180,17 +180,17 @@ io.on('connection', async (socket) => {
     console.log('userId', userId);
     console.log('roomId', roomId);
 
-    const userReady = await User.findOne({
+    const userReady = await Player.findOne({
       where: { userId },
       attributes: ['isReady'],
       raw: true,
     });
 
     userReady.isReady
-      ? await User.update({ isReady: false }, { where: { userId } })
-      : await User.update({ isReady: true }, { where: { userId } });
+      ? await Player.update({ isReady: false }, { where: { userId } })
+      : await Player.update({ isReady: true }, { where: { userId } });
 
-    let readyCount = await User.findAll({
+    let readyCount = await Player.findAll({
       where: {
         roomId,
         [Op.or]: [{ isReady: 1 }],
@@ -212,7 +212,7 @@ io.on('connection', async (socket) => {
       raw: true,
     });
 
-    let userInfo = await User.findAll({
+    let userInfo = await Player.findAll({
       where: { roomId },
       attributes: [
         'userId',
@@ -318,7 +318,7 @@ io.on('connection', async (socket) => {
         }
       });
 
-    await User.update(
+    await Player.update(
       { hand: JSON.stringify(getCards) },
       { where: { userId } }
     );
@@ -335,7 +335,7 @@ io.on('connection', async (socket) => {
       raw: true,
     });
 
-    let userInfo = await User.findAll({
+    let userInfo = await Player.findAll({
       where: { roomId },
       attributes: ['userId', 'userName', 'gameOver', 'hand', 'sids'],
       raw: true,
@@ -448,7 +448,7 @@ io.on('connection', async (socket) => {
       let cardIndex = Math.floor(Math.random() * Number(cardLength));
       let randomCard = cards[cardIndex];
       myCard({ color: 'black', value: Number(randomCard) });
-      await User.update(
+      await Player.update(
         {
           security: JSON.stringify({
             color: 'black',
@@ -469,7 +469,7 @@ io.on('connection', async (socket) => {
       let cardIndex = Math.floor(Math.random() * Number(cardLength));
       let randomCard = cards[cardIndex];
       myCard({ color: 'white', value: Number(randomCard) });
-      await User.update(
+      await Player.update(
         {
           security: JSON.stringify({
             color: 'white',
@@ -485,7 +485,7 @@ io.on('connection', async (socket) => {
         { where: { roomId } }
       );
     }
-    let userInfo = await User.findAll({
+    let userInfo = await Player.findAll({
       where: { roomId },
       attributes: ['userId', 'userName', 'gameOver', 'hand', 'sids'],
       raw: true,
@@ -502,7 +502,7 @@ io.on('connection', async (socket) => {
     console.log(value);
     let targetHand = JSON.parse(
       (
-        await User.findOne({
+        await Player.findOne({
           where: { userId },
           attributes: ['hand'],
           raw: true,
@@ -522,29 +522,29 @@ io.on('connection', async (socket) => {
       console.log('설정한 값', value);
       targetHand[index].isOpen = true;
       if (targetHand.filter((card) => card.isOpen === false).length) {
-        await User.update(
+        await Player.update(
           { hand: JSON.stringify(targetHand) },
           { where: { userId } }
         );
         console.log('1번콘솔', { hand: JSON.stringify(targetHand) });
       } else {
-        await User.update(
+        await Player.update(
           { hand: JSON.stringify(targetHand), gameOver: true },
           { where: { userId } }
         );
 
         let topRank = JSON.parse(
           (
-            await Room.findOne({
+            await Table.findOne({
               where: { roomId },
-              attributes: ['hand'],
+              attributes: ['top'],
               raw: true,
             })
           ).top
         );
 
         let name = (
-          await User.findOne({
+          await Player.findOne({
             where: { userId },
             attributes: ['userName'],
             raw: true,
@@ -553,7 +553,7 @@ io.on('connection', async (socket) => {
 
         topRank.unshift({ userId: userId, userName: name });
 
-        await Room.update(
+        await Table.update(
           { top: JSON.stringify(topRank) },
           { where: { roomId } }
         );
@@ -564,7 +564,7 @@ io.on('connection', async (socket) => {
         });
       }
 
-      userCard = await User.findOne({
+      userCard = await Player.findOne({
         where: { userId },
         attributes: ['hand', 'security'],
         raw: true,
@@ -575,7 +575,7 @@ io.on('connection', async (socket) => {
       console.log('result false');
       console.log('타겟의 값', targetHand[index].value);
       console.log('설정한 값', value);
-      userCard = await User.findOne({
+      userCard = await Player.findOne({
         where: { userId: socket.data.userId },
         attributes: ['hand', 'security'],
         raw: true,
@@ -643,7 +643,7 @@ io.on('connection', async (socket) => {
       }
 
       if (tempHand.filter((card) => card.isOpen === false).length) {
-        await User.update(
+        await Player.update(
           { hand: JSON.stringify(tempHand), security: '' },
           { where: { userId: socket.data.userId } }
         );
@@ -652,22 +652,22 @@ io.on('connection', async (socket) => {
           security: '',
         });
       } else {
-        await User.update(
+        await Player.update(
           { hand: JSON.stringify(tempHand), security: '', gameOver: true },
           { where: { userId: socket.data.userId } }
         );
         let topRank = JSON.parse(
           (
-            await Room.findOne({
+            await Table.findOne({
               where: { roomId },
-              attributes: ['hand'],
+              attributes: ['top'],
               raw: true,
             })
           ).top
         );
 
         let name = (
-          await User.findOne({
+          await Player.findOne({
             where: { userId },
             attributes: ['userName'],
             raw: true,
@@ -676,7 +676,7 @@ io.on('connection', async (socket) => {
 
         topRank.unshift({ userId: userId, userName: name });
 
-        await Room.update(
+        await Table.update(
           { top: JSON.stringify(topRank) },
           { where: { roomId } }
         );
@@ -690,7 +690,7 @@ io.on('connection', async (socket) => {
     }
 
     // TODO: 전체적으로 뿌려주기 전에 상태값 다 입히기.
-    let userInfo = await User.findAll({
+    let userInfo = await Player.findAll({
       where: { roomId },
       attributes: [
         'userId',
@@ -764,7 +764,7 @@ io.on('connection', async (socket) => {
       // });
       let topRank = JSON.parse(
         (
-          await Room.findOne({
+          await Table.findOne({
             where: { roomId },
             attributes: ['top'],
             raw: true,
@@ -780,7 +780,6 @@ io.on('connection', async (socket) => {
       await Room.update(
         {
           turn: userId,
-          top: JSON.stringify([]),
         },
         { where: { roomId } }
       );
@@ -790,9 +789,10 @@ io.on('connection', async (socket) => {
         blackCards: JSON.stringify([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]),
         whiteCards: JSON.stringify([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]),
         users: JSON.stringify([{ userId }]),
+        top: JSON.stringify([]),
       });
 
-      await User.update({
+      await Player.update({
         roomId,
         userId,
         sids: socket.id,
@@ -821,11 +821,23 @@ io.on('connection', async (socket) => {
 
     // hand가 있을 때
     if (hand) {
-      await User.update({ hand: JSON.stringify(hand) }, { where: { userId } });
+      await Player.update(
+        { hand: JSON.stringify(hand) },
+        { where: { userId } }
+      );
     } else {
       // TODO: 담보 불러서 저장하기.
+      let userSecurity = JSON.parse(
+        await Player.findOne({
+          where: { userId },
+          attributes: ['security'],
+          raw: true,
+        })
+      ).security;
+
+      userSecurity.push();
     }
-    let userInfo = await User.findAll({
+    let userInfo = await Player.findAll({
       where: { roomId },
       attributes: ['userId', 'userName', 'gameOver', 'hand', 'sids'],
       raw: true,
@@ -891,7 +903,7 @@ io.on('connection', async (socket) => {
   });
 
   socket.on('select-card-as-security', async (userId, color, value) => {
-    await User.update(
+    await Player.update(
       { security: JSON.stringify({ color, value }) },
       { where: { userId } }
     );
@@ -923,7 +935,7 @@ io.on('connection', async (socket) => {
 
     await Room.update({ turn: netxTurn }, { where: { roomId } });
 
-    let userInfo = await User.findAll({
+    let userInfo = await Player.findAll({
       where: { roomId },
       attributes: ['userId', 'userName', 'gameOver', 'hand', 'sids'],
       raw: true,

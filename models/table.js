@@ -25,6 +25,9 @@ module.exports = (sequelize, DataTypes) => {
       users: {
         type: DataTypes.STRING,
       },
+      top: {
+        type: DataTypes.STRING,
+      },
     },
     {
       sequelize,
