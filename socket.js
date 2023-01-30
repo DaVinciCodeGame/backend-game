@@ -825,12 +825,8 @@ io.on('connection', async (socket) => {
 
     // hand가 있을 때
     if (hand) {
-      // let changHand = hand.map((el) => {
-      //   if (el.value === 12) el.isOpen = false;
-      // });
-
       await Player.update(
-        { hand: JSON.stringify(changHand) },
+        { hand: JSON.stringify(hand) },
         { where: { userId } }
       );
     } else {
