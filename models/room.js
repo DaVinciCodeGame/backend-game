@@ -20,6 +20,11 @@ module.exports = (sequelize, DataTypes) => {
       isPlaying: { type: DataTypes.BOOLEAN, defaultValue: false },
 
       password: { type: DataTypes.STRING, allowNull: true },
+
+      createdAt: {
+        type: DataTypes.DATE(6),
+        defaultValue: sequelize.literal('CURRENT_TIMESTAMP(6)'),
+      },
     },
     {
       sequelize,
