@@ -900,7 +900,7 @@ io.on('connection', async (socket) => {
     }
     userInfo.forEach((el) => {
       const result = info(el);
-      io.to(el.sids).emit('draw-result', result);
+      io.to(el.sids).emit('ongoing', result);
     });
   });
 
