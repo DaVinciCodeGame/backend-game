@@ -437,27 +437,13 @@ io.on('connection', async (socket) => {
   socket.on('color-selected', async (userId, color, myCard) => {
     let roomId = socket.data.roomId;
     let oneCard = {};
-    console.log(userId);
-    console.log(color);
-
-    let tableCard = await Table.findOne({
+    let cardResult = await Table.findOne({
       where: { roomId },
       attributes: ['blackCards', 'whiteCards'],
       raw: true,
     });
-
-    let userHand = JSON.parse(
-      (
-        await User.findOne({
-          where: { userId },
-          attributes: ['hand'],
-          raw: true,
-        })
-      ).hand
-    );
-
     if (color === 'black') {
-      let cards = JSON.parse(tableCard.blackCards);
+      let cards = JSON.parse(cardResult.blackCards);
       let cardLength = cards.length;
       let cardIndex = Math.floor(Math.random() * Number(cardLength));
       let randomCard = cards[cardIndex];
@@ -471,17 +457,14 @@ io.on('connection', async (socket) => {
         },
         { where: { userId } }
       );
-
       oneCard = { color: 'black', value: Number(randomCard), isOpen: false };
-
       cards.splice(cardIndex, 1);
-
       await Table.update(
         { blackCards: JSON.stringify(cards) },
         { where: { roomId } }
       );
     } else {
-      let cards = JSON.parse(tableCard.whiteCards);
+      let cards = JSON.parse(cardResult.whiteCards);
       let cardLength = cards.length;
       let cardIndex = Math.floor(Math.random() * Number(cardLength));
       let randomCard = cards[cardIndex];
@@ -496,54 +479,17 @@ io.on('connection', async (socket) => {
         { where: { userId } }
       );
       oneCard = { color: 'white', value: Number(randomCard), isOpen: false };
-
       cards.splice(cardIndex, 1);
-
       await Table.update(
         { whiteCards: JSON.stringify(cards) },
         { where: { roomId } }
       );
     }
-
-    userHand.push(oneCard);
-    let jokerIndex = [];
-    let jokerCard = [];
-    for (let i = 0; i < userHand.length; i++) {
-      if (userHand[i].value === 12) {
-        jokerIndex.push(i);
-        jokerCard.push(userHand[i]);
-      }
-    }
-
-    jokerIndex.map((el, i) => {
-      userHand.splice(el - i, 1);
-    });
-
-    userHand
-      .sort((a, b) => a.value - b.value)
-      .sort((a, b) => {
-        if (a.value === b.value) {
-          if (a.color < b.color) return -1;
-          else if (b.color < a.color) return 1;
-          else return 0;
-        }
-      });
-
-    for (let i = 0; i < jokerIndex.length; i++) {
-      userHand.splice(jokerIndex[i], 0, jokerCard[i]);
-    }
-
-    await User.update(
-      { hand: JSON.stringify(userHand) },
-      { where: { userId } }
-    );
-
     let userInfo = await User.findAll({
       where: { roomId },
       attributes: ['userId', 'userName', 'gameOver', 'hand', 'sids'],
       raw: true,
     });
-
     userInfo.forEach((el) =>
       socket.to(el.sids).emit('result-select', { userId, color })
     );
@@ -759,7 +705,6 @@ io.on('connection', async (socket) => {
       raw: true,
     });
 
-    //console.log('전체 유저 이후 값', userInfo);
     let roomInfo = await Room.findOne({
       where: { roomId },
       attributes: ['turn'],
@@ -867,11 +812,82 @@ io.on('connection', async (socket) => {
   });
 
   socket.on('place-joker', async (userId, hand) => {
+    const roomId = socket.data.roomId;
     console.log(userId);
     console.log(hand);
-    await User.update({ hand: JSON.stringify(hand) }, { where: { userId } });
+    console.log(typeof hand);
     // hand가 있으면 수정해서 보내주고,
     // 없으면 그냥 전체적인Info  // 없을 때는 Null
+
+    // hand가 있을 때
+    if (hand) {
+      await User.update({ hand: JSON.stringify(hand) }, { where: { userId } });
+    } else {
+      // TODO: 담보 불러서 저장하기.
+    }
+    let userInfo = await User.findAll({
+      where: { roomId },
+      attributes: ['userId', 'userName', 'gameOver', 'hand', 'sids'],
+      raw: true,
+    });
+
+    let tableInfo = await Table.findOne({
+      where: { roomId },
+      attributes: ['blackCards', 'whiteCards', 'users'],
+      raw: true,
+    });
+
+    let roomInfo = await Room.findOne({
+      where: { roomId },
+      attributes: ['turn'],
+      raw: true,
+    });
+
+    console.log('testestestestestest', userInfo);
+    console.log('testestestestestest', tableInfo);
+
+    function info(temp) {
+      const gameInfo = userInfo.map((el) => {
+        return {
+          userId: el.userId,
+          userName: el.userName,
+          userProfileImg: '',
+          gameOver: el.gameOver ? true : false,
+          hand: JSON.parse(el.hand).map((card) => {
+            if (el.userId === temp.userId) {
+              return {
+                color: card.color,
+                value: card.value,
+                isOpen: card.isOpen,
+              };
+            } else if (!card.isOpen) {
+              return {
+                color: card.color,
+                value: 'Back',
+                isOpen: card.isOpen,
+              };
+            } else {
+              return {
+                color: card.color,
+                value: card.value,
+                isOpen: card.isOpen,
+              };
+            }
+          }),
+        };
+      });
+      cardResult = {
+        blackCards: JSON.parse(tableInfo.blackCards).length,
+        whiteCards: JSON.parse(tableInfo.whiteCards).length,
+        turn: roomInfo.turn,
+        users: gameInfo,
+      };
+      return cardResult;
+    }
+    userInfo.forEach((el) => {
+      const result = info(el);
+      io.to(el.sids).emit('next-gameInfo', result);
+    });
   });
 
   socket.on('select-card-as-security', async (userId, color, value) => {
