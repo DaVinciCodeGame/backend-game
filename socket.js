@@ -568,7 +568,10 @@ io.on('connection', async (socket) => {
       console.log('test console::targetSecurity ', targetSecurity);
 
       for (let i = 0; i < changeHand.length; i++) {
-        if (changeHand[i].value == b.value && changeHand[i].color == b.color) {
+        if (
+          changeHand[i].value == targetSecurity.value &&
+          changeHand[i].color == targetSecurity.color
+        ) {
           changeHand[i].isOpen = true;
         }
       }
