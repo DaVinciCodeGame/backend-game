@@ -1011,6 +1011,43 @@ io.on('connection', async (socket) => {
       io.to(el.sids).emit('next-gameInfo', result);
     });
   });
+
+  socket.on('room-out', async () => {
+    // 방 나갈 때
+    const roomId = socket.data.roomId;
+    const userId = socket.data.userId;
+    console.log(roomId);
+    console.log(userId);
+
+    let tableInfo = await Table.findOne({
+      where: { roomId },
+      attributes: ['users', 'turn'],
+      raw: true,
+    });
+
+    let tempUsers = JSON.parse(tableInfo.users);
+
+    for (let i = 0; i < tempUsers.length; i++) {
+      if (tempUsers[i].userId == userId) {
+        tempUsers.splice(i, 1);
+        break;
+      }
+    }
+
+    if (tempUsers.length == 0) {
+      await Room.destroy({ where: { roomId } });
+    } else {
+      await Table.update(
+        {
+          users: JSON.stringify(tempUsers),
+          turn: JSON.stringify(tempUsers[0].userId),
+        },
+        { where: { roomId } }
+      );
+
+      await Player.destroy({ where: { userId } });
+    }
+  });
 });
 
 server.listen(process.env.PORT, () => {

@@ -47,6 +47,8 @@ module.exports = (sequelize, DataTypes) => {
       sequelize,
       modelName: 'Player',
       tableName: 'Player',
+      onDelete: 'CASCADE',
+
     }
   );
 

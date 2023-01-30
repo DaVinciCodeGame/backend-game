@@ -37,6 +37,7 @@ module.exports = (sequelize, DataTypes) => {
       sequelize,
       modelName: 'Table',
       tableName: 'Table',
+      onDelete: 'CASCADE',
     }
   );
 
