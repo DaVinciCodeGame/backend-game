@@ -464,7 +464,7 @@ io.on('connection', async (socket) => {
       let cardLength = cards.length;
       let cardIndex = Math.floor(Math.random() * Number(cardLength));
       let randomCard = cards[cardIndex];
-      myCard({ color: 'black', value: Number(randomCard) });
+      myCard({ color: 'black', value: Number(randomCard), isOpen: false });
       await Player.update(
         {
           security: JSON.stringify({
@@ -485,7 +485,7 @@ io.on('connection', async (socket) => {
       let cardLength = cards.length;
       let cardIndex = Math.floor(Math.random() * Number(cardLength));
       let randomCard = cards[cardIndex];
-      myCard({ color: 'white', value: Number(randomCard) });
+      myCard({ color: 'white', value: Number(randomCard), isOpen: false });
       await Player.update(
         {
           security: JSON.stringify({
@@ -825,9 +825,9 @@ io.on('connection', async (socket) => {
 
     // hand가 있을 때
     if (hand) {
-      let changHand = hand.map((el) => {
-        if (el.value === 12) el.isOpen = false;
-      });
+      // let changHand = hand.map((el) => {
+      //   if (el.value === 12) el.isOpen = false;
+      // });
 
       await Player.update(
         { hand: JSON.stringify(changHand) },
