@@ -437,15 +437,27 @@ io.on('connection', async (socket) => {
   socket.on('color-selected', async (userId, color, myCard) => {
     let roomId = socket.data.roomId;
     let oneCard = {};
+    console.log(userId);
+    console.log(color);
 
-    let cardResult = await Table.findOne({
+    let tableCard = await Table.findOne({
       where: { roomId },
       attributes: ['blackCards', 'whiteCards'],
       raw: true,
     });
 
+    let userHand = JSON.parse(
+      (
+        await User.findOne({
+          where: { userId },
+          attributes: ['hand'],
+          raw: true,
+        })
+      ).hand
+    );
+
     if (color === 'black') {
-      let cards = JSON.parse(cardResult.blackCards);
+      let cards = JSON.parse(tableCard.blackCards);
       let cardLength = cards.length;
       let cardIndex = Math.floor(Math.random() * Number(cardLength));
       let randomCard = cards[cardIndex];
@@ -469,7 +481,7 @@ io.on('connection', async (socket) => {
         { where: { roomId } }
       );
     } else {
-      let cards = JSON.parse(cardResult.whiteCards);
+      let cards = JSON.parse(tableCard.whiteCards);
       let cardLength = cards.length;
       let cardIndex = Math.floor(Math.random() * Number(cardLength));
       let randomCard = cards[cardIndex];
@@ -492,6 +504,39 @@ io.on('connection', async (socket) => {
         { where: { roomId } }
       );
     }
+
+    userHand.push(oneCard);
+    let jokerIndex = [];
+    let jokerCard = [];
+    for (let i = 0; i < userHand.length; i++) {
+      if (userHand[i].value === 12) {
+        jokerIndex.push(i);
+        jokerCard.push(userHand[i]);
+      }
+    }
+
+    jokerIndex.map((el, i) => {
+      userHand.splice(el - i, 1);
+    });
+
+    userHand
+      .sort((a, b) => a.value - b.value)
+      .sort((a, b) => {
+        if (a.value === b.value) {
+          if (a.color < b.color) return -1;
+          else if (b.color < a.color) return 1;
+          else return 0;
+        }
+      });
+
+    for (let i = 0; i < jokerIndex.length; i++) {
+      userHand.splice(jokerIndex[i], 0, jokerCard[i]);
+    }
+
+    await User.update(
+      { hand: JSON.stringify(userHand) },
+      { where: { userId } }
+    );
 
     let userInfo = await User.findAll({
       where: { roomId },
@@ -795,14 +840,14 @@ io.on('connection', async (socket) => {
         { where: { roomId } }
       );
 
-      await Table.create({
+      await Table.update({
         roomId,
         blackCards: JSON.stringify([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]),
         whiteCards: JSON.stringify([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]),
         users: JSON.stringify([{ userId }]),
       });
 
-      await User.create({
+      await User.update({
         roomId,
         userId,
         sids: socket.id,
