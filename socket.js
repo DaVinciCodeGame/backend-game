@@ -799,17 +799,53 @@ io.on('connection', async (socket) => {
       );
     } else {
       // TODO: 담보 불러서 저장하기.
-      let userSecurity = JSON.parse(
-        await Player.findOne({
-          where: { userId },
-          attributes: ['security'],
-          raw: true,
-        })
-      ).security;
-      userSecurity.isOpen = false;
+      let userInfo = await Player.findOne({
+        where: { userId },
+        attributes: ['security', 'hand'],
+        raw: true,
+      });
+      console.log(userInfo);
+      console.log(userInfo.security);
+      console.log(userInfo.hand);
 
-      
+      let userSecurity = JSON.parse(userInfo.security);
+      userSecurity.isOpen = false;
+      let userHand = JSON.parse(userInfo.hand);
+
+      userHand.push(userSecurity);
+      let jokerIndex = [];
+      let jokerCard = [];
+      for (let i = 0; i < userHand.length; i++) {
+        if (userHand[i].value === 12) {
+          jokerIndex.push(i);
+          jokerCard.push(userHand[i]);
+        }
+      }
+
+      jokerIndex.map((el, i) => {
+        userHand.splice(el - i, 1);
+      });
+
+      userHand
+        .sort((a, b) => a.value - b.value)
+        .sort((a, b) => {
+          if (a.value === b.value) {
+            if (a.color < b.color) return -1;
+            else if (b.color < a.color) return 1;
+            else return 0;
+          }
+        });
+
+      for (let i = 0; i < jokerIndex.length; i++) {
+        userHand.splice(jokerIndex[i], 0, jokerCard[i]);
+      }
+
+      await Player.update(
+        { hand: JSON.stringify(userHand) },
+        { where: { userId } }
+      );
     }
+
     let userInfo = await Player.findAll({
       where: { roomId },
       attributes: ['userId', 'userName', 'gameOver', 'hand', 'sids'],
@@ -821,9 +857,6 @@ io.on('connection', async (socket) => {
       attributes: ['blackCards', 'whiteCards', 'users', 'turn'],
       raw: true,
     });
-
-    console.log('testestestestestest', userInfo);
-    console.log('testestestestestest', tableInfo);
 
     function info(temp) {
       const gameInfo = userInfo.map((el) => {
@@ -865,7 +898,7 @@ io.on('connection', async (socket) => {
     }
     userInfo.forEach((el) => {
       const result = info(el);
-      io.to(el.sids).emit('next-gameInfo', result);
+      io.to(el.sids).emit('draw-result', result);
     });
   });
 
