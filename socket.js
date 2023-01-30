@@ -550,6 +550,7 @@ io.on('connection', async (socket) => {
 
       result = true;
     } else {
+      // 틀렸을 때
       console.log('result false');
       console.log('타겟의 값', targetHand[index].value);
       console.log('설정한 값', value);
@@ -584,87 +585,87 @@ io.on('connection', async (socket) => {
       await Table.update({ turn: netxTurn }, { where: { roomId } });
 
       result = false;
-      let tempSecurity;
-      if (userCard.security.length > 0) {
-        tempSecurity = JSON.parse(userCard.security);
-        tempSecurity.isOpen = true;
-      }
+      // let tempSecurity;
+      // if (userCard.security.length > 0) {
+      //   tempSecurity = JSON.parse(userCard.security);
+      //   tempSecurity.isOpen = true;
+      // }
 
-      let tempHand = JSON.parse(userCard.hand);
+      // let tempHand = JSON.parse(userCard.hand);
 
-      tempHand.push(tempSecurity);
-      let jokerIndex = [];
-      let jokerCard = [];
-      for (let i = 0; i < tempHand.length; i++) {
-        if (tempHand[i].value === 12) {
-          jokerIndex.push(i);
-          jokerCard.push(tempHand[i]);
-        }
-      }
+      // tempHand.push(tempSecurity);
+      // let jokerIndex = [];
+      // let jokerCard = [];
+      // for (let i = 0; i < tempHand.length; i++) {
+      //   if (tempHand[i].value === 12) {
+      //     jokerIndex.push(i);
+      //     jokerCard.push(tempHand[i]);
+      //   }
+      // }
 
-      jokerIndex.map((el, i) => {
-        tempHand.splice(el - i, 1);
-      });
+      // jokerIndex.map((el, i) => {
+      //   tempHand.splice(el - i, 1);
+      // });
 
-      tempHand
-        .sort((a, b) => a.value - b.value)
-        .sort((a, b) => {
-          if (a.value === b.value) {
-            if (a.color < b.color) return -1;
-            else if (b.color < a.color) return 1;
-            else return 0;
-          }
-        });
+      // tempHand
+      //   .sort((a, b) => a.value - b.value)
+      //   .sort((a, b) => {
+      //     if (a.value === b.value) {
+      //       if (a.color < b.color) return -1;
+      //       else if (b.color < a.color) return 1;
+      //       else return 0;
+      //     }
+      //   });
 
-      for (let i = 0; i < jokerIndex.length; i++) {
-        tempHand.splice(jokerIndex[i], 0, jokerCard[i]);
-      }
+      // for (let i = 0; i < jokerIndex.length; i++) {
+      //   tempHand.splice(jokerIndex[i], 0, jokerCard[i]);
+      // }
 
-      if (tempHand.filter((card) => card.isOpen === false).length) {
-        await Player.update(
-          { hand: JSON.stringify(tempHand), security: '' },
-          { where: { userId: socket.data.userId } }
-        );
-        console.log('3번콘솔', {
-          hand: JSON.stringify(tempHand),
-          security: '',
-        });
-      } else {
-        await Player.update(
-          { hand: JSON.stringify(tempHand), security: '', gameOver: true },
-          { where: { userId: socket.data.userId } }
-        );
-        let topRank = JSON.parse(
-          (
-            await Table.findOne({
-              where: { roomId },
-              attributes: ['top'],
-              raw: true,
-            })
-          ).top
-        );
+      // if (tempHand.filter((card) => card.isOpen === false).length) {
+      //   await Player.update(
+      //     { hand: JSON.stringify(tempHand), security: '' },
+      //     { where: { userId: socket.data.userId } }
+      //   );
+      //   console.log('3번콘솔', {
+      //     hand: JSON.stringify(tempHand),
+      //     security: '',
+      //   });
+      // } else {
+      //   await Player.update(
+      //     { hand: JSON.stringify(tempHand), security: '', gameOver: true },
+      //     { where: { userId: socket.data.userId } }
+      //   );
+      //   let topRank = JSON.parse(
+      //     (
+      //       await Table.findOne({
+      //         where: { roomId },
+      //         attributes: ['top'],
+      //         raw: true,
+      //       })
+      //     ).top
+      //   );
 
-        let name = (
-          await Player.findOne({
-            where: { userId },
-            attributes: ['userName'],
-            raw: true,
-          })
-        ).userName;
+      //   let name = (
+      //     await Player.findOne({
+      //       where: { userId },
+      //       attributes: ['userName'],
+      //       raw: true,
+      //     })
+      //   ).userName;
 
-        topRank.unshift({ userId: userId, userName: name });
+      //   topRank.unshift({ userId: userId, userName: name });
 
-        await Table.update(
-          { top: JSON.stringify(topRank) },
-          { where: { roomId } }
-        );
+      //   await Table.update(
+      //     { top: JSON.stringify(topRank) },
+      //     { where: { roomId } }
+      //   );
 
-        console.log('4번콘솔', {
-          hand: JSON.stringify(tempHand),
-          security: '',
-          gameOver: true,
-        });
-      }
+      //   console.log('4번콘솔', {
+      //     hand: JSON.stringify(tempHand),
+      //     security: '',
+      //     gameOver: true,
+      //   });
+      // }
     }
 
     // TODO: 전체적으로 뿌려주기 전에 상태값 다 입히기.
