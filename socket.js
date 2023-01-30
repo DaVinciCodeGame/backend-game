@@ -831,14 +831,17 @@ io.on('connection', async (socket) => {
         attributes: ['security', 'hand'],
         raw: true,
       });
-      console.log(userInfo);
+
       console.log(userInfo.security);
       console.log(userInfo.hand);
 
       let userSecurity = JSON.parse(userInfo.security);
       let userHand = JSON.parse(userInfo.hand);
+      userSecurity.isOpen = false;
 
       userHand.push(userSecurity);
+      console.log('place-joker 변한 userHand 값: ', userHand);
+
       let jokerIndex = [];
       let jokerCard = [];
       for (let i = 0; i < userHand.length; i++) {
