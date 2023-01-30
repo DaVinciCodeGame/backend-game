@@ -562,12 +562,12 @@ io.on('connection', async (socket) => {
       });
 
       console.log('test console:: ', userCard);
-      let changeHand = JSON.parse(userCard.hand);
+      let hand = JSON.parse(userCard.hand);
       let targetSecurity = JSON.parse(userCard.security);
-      console.log('test console::changeHand ', changeHand);
+      console.log('test console::hand ', hand);
       console.log('test console::targetSecurity ', targetSecurity);
 
-      changeHand.map((el) => {
+      let changeHand = hand.map((el) => {
         if (
           el.value === targetSecurity.value &&
           el.color === targetHand.color
