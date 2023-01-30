@@ -573,7 +573,7 @@ io.on('connection', async (socket) => {
           el.isOpen = true;
         }
       });
-
+      console.log('이후에 변한 값 측정 console:', changeHand);
       await Player.update(
         { security: '', hand: JSON.stringify(changeHand) },
         { where: { userId: socket.data.userId } }
