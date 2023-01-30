@@ -19,8 +19,6 @@ module.exports = (sequelize, DataTypes) => {
 
       isPlaying: { type: DataTypes.BOOLEAN, defaultValue: false },
 
-      isPrivate: DataTypes.BOOLEAN,
-
       password: { type: DataTypes.STRING, allowNull: true },
     },
     {
