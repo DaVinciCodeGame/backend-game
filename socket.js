@@ -560,6 +560,16 @@ io.on('connection', async (socket) => {
         raw: true,
       });
 
+      console.log('test console:: ', userCard);
+      let changSecurity = JSON.parse(userCard.security);
+      changSecurity.isOpen = true;
+
+      await Player.update(
+        { security: JSON.stringify(changSecurity) },
+        { where: { userId: socket.data.userId } }
+      );
+
+      // FIXME turn 진행 순서 여러명일 때 기준으로 수정 필요.
       let roomTurn = await Table.findOne({
         where: { roomId },
         attributes: ['turn'],
@@ -816,7 +826,6 @@ io.on('connection', async (socket) => {
       console.log(userInfo.hand);
 
       let userSecurity = JSON.parse(userInfo.security);
-      userSecurity.isOpen = false;
       let userHand = JSON.parse(userInfo.hand);
 
       userHand.push(userSecurity);
