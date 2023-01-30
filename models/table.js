@@ -28,6 +28,10 @@ module.exports = (sequelize, DataTypes) => {
       top: {
         type: DataTypes.STRING,
       },
+      turn: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+      },
     },
     {
       sequelize,

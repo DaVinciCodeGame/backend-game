@@ -17,11 +17,7 @@ module.exports = (sequelize, DataTypes) => {
         allowNull: false,
         //autoIncrement: true,
       },
-      turn: {
-        type: DataTypes.INTEGER,
-        allowNull: false,
-      },
-      isPlaying:{
+      isPlaying: {
         type: DataTypes.BOOLEAN,
       },
     },

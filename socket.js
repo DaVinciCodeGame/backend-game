@@ -24,17 +24,11 @@ const { table } = require('console');
 
 // db 연결 확인
 DB.sequelize
-  .sync()
+  .sync({ force: false })
   .then(() => {
     console.log('database 연결 성공');
   })
   .catch(console.error);
-
-// sequelize model sync(), 테이블 수정 적용 여부
-// https://medium.com/@smallbee/how-to-use-sequelize-sync-without-difficulties-4645a8d96841
-DB.sequelize.sync({
-  force: false, // default가 false, force: true -> 테이블을 생성하고 이미 존재하는 경우 먼저 삭제합니다. (공식문서 참고: https://sequelize.org/docs/v6/core-concepts/model-basics/#model-synchronization)
-});
 
 const io = new Server(server, {
   cors: {
@@ -76,7 +70,6 @@ io.on('connection', async (socket) => {
     if (!result) {
       await Room.create({
         roomId,
-        turn: userId,
       });
 
       await Table.create({
@@ -85,6 +78,7 @@ io.on('connection', async (socket) => {
         whiteCards: JSON.stringify([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]),
         users: JSON.stringify([{ userId }]),
         top: JSON.stringify([]),
+        turn: userId,
       });
 
       await Player.create({
@@ -127,15 +121,9 @@ io.on('connection', async (socket) => {
       );
     }
 
-    let roomInfo = await Room.findOne({
-      where: { roomId },
-      attributes: ['turn'],
-      raw: true,
-    });
-
     let tableInfo = await Table.findOne({
       where: { roomId },
-      attributes: ['blackCards', 'whiteCards'],
+      attributes: ['blackCards', 'whiteCards', 'turn'],
       raw: true,
     });
 
@@ -167,7 +155,7 @@ io.on('connection', async (socket) => {
     let cardResult = {
       blackCards: JSON.parse(tableInfo.blackCards).length,
       whiteCards: JSON.parse(tableInfo.whiteCards).length,
-      turn: roomInfo.turn,
+      turn: tableInfo.turn,
       users: userInfoV2,
     };
 
@@ -200,15 +188,9 @@ io.on('connection', async (socket) => {
       raw: true,
     });
 
-    let roomInfo = await Room.findOne({
-      where: { roomId },
-      attributes: ['turn'],
-      raw: true,
-    });
-
     let tableInfo = await Table.findOne({
       where: { roomId },
-      attributes: ['blackCards', 'whiteCards'],
+      attributes: ['blackCards', 'whiteCards', 'turn'],
       raw: true,
     });
 
@@ -240,7 +222,7 @@ io.on('connection', async (socket) => {
     let cardResult = {
       blackCards: JSON.parse(tableInfo.blackCards).length,
       whiteCards: JSON.parse(tableInfo.whiteCards).length,
-      turn: roomInfo.turn,
+      turn: tableInfo.turn,
       users: userInfoV2,
     };
 
@@ -323,15 +305,9 @@ io.on('connection', async (socket) => {
       { where: { userId } }
     );
 
-    let roomInfo = await Room.findOne({
-      where: { roomId },
-      attributes: ['turn'],
-      raw: true,
-    });
-
     let tableInfo = await Table.findOne({
       where: { roomId },
-      attributes: ['blackCards', 'whiteCards', 'users'],
+      attributes: ['blackCards', 'whiteCards', 'users', 'turn'],
       raw: true,
     });
 
@@ -377,7 +353,7 @@ io.on('connection', async (socket) => {
     let mycardResult = {
       blackCards: JSON.parse(tableInfo.blackCards).length,
       whiteCards: JSON.parse(tableInfo.whiteCards).length,
-      turn: roomInfo.turn,
+      turn: tableInfo.turn,
       users: myInfo,
     };
 
@@ -422,7 +398,7 @@ io.on('connection', async (socket) => {
         cardResult = {
           blackCards: JSON.parse(tableInfo.blackCards).length,
           whiteCards: JSON.parse(tableInfo.whiteCards).length,
-          turn: roomInfo.turn,
+          turn: tableInfo.turn,
           users: gameInfo,
         };
         return cardResult;
@@ -581,7 +557,7 @@ io.on('connection', async (socket) => {
         raw: true,
       });
 
-      let roomTurn = await Room.findOne({
+      let roomTurn = await Table.findOne({
         where: { roomId },
         attributes: ['turn'],
         raw: true,
@@ -603,7 +579,7 @@ io.on('connection', async (socket) => {
         }
       }
 
-      await Room.update({ turn: netxTurn }, { where: { roomId } });
+      await Table.update({ turn: netxTurn }, { where: { roomId } });
 
       result = false;
       let tempSecurity;
@@ -705,15 +681,9 @@ io.on('connection', async (socket) => {
       raw: true,
     });
 
-    let roomInfo = await Room.findOne({
-      where: { roomId },
-      attributes: ['turn'],
-      raw: true,
-    });
-
     let tableInfo = await Table.findOne({
       where: { roomId },
-      attributes: ['blackCards', 'whiteCards'],
+      attributes: ['blackCards', 'whiteCards', 'turn'],
       raw: true,
     });
 
@@ -752,7 +722,7 @@ io.on('connection', async (socket) => {
         (guessResult = {
           blackCards: JSON.parse(tableInfo.blackCards).length,
           whiteCards: JSON.parse(tableInfo.whiteCards).length,
-          turn: roomInfo.turn,
+          turn: tableInfo.turn,
           users: some,
         });
       return guessResult;
@@ -777,20 +747,22 @@ io.on('connection', async (socket) => {
       // TODO: 방 초기화
       // 입장하고 있는 유저들의 정보는 살려야함.
       // turn 넘길 때 죽어있는 유저는 빼고 넘겨야한다.
-      await Room.update(
+
+      await Table.update(
         {
+          roomId,
+          blackCards: JSON.stringify([
+            0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12,
+          ]),
+          whiteCards: JSON.stringify([
+            0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12,
+          ]),
+          users: JSON.stringify([{ userId }]),
+          top: JSON.stringify([]),
           turn: userId,
         },
         { where: { roomId } }
       );
-
-      await Table.update({
-        roomId,
-        blackCards: JSON.stringify([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]),
-        whiteCards: JSON.stringify([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]),
-        users: JSON.stringify([{ userId }]),
-        top: JSON.stringify([]),
-      });
 
       await Player.update({
         roomId,
@@ -834,8 +806,9 @@ io.on('connection', async (socket) => {
           raw: true,
         })
       ).security;
+      userSecurity.isOpen = false;
 
-      userSecurity.push();
+      
     }
     let userInfo = await Player.findAll({
       where: { roomId },
@@ -845,13 +818,7 @@ io.on('connection', async (socket) => {
 
     let tableInfo = await Table.findOne({
       where: { roomId },
-      attributes: ['blackCards', 'whiteCards', 'users'],
-      raw: true,
-    });
-
-    let roomInfo = await Room.findOne({
-      where: { roomId },
-      attributes: ['turn'],
+      attributes: ['blackCards', 'whiteCards', 'users', 'turn'],
       raw: true,
     });
 
@@ -891,7 +858,7 @@ io.on('connection', async (socket) => {
       cardResult = {
         blackCards: JSON.parse(tableInfo.blackCards).length,
         whiteCards: JSON.parse(tableInfo.whiteCards).length,
-        turn: roomInfo.turn,
+        turn: tableInfo.turn,
         users: gameInfo,
       };
       return cardResult;
@@ -911,20 +878,15 @@ io.on('connection', async (socket) => {
 
   socket.on('next-turn', async () => {
     const roomId = socket.data.roomId;
-    let roomInfo = await Room.findOne({
-      where: { roomId },
-      attributes: ['turn'],
-      raw: true,
-    });
 
     let tableInfo = await Table.findOne({
       where: { roomId },
-      attributes: ['blackCards', 'whiteCards', 'users'],
+      attributes: ['blackCards', 'whiteCards', 'users', 'turn'],
       raw: true,
     });
 
     let turns = JSON.parse(tableInfo.users);
-    let netxTurn = roomInfo.turn;
+    let netxTurn = tableInfo.turn;
 
     for (let i = 0; i < turns.length; i++) {
       if (turns[i].userId === netxTurn) {
@@ -933,7 +895,7 @@ io.on('connection', async (socket) => {
       }
     }
 
-    await Room.update({ turn: netxTurn }, { where: { roomId } });
+    await Table.update({ turn: netxTurn }, { where: { roomId } });
 
     let userInfo = await Player.findAll({
       where: { roomId },
