@@ -564,6 +564,8 @@ io.on('connection', async (socket) => {
       console.log('test console:: ', userCard);
       let changeHand = JSON.parse(userCard.hand);
       let targetSecurity = JSON.parse(userCard.security);
+      console.log('test console::changeHand ', changeHand);
+      console.log('test console::targetSecurity ', targetSecurity);
 
       changeHand.map((el) => {
         if (
