@@ -34,7 +34,7 @@ if (process.env.NODE_ENV === 'development') {
 
 const io = new Server(server, {
   cors: {
-    origin: 'http://localhost:3000',
+    origin: ['http://localhost:3000', 'https://frontend-delta-puce.vercel.app'],
     method: ['GET', 'POST'],
   },
 });
