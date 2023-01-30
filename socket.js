@@ -551,6 +551,7 @@ io.on('connection', async (socket) => {
       result = true;
     } else {
       // 틀렸을 때
+
       console.log('result false');
       console.log('타겟의 값', targetHand[index].value);
       console.log('설정한 값', value);
@@ -561,11 +562,20 @@ io.on('connection', async (socket) => {
       });
 
       console.log('test console:: ', userCard);
-      let changSecurity = JSON.parse(userCard.security);
-      changSecurity.isOpen = true;
+      let changeHand = JSON.parse(userCard.hand);
+      let targetSecurity = JSON.parse(userCard.security);
+
+      changeHand.map((el) => {
+        if (
+          el.value === targetSecurity.value &&
+          el.color === targetHand.color
+        ) {
+          el.isOpen = true;
+        }
+      });
 
       await Player.update(
-        { security: JSON.stringify(changSecurity) },
+        { security: '', hand: JSON.stringify(changeHand) },
         { where: { userId: socket.data.userId } }
       );
 
