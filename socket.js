@@ -562,19 +562,17 @@ io.on('connection', async (socket) => {
       });
 
       console.log('test console:: ', userCard);
-      let hand = JSON.parse(userCard.hand);
+      let changeHand = JSON.parse(userCard.hand);
       let targetSecurity = JSON.parse(userCard.security);
-      console.log('test console::hand ', hand);
+      console.log('test console::changeHand ', changeHand);
       console.log('test console::targetSecurity ', targetSecurity);
 
-      let changeHand = hand.map((el) => {
-        if (
-          el.value === targetSecurity.value &&
-          el.color === targetHand.color
-        ) {
-          el.isOpen = true;
+      for (let i = 0; i < changeHand.length; i++) {
+        if (changeHand[i].value == b.value && changeHand[i].color == b.color) {
+          changeHand[i].isOpen = true;
         }
-      });
+      }
+
       console.log('이후에 변한 값 측정 console:', changeHand);
       await Player.update(
         { security: '', hand: JSON.stringify(changeHand) },
