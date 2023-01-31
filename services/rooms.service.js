@@ -81,7 +81,12 @@ module.exports = class RoomsService {
 
     if (searchType && search) {
       if (searchType === 'number') {
-        const roomId = Number(search);
+        findResult =
+          await this.roomsRepository.findAndCountPagedListFilteredById(
+            page,
+            ROOMS_PER_PAGE,
+            search
+          );
       } else {
         findResult =
           await this.roomsRepository.findAndCountPagedListFilteredByName(

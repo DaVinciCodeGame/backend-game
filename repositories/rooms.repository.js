@@ -87,4 +87,19 @@ module.exports = class RoomsRepository {
       offset,
     });
   };
+
+  findAndCountPagedListFilteredById = (page, limit, search) => {
+    const offset = (page - 1) * limit;
+
+    return Room.findAndCountAll({
+      where: {
+        roomId: {
+          [Op.like]: `%${search}%`,
+        },
+      },
+      order: [['createdAt', 'DESC']],
+      limit,
+      offset,
+    });
+  };
 };
