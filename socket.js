@@ -810,15 +810,11 @@ io.on('connection', async (socket) => {
       // TODO:  게임 오버
       userInfo.forEach((el) => {
         const gameInfo = infoV2(el);
-        console.log(
-          'endingInfoendingInfoendingInfoendingInfoendingInfo',
-          endingInfo
-        );
-        console.log(gameInfo);
-        io.to(el.sids).emit('result-guess', endingInfo, gameInfo);
+        
+        io.to(el.sids).emit('gameover', endingInfo, gameInfo);
       });
 
-      io.to(roomId).emit('gameover', topRank);
+      
     } else {
       userInfo.forEach((el) => {
         const table = info(el);
