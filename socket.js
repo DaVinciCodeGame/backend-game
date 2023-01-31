@@ -1,4 +1,6 @@
 const express = require('express');
+const routes = require('./routes');
+
 const app = express();
 const http = require('http');
 const { Server } = require('socket.io');
@@ -9,10 +11,7 @@ const { Player, Room, Table } = require('./models');
 
 //dotenv.config();
 app.use(cors());
-
-app.get('/', (req, res) => {
-  res.send('OK');
-});
+app.use(routes);
 
 const server = http.createServer(app);
 
