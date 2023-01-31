@@ -690,13 +690,14 @@ io.on('connection', async (socket) => {
         });
       return guessResult;
     }
-
+    console.log(11);
     if (userInfo.filter((user) => user.gameOver == false).length === 1) {
+      console.log(12);
       const winner = await Player.findOne({
         where: roomId,
         [Op.and]: { gameOver: false },
       });
-
+      console.log(13);
       let topRank = JSON.parse(
         (
           await Table.findOne({
@@ -706,6 +707,7 @@ io.on('connection', async (socket) => {
           })
         ).top
       );
+
       console.log(
         'topRanktopRanktopRanktopRanktopRanktopRanktopRanktopRanktopRanktopRanktopRank',
         topRank
@@ -716,6 +718,7 @@ io.on('connection', async (socket) => {
       );
       let endingInfo = topRank;
       await Room.update({ isPlaying: false }, { where: { roomId } });
+      console.log(14);
       await Table.update(
         {
           blackCards: JSON.stringify([
@@ -728,7 +731,7 @@ io.on('connection', async (socket) => {
         },
         { where: { roomId } }
       );
-
+      console.log(15);
       userInfo.forEach(async (el) => {
         await Player.update(
           {
@@ -740,7 +743,7 @@ io.on('connection', async (socket) => {
           { where: { userId: el.userId } }
         );
       });
-
+      console.log(16);
       let userInfoV2 = await Player.findAll({
         where: { roomId },
         attributes: [
@@ -755,13 +758,13 @@ io.on('connection', async (socket) => {
         ],
         raw: true,
       });
-
+      console.log(17);
       let tableInfo = await Table.findOne({
         where: { roomId },
         attributes: ['blackCards', 'whiteCards', 'turn'],
         raw: true,
       });
-
+      console.log(18);
       function info(temp) {
         const some = userInfoV2.map((el) => {
           return {
@@ -792,7 +795,7 @@ io.on('connection', async (socket) => {
             }),
           };
         });
-
+        console.log(19);
         (no_security = userCard.security.length === 0 ? false : true),
           (guessResult = {
             blackCards: JSON.parse(tableInfo.blackCards).length,
@@ -802,7 +805,7 @@ io.on('connection', async (socket) => {
           });
         return guessResult;
       }
-
+      console.log(20);
       // TODO:  게임 오버
       userInfo.forEach((el) => {
         const gameInfo = info(el);
