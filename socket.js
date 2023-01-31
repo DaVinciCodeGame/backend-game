@@ -775,6 +775,13 @@ io.on('connection', async (socket) => {
           { where: { userId: el.userId } }
         );
       });
+      
+      let tableInfo = await Table.findOne({
+        where: { roomId },
+        attributes: ['blackCards', 'whiteCards', 'turn'],
+        raw: true,
+      });
+
       userInfoV2 = await Player.findAll({
         where: { roomId },
         attributes: [
@@ -792,11 +799,6 @@ io.on('connection', async (socket) => {
       console.log('초기화 한 user data', userInfoV2);
       console.log(16);
 
-      let tableInfo = await Table.findOne({
-        where: { roomId },
-        attributes: ['blackCards', 'whiteCards', 'turn'],
-        raw: true,
-      });
       console.log(18);
       function infoV2(temp) {
         const some = userInfoV2.map((el) => {
