@@ -1,4 +1,4 @@
-const { Room } = require('../models');
+const { Room, Table } = require('../models');
 const { Op } = require('sequelize');
 
 module.exports = class RoomsRepository {
@@ -37,15 +37,16 @@ module.exports = class RoomsRepository {
    * @param {number} page
    * @param {number} limit
    * @returns {Promise<{
-   *  totalPage: number,
-   *  rooms: {
-   *    roomId: number,
-   *    roomName: string,
-   *    maxMembers: number,
-   *    isPlaying: boolean,
-   *    createdAt: Date,
-   *    password: string
-   *  } }>}
+   *    totalPage: number,
+   *    rooms: {
+   *      roomId: number,
+   *      roomName: string,
+   *      maxMembers: number,
+   *      isPlaying: boolean,
+   *      createdAt: Date,
+   *      password: string
+   *    }
+   *  }>}
    */
   findAndCountPagedList = (page, limit) => {
     const offset = (page - 1) * limit;
@@ -63,15 +64,16 @@ module.exports = class RoomsRepository {
    * @param {number} limit
    * @param {string} search
    * @returns {Promise<{
-   *  totalPage: number,
-   *  rooms: {
-   *    roomId: number,
-   *    roomName: string,
-   *    maxMembers: number,
-   *    isPlaying: boolean,
-   *    createdAt: Date,
-   *    password: string
-   *  } }>}
+   *   totalPage: number,
+   *   rooms: {
+   *     roomId: number,
+   *     roomName: string,
+   *     maxMembers: number,
+   *     isPlaying: boolean,
+   *     createdAt: Date,
+   *     password: string
+   *   }
+   * }>}
    */
   findAndCountPagedListFilteredByName = (page, limit, search) => {
     const offset = (page - 1) * limit;
@@ -88,6 +90,23 @@ module.exports = class RoomsRepository {
     });
   };
 
+  /**
+   *
+   * @param {number} page
+   * @param {number} limit
+   * @param {string} search
+   * @returns {Promise<{
+   *   totalPage: number,
+   *   rooms: {
+   *     roomId: number,
+   *     roomName: string,
+   *     maxMembers: number,
+   *     isPlaying: boolean,
+   *     createdAt: Date,
+   *     password: string
+   *   }
+   * }>}
+   */
   findAndCountPagedListFilteredById = (page, limit, search) => {
     const offset = (page - 1) * limit;
 
