@@ -48,7 +48,7 @@ module.exports = class RoomsService {
    * @returns {Promise<number>}
    */
   getUnoccupiedRoomId = async () => {
-    const randomGeneratedNumber = Math.floor(Math.random() * 100000 + 1);
+    const randomGeneratedNumber = Math.floor(Math.random() * 99999 + 1);
 
     const existRoom = await this.roomsRepository.findOneById(
       randomGeneratedNumber
@@ -123,4 +123,10 @@ module.exports = class RoomsService {
 
     return { totalPage, rooms };
   };
+
+  /**
+   *
+   * @returns {number}
+   */
+  quickStart = async () => {};
 };
