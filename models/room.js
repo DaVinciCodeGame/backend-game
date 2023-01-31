@@ -4,8 +4,14 @@ const { Model } = require('sequelize');
 module.exports = (sequelize, DataTypes) => {
   class Room extends Model {
     static associate(models) {
-      this.belongsTo(models.Table, { foreignKey: 'tableId' });
-      this.hasMany(models.Player, { foreignKey: 'roomId' });
+      this.belongsTo(models.Table, {
+        foreignKey: 'tableId',
+        onDelete: 'CASCADE',
+      });
+      this.hasMany(models.Player, {
+        foreignKey: 'roomId',
+        onDelete: 'CASCADE',
+      });
     }
   }
 
