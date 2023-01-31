@@ -4,8 +4,14 @@ const { Model } = require('sequelize');
 module.exports = (sequelize, DataTypes) => {
   class Room extends Model {
     static associate(models) {
-      this.belongsTo(models.Table, { foreignKey: 'roomId' });
-      this.hasMany(models.Player, { foreignKey: 'roomId' });
+      this.belongsTo(models.Table, {
+        foreignKey: 'roomId',
+        onDelete: 'CASCADE',
+      });
+      this.hasMany(models.Player, {
+        foreignKey: 'roomId',
+        onDelete: 'CASCADE',
+      });
     }
   }
 
@@ -30,7 +36,6 @@ module.exports = (sequelize, DataTypes) => {
       sequelize,
       modelName: 'Room',
       tableName: 'Room',
-      onDelete: 'CASCADE',
     }
   );
 
