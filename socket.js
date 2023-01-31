@@ -694,8 +694,7 @@ io.on('connection', async (socket) => {
     if (userInfo.filter((user) => user.gameOver == false).length === 1) {
       console.log(12);
       const winner = await Player.findOne({
-        where: roomId,
-        [Op.and]: { gameOver: false },
+        where: { roomId, gameOver: false },
       });
       console.log(13);
       let topRank = JSON.parse(
