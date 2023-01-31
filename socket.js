@@ -1,19 +1,12 @@
-const express = require('express');
-const app = express();
 const http = require('http');
 const { Server } = require('socket.io');
-const cors = require('cors');
 const { Op, Sequelize } = require('sequelize');
 require('dotenv');
 const { Player, Room, Table } = require('./models');
+const app = require('./app');
 const { eventName } = require('./eventName');
 
 //dotenv.config();
-app.use(cors());
-
-app.get('/', (req, res) => {
-  res.send('OK');
-});
 
 const server = http.createServer(app);
 
@@ -23,15 +16,13 @@ const { json } = require('sequelize');
 const e = require('express');
 const { table } = require('console');
 
-// db 연결 확인
-if (process.env.NODE_ENV === 'development') {
-  DB.sequelize
-    .sync({ force: false })
-    .then(() => {
-      console.log('database 연결 성공');
-    })
-    .catch(console.error);
-}
+// 테이블 생성
+DB.sequelize
+  .sync()
+  .then(() => {
+    console.log('database 연결 성공');
+  })
+  .catch(console.error);
 
 const io = new Server(server, {
   cors: {
