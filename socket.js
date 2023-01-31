@@ -214,16 +214,16 @@ io.on('connection', async (socket) => {
       raw: true,
     });
 
-    // let userInfoV2 = userInfo.map((el) => {
-    //   return {
-    //     userId: el.userId,
-    //     userName: el.userName,
-    //     userProfileImg: el.userProfileImg,
-    //     isReady: el.isReady ? true : false,
-    //     gameOver: el.gameOver ? true : false,
-    //     hand: JSON.parse(el.hand),
-    //   };
-    // });
+    let userInfoV2 = userInfo.map((el) => {
+      return {
+        userId: el.userId,
+        userName: el.userName,
+        userProfileImg: el.userProfileImg,
+        isReady: el.isReady ? true : false,
+        gameOver: el.gameOver ? true : false,
+        hand: JSON.parse(el.hand),
+      };
+    });
 
     let cardResult = {
       blackCards: JSON.parse(tableInfo.blackCards).length,
