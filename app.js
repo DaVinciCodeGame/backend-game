@@ -9,7 +9,12 @@ const errorHandler = require('./middlewares/error-handler');
 
 const app = express();
 
-app.use(cors());
+app.use(
+  cors({
+    credentials: true,
+    origin: ['https://frontend-delta-puce.vercel.app', 'http://localhost:3000'],
+  })
+);
 app.use(helmet());
 app.use(compression());
 app.use(cookieParser());
