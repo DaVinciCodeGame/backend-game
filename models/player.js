@@ -42,11 +42,15 @@ module.exports = (sequelize, DataTypes) => {
       security: {
         type: DataTypes.STRING,
       },
+      score: {
+        type: DataTypes.INTEGER,
+      },
     },
     {
       sequelize,
       modelName: 'Player',
       tableName: 'Player',
+      onDelete: 'CASCADE',
     }
   );
 
