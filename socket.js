@@ -546,7 +546,7 @@ io.on('connection', async (socket) => {
           })
         ).userName;
         // FIXME 스코어 받아와서 정보 넣어줘야함.
-        topRank.unshift({ userId: userId, userName: name, rank: 50 });
+        topRank.unshift({ userId: userId, userName: name, score: 50 });
 
         await Table.update(
           { top: JSON.stringify(topRank) },
@@ -765,7 +765,7 @@ io.on('connection', async (socket) => {
         raw: true,
       });
       console.log(18);
-      function info(temp) {
+      function infoV2(temp) {
         const some = userInfoV2.map((el) => {
           return {
             userId: el.userId,
@@ -806,14 +806,15 @@ io.on('connection', async (socket) => {
         return guessResult;
       }
 
-      console.log(
-        'endingInfoendingInfoendingInfoendingInfoendingInfo',
-        endingInfo
-      );
       console.log(20);
       // TODO:  게임 오버
       userInfo.forEach((el) => {
-        const gameInfo = info(el);
+        const gameInfo = infoV2(el);
+        console.log(
+          'endingInfoendingInfoendingInfoendingInfoendingInfo',
+          endingInfo
+        );
+        console.log(gameInfo);
         io.to(el.sids).emit('result-guess', endingInfo, gameInfo);
       });
 
