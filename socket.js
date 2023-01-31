@@ -37,15 +37,6 @@ io.on('connection', async (socket) => {
     console.log(`SocketEvent:${e}`);
   });
 
-  socket.on(eventName.SEND_MESSAGE, (msg, room, nickName, addMyMessage) => {
-    console.log(msg);
-    console.log(room);
-    // 소켓 아이디에 맞는 닉네임을 뽑아서 msg와 같이 전송
-
-    socket.to(room).emit(eventName.RECEIVE_MESSAGE, nickName, msg);
-    addMyMessage(nickName, msg);
-  });
-
   socket.on(eventName.JOINED, async (userId, roomId, fn) => {
     // TODO:
     // game-info 필요
@@ -170,6 +161,16 @@ io.on('connection', async (socket) => {
     fn(cardResult);
   });
 
+  socket.on(eventName.SEND_MESSAGE, async (msg, roomId, addMyMessage) => {
+    console.log(msg);
+    console.log(roomId);
+
+    // 소켓 아이디에 맞는 닉네임을 뽑아서 msg와 같이 전송
+
+    socket.to(roomId).emit(eventName.RECEIVE_MESSAGE, msg);
+    addMyMessage(msg);
+  });
+
   socket.on(eventName.READY, async (userId) => {
     const roomId = socket.data.roomId;
     console.log('userId', userId);
@@ -188,7 +189,7 @@ io.on('connection', async (socket) => {
     let readyCount = await Player.findAll({
       where: {
         roomId,
-        [Op.or]: [{ isReady: 1 }],
+        [Op.or]: [{ isReady: true }],
       },
       attributes: ['isReady'],
       raw: true,
@@ -612,11 +613,16 @@ io.on('connection', async (socket) => {
 
         let getUser = await Player.findOne({
           where: { userId: socket.data.userId },
-          attributes: ['userId', 'userName', 'score'],
+          attributes: ['userId', 'userName', 'score', 'gameOver'],
           raw: true,
         });
         // FIXME 스코어 받아와서 정보 넣어줘야함.
-        topRank.unshift(getUser);
+
+        topRank.unshift({
+          userId: getUser.userId,
+          userName: getUser.userName,
+          score: getUser.score,
+        });
 
         await Table.update(
           { top: JSON.stringify(topRank) },
@@ -624,24 +630,46 @@ io.on('connection', async (socket) => {
         );
       }
 
-      // FIXME turn 진행 순서 여러명일 때 기준으로 수정 필요.
-      let roomTurn = await Table.findOne({
-        where: { roomId },
-        attributes: ['turn'],
-        raw: true,
-      });
+      // 턴 목록 필요 ㅇ
+      // 유저 목록 필요 ㅇ
+      // 턴 목록을 넘기면서 유저가 죽었는지 확인
+      // 죽었으면 다음 유저 검색 -> 죽었으면 다음 유저 검색 ->  턴 수정
+
       console.log(5);
-      let usersTurn = await Table.findOne({
+      // let roomTurn = await Table.findOne({
+      //   where: { roomId },
+      //   attributes: ['turn', ],
+      //   raw: true,
+      // });
+      // let usersTurn = await Table.findOne({
+      //   where: { roomId },
+      //   attributes: ['users'],
+      //   raw: true,
+      // });
+
+      let tableInfo = await Table.findOne({
         where: { roomId },
-        attributes: ['users'],
+        attributes: ['turn', 'users'],
         raw: true,
       });
 
-      let turns = JSON.parse(usersTurn.users);
-      let netxTurn = roomTurn.turn;
+      let turns = JSON.parse(tableInfo.users);
+      let netxTurn = tableInfo.turn;
       console.log(6);
+      console.log('turnsturnsturnsturns test:', turns);
+      console.log('gameOvergameOvergameOver test :', getUser.gameOver);
       for (let i = 0; i < turns.length; i++) {
         if (turns[i].userId === netxTurn) {
+          // for(let j=0; j<4; j++){
+          //   if(turns[i].userId ==)
+          // }
+
+          getUser.map((userInfo) => {
+            if (userInfo.userId === asdf) {
+              asd;
+            }
+          });
+
           netxTurn = turns[(i + 1) % turns.length].userId;
           break;
         }
@@ -764,19 +792,20 @@ io.on('connection', async (socket) => {
       );
       console.log(15);
 
-      
-      await Promise.all(userInfo.map(async (el) => {
-        await Player.update(
-          {
-            isReady: false,
-            gameOver: false,
-            hand: JSON.stringify([]),
-            security: '',
-          },
-          { where: { userId: el.userId } }
-        );
-      }))
-      
+      await Promise.all(
+        userInfo.map(async (el) => {
+          await Player.update(
+            {
+              isReady: false,
+              gameOver: false,
+              hand: JSON.stringify([]),
+              security: '',
+            },
+            { where: { userId: el.userId } }
+          );
+        })
+      );
+
       let tableInfo = await Table.findOne({
         where: { roomId },
         attributes: ['blackCards', 'whiteCards', 'turn'],
@@ -1096,6 +1125,8 @@ io.on('connection', async (socket) => {
 
       await Player.destroy({ where: { userId } });
     }
+
+    // 개인이 나갈 때, 방에 정보를 뿌려줘야한다.
   });
 });
 
