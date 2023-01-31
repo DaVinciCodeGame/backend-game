@@ -4,7 +4,7 @@ const { Model } = require('sequelize');
 module.exports = (sequelize, DataTypes) => {
   class Room extends Model {
     static associate(models) {
-      this.belongsTo(models.Table, { foreignKey: 'roomId' });
+      this.belongsTo(models.Table, { foreignKey: 'tableId' });
       this.hasMany(models.Player, { foreignKey: 'roomId' });
     }
   }
@@ -30,7 +30,6 @@ module.exports = (sequelize, DataTypes) => {
       sequelize,
       modelName: 'Room',
       tableName: 'Room',
-      
     }
   );
 
