@@ -25,4 +25,4 @@ const eventName = {
   ROOM_OUT: 'room-out',
   ONGOING: 'ongoing',
 };
-eventName.module.exports = { eventName };
+module.exports = { eventName };
