@@ -37,8 +37,8 @@ module.exports = class RoomsRepository {
    * @param {number} page
    * @param {number} limit
    * @returns {Promise<{
-   *    totalPage: number,
-   *    rooms: {
+   *    count: number,
+   *    rows: {
    *      roomId: number,
    *      roomName: string,
    *      maxMembers: number,
@@ -73,8 +73,8 @@ module.exports = class RoomsRepository {
    * @param {number} limit
    * @param {string} search
    * @returns {Promise<{
-   *    totalPage: number,
-   *    rooms: {
+   *    count: number,
+   *    rows: {
    *      roomId: number,
    *      roomName: string,
    *      maxMembers: number,
@@ -114,8 +114,8 @@ module.exports = class RoomsRepository {
    * @param {number} limit
    * @param {string} search
    * @returns {Promise<{
-   *    totalPage: number,
-   *    rooms: {
+   *    count: number,
+   *    rows: {
    *      roomId: number,
    *      roomName: string,
    *      maxMembers: number,
