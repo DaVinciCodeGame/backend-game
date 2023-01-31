@@ -689,15 +689,22 @@ io.on('connection', async (socket) => {
     // gameover 일 때
     if (userInfo.filter((user) => user.gameOver == false).length === 1) {
       console.log(12);
-      const winner = await Player.findOne({
+      let winner = await Player.findOne({
         where: {
           roomId,
-          [Op.or]: [{ gameOver: false }],
         },
-        attributes: ['userId, userName', 'score'],
+        attributes: ['userId, userName', 'score', 'gameOver'],
         raw: true,
       });
-
+      let winnerFilter = winner.map((user) => {
+        if (user.gameOver === false)
+          return {
+            userId: user.userId,
+            userName: user.userName,
+            score: user.score,
+          };
+      });
+      console.log('winnerFilter::::::::::::::', winnerFilter);
       console.log(13);
       let topRank = JSON.parse(
         (
@@ -708,9 +715,9 @@ io.on('connection', async (socket) => {
           })
         ).top
       );
-      console.log('승리 user 정보:::::', winner);
+      console.log('승리 user 정보:::::', winnerFilter);
       console.log('topRank 정보:::::', topRank);
-      topRank.unshift(winner);
+      topRank.unshift(winnerFilter);
       console.log('합친 정보:::::', topRank);
 
       let endingInfo = topRank;
