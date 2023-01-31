@@ -32,9 +32,8 @@ module.exports = class RoomsController {
 
       if (
         (page && Number.isNaN(Number(page))) ||
-        !searchType !== !search ||
         (searchType && searchType !== 'number' && searchType !== 'name') ||
-        (searchType === 'number' && Number.isNaN(Number(search))) ||
+        (searchType === 'number' && search && Number.isNaN(Number(search))) ||
         (searchType === 'name' && typeof search !== 'string')
       ) {
         throw badRequest();
