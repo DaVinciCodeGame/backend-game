@@ -1,17 +1,11 @@
-const express = require('express');
-const routes = require('./routes');
-
-const app = express();
 const http = require('http');
 const { Server } = require('socket.io');
-const cors = require('cors');
 const { Op, Sequelize } = require('sequelize');
 require('dotenv');
 const { Player, Room, Table } = require('./models');
+const app = require('./app');
 
 //dotenv.config();
-app.use(cors());
-app.use(routes);
 
 const server = http.createServer(app);
 
