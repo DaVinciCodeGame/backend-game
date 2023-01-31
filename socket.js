@@ -814,7 +814,7 @@ io.on('connection', async (socket) => {
       // TODO:  게임 오버
       userInfo.forEach((el) => {
         const gameInfo = info(el);
-        io.to(el.sids).emit('result-guess', endingInfo);
+        io.to(el.sids).emit('result-guess', endingInfo, gameInfo);
       });
 
       io.to(roomId).emit('gameover', topRank);
