@@ -148,4 +148,36 @@ module.exports = class RoomsRepository {
       include: Table,
     });
   };
+
+  /**
+   *
+   * @returns {Promise<{
+   *    count: number,
+   *    rows: {
+   *      roomId: number,
+   *      roomName: string,
+   *      maxMembers: number,
+   *      isPlaying: boolean,
+   *      createdAt: Date,
+   *      password: string,
+   *      Table: {
+   *        tableId: number,
+   *        blackCards: string,
+   *        whiteCards: string,
+   *        users: string,
+   *        top: string,
+   *        turn: number,
+   *      } | undefined,
+   *    }[]
+   *  }>}
+   */
+  findAllForQuickStart = () => {
+    return Room.findAll({
+      where: {
+        password: null,
+        isPlaying: false,
+      },
+      include: Table,
+    });
+  };
 };
