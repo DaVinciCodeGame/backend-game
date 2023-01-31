@@ -6,6 +6,7 @@ const cors = require('cors');
 const { Op, Sequelize } = require('sequelize');
 require('dotenv');
 const { Player, Room, Table } = require('./models');
+const { eventName } = require('./eventName');
 
 //dotenv.config();
 app.use(cors());
@@ -45,16 +46,16 @@ io.on('connection', async (socket) => {
     console.log(`SocketEvent:${e}`);
   });
 
-  socket.on('send-message', (msg, room, nickName, addMyMessage) => {
+  socket.on(eventName.SEND_MESSAGE, (msg, room, nickName, addMyMessage) => {
     console.log(msg);
     console.log(room);
     // 소켓 아이디에 맞는 닉네임을 뽑아서 msg와 같이 전송
 
-    socket.to(room).emit('receive-message', nickName, msg);
+    socket.to(room).emit(eventName.RECEIVE_MESSAGE, nickName, msg);
     addMyMessage(nickName, msg);
   });
 
-  socket.on('joined', async (userId, roomId, fn) => {
+  socket.on(eventName.JOINED, async (userId, roomId, fn) => {
     // TODO:
     // game-info 필요
     // roomId에 따른 방 제목 -> 게임 시작시 상단 바 정보(비공개, 인원, 방제목)
@@ -169,11 +170,13 @@ io.on('connection', async (socket) => {
       users: userInfoV2,
     };
 
-    userInfo.forEach((el) => socket.to(el.sids).emit('add-ready', cardResult));
+    userInfo.forEach((el) =>
+      socket.to(el.sids).emit(eventName.ADD_READY, cardResult)
+    );
     fn(cardResult);
   });
 
-  socket.on('ready', async (userId) => {
+  socket.on(eventName.READY, async (userId) => {
     const roomId = socket.data.roomId;
     console.log('userId', userId);
     console.log('roomId', roomId);
@@ -251,7 +254,7 @@ io.on('connection', async (socket) => {
     }
   });
 
-  socket.on('first-draw', async (userId, black, myCard) => {
+  socket.on(eventName.FIRST_DRAW, async (userId, black, myCard) => {
     const roomId = socket.data.roomId;
     const white = 3 - black;
     console.log('userId', userId);
@@ -429,7 +432,7 @@ io.on('connection', async (socket) => {
     }
   });
 
-  socket.on('color-selected', async (userId, color, myCard) => {
+  socket.on(eventName.COLOR_SELECTED, async (userId, color, myCard) => {
     let roomId = socket.data.roomId;
     let oneCard = {};
     let cardResult = await Table.findOne({
@@ -486,11 +489,11 @@ io.on('connection', async (socket) => {
       raw: true,
     });
     userInfo.forEach((el) =>
-      socket.to(el.sids).emit('result-select', { userId, color })
+      socket.to(el.sids).emit(eventName.RESULT_SELECT, { userId, color })
     );
   });
 
-  socket.on('guess', async (userId, { index, value }) => {
+  socket.on(eventName.GUESS, async (userId, { index, value }) => {
     const roomId = socket.data.roomId;
     console.log(userId);
     console.log(index);
@@ -732,6 +735,7 @@ io.on('connection', async (socket) => {
         { where: { roomId } }
       );
       console.log(15);
+
       userInfo.forEach(async (el) => {
         await Player.update(
           {
@@ -810,20 +814,20 @@ io.on('connection', async (socket) => {
       // TODO:  게임 오버
       userInfo.forEach((el) => {
         const gameInfo = infoV2(el);
-        
-        io.to(el.sids).emit('gameover', endingInfo, gameInfo);
-      });
+        console.log('endingInfo:::::', endingInfo);
+        console.log('gameInfo:::::', gameInfo);
 
-      
+        io.to(el.sids).emit(eventName.GAMEOVER, endingInfo, gameInfo);
+      });
     } else {
       userInfo.forEach((el) => {
         const table = info(el);
-        io.to(el.sids).emit('result-guess', result, no_security, table);
+        io.to(el.sids).emit(eventName.RESULT_GUESS, result, no_security, table);
       });
     }
   });
 
-  socket.on('place-joker', async (userId, hand) => {
+  socket.on(eventName.PLACE_JOKER, async (userId, hand) => {
     const roomId = socket.data.roomId;
     console.log(userId);
     console.log(hand);
@@ -940,18 +944,18 @@ io.on('connection', async (socket) => {
     }
     userInfo.forEach((el) => {
       const result = info(el);
-      io.to(el.sids).emit('ongoing', result);
+      io.to(el.sids).emit(eventName.ONGOING, result);
     });
   });
 
-  socket.on('select-card-as-security', async (userId, color, value) => {
+  socket.on(eventName.SELECT_CARD_AS_SECURITY, async (userId, color, value) => {
     await Player.update(
       { security: JSON.stringify({ color, value }) },
       { where: { userId } }
     );
   });
 
-  socket.on('next-turn', async () => {
+  socket.on(eventName.NEXT_TURN, async () => {
     const roomId = socket.data.roomId;
 
     let tableInfo = await Table.findOne({
@@ -1018,11 +1022,11 @@ io.on('connection', async (socket) => {
     }
     userInfo.forEach((el) => {
       const result = info(el);
-      io.to(el.sids).emit('next-gameInfo', result);
+      io.to(el.sids).emit(eventName.NEXT_GAMEINFO, result);
     });
   });
 
-  socket.on('room-out', async () => {
+  socket.on(eventName.ROOM_OUT, async () => {
     // 방 나갈 때
     const roomId = socket.data.roomId;
     const userId = socket.data.userId;
