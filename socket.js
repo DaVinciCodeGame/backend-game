@@ -532,13 +532,11 @@ io.on('connection', async (socket) => {
           ).top
         );
 
-        let getUser = (
-          await Player.findOne({
-            where: { userId },
-            attributes: ['userId', 'userName', 'score'],
-            raw: true,
-          })
-        ).userName;
+        let getUser = await Player.findOne({
+          where: { userId },
+          attributes: ['userId', 'userName', 'score'],
+          raw: true,
+        });
         // FIXME 스코어 받아와서 정보 넣어줘야함.
         topRank.unshift(getUser);
 
@@ -587,11 +585,43 @@ io.on('connection', async (socket) => {
         }
       }
       console.log(4);
+      console.log('changeHand값 :', changeHand);
       console.log('이후에 변한 값 측정 console:', changeHand);
-      await Player.update(
-        { security: '', hand: JSON.stringify(changeHand) },
-        { where: { userId: socket.data.userId } }
-      );
+
+      if (changeHand.filter((card) => card.isOpen === false).length) {
+        await Player.update(
+          { hand: JSON.stringify(changeHand) },
+          { where: { userId: socket.data.userId } }
+        );
+      } else {
+        await Player.update(
+          { hand: JSON.stringify(changeHand), gameOver: true, security: '' },
+          { where: { userId: socket.data.userId } }
+        );
+
+        let topRank = JSON.parse(
+          (
+            await Table.findOne({
+              where: { roomId },
+              attributes: ['top'],
+              raw: true,
+            })
+          ).top
+        );
+
+        let getUser = await Player.findOne({
+          where: { userId: socket.data.userId },
+          attributes: ['userId', 'userName', 'score'],
+          raw: true,
+        });
+        // FIXME 스코어 받아와서 정보 넣어줘야함.
+        topRank.unshift(getUser);
+
+        await Table.update(
+          { top: JSON.stringify(topRank) },
+          { where: { roomId } }
+        );
+      }
 
       // FIXME turn 진행 순서 여러명일 때 기준으로 수정 필요.
       let roomTurn = await Table.findOne({
@@ -734,7 +764,6 @@ io.on('connection', async (socket) => {
       console.log(15);
 
       userInfo.forEach(async (el) => {
-        console.log('초기화한 userId', el.userId);
         await Player.update(
           {
             isReady: false,
