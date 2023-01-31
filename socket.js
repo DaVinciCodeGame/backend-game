@@ -68,6 +68,7 @@ io.on('connection', async (socket) => {
     maxMembers = 2;
     isPlaying = false;
     password = 'zizonS2';
+    score = 50;
 
     socket.join(roomId);
     socket.data.roomId = roomId;
@@ -102,6 +103,7 @@ io.on('connection', async (socket) => {
         isReady: false,
         gameOver: false,
         hand: JSON.stringify([]),
+        score,
       });
     } else {
       const result = await Table.findOne({
@@ -120,6 +122,7 @@ io.on('connection', async (socket) => {
         isReady: false,
         gameOver: false,
         hand: JSON.stringify([]),
+        score,
       });
 
       let usersData = JSON.parse(result.users);
@@ -197,55 +200,52 @@ io.on('connection', async (socket) => {
         [Op.or]: [{ isReady: 1 }],
       },
       attributes: ['isReady'],
-
       raw: true,
     });
 
-    let tableInfo = await Table.findOne({
-      where: { roomId },
-      attributes: ['blackCards', 'whiteCards', 'turn'],
-      raw: true,
-    });
+    // let tableInfo = await Table.findOne({
+    //   where: { roomId },
+    //   attributes: ['blackCards', 'whiteCards', 'turn'],
+    //   raw: true,
+    // });
 
-    let userInfo = await Player.findAll({
-      where: { roomId },
-      attributes: [
-        'userId',
-        'userName',
-        'isReady',
-        'gameOver',
-        'hand',
-        'sids',
-        'userProfileImg',
-      ],
-      raw: true,
-    });
+    // let userInfo = await Player.findAll({
+    //   where: { roomId },
+    //   attributes: [
+    //     'userId',
+    //     'userName',
+    //     'isReady',
+    //     'gameOver',
+    //     'hand',
+    //     'sids',
+    //     'userProfileImg',
+    //   ],
+    //   raw: true,
+    // });
 
-    let userInfoV2 = userInfo.map((el) => {
-      return {
-        userId: el.userId,
-        userName: el.userName,
-        userProfileImg: el.userProfileImg,
-        isReady: el.isReady ? true : false,
-        gameOver: el.gameOver ? true : false,
-        hand: JSON.parse(el.hand),
-      };
-    });
+    // let userInfoV2 = userInfo.map((el) => {
+    //   return {
+    //     userId: el.userId,
+    //     userName: el.userName,
+    //     userProfileImg: el.userProfileImg,
+    //     isReady: el.isReady ? true : false,
+    //     gameOver: el.gameOver ? true : false,
+    //     hand: JSON.parse(el.hand),
+    //   };
+    // });
 
-    let cardResult = {
-      blackCards: JSON.parse(tableInfo.blackCards).length,
-      whiteCards: JSON.parse(tableInfo.whiteCards).length,
-      turn: tableInfo.turn,
-      users: userInfoV2,
-    };
+    // let cardResult = {
+    //   blackCards: JSON.parse(tableInfo.blackCards).length,
+    //   whiteCards: JSON.parse(tableInfo.whiteCards).length,
+    //   turn: tableInfo.turn,
+    //   users: userInfoV2,
+    // };
 
     const members = await Room.findOne({
       where: { roomId },
       attributes: ['maxMembers'],
       raw: true,
     });
-
-    console.log('members : ', members.maxMembers);
 
     userInfo.forEach((el) => io.to(el.sids).emit('add-ready', cardResult));
     if (readyCount.length === members.maxMembers) {
@@ -541,15 +541,15 @@ io.on('connection', async (socket) => {
           ).top
         );
 
-        let name = (
+        let getUser = (
           await Player.findOne({
             where: { userId },
-            attributes: ['userName'],
+            attributes: ['userId', 'userName', 'score'],
             raw: true,
           })
         ).userName;
         // FIXME 스코어 받아와서 정보 넣어줘야함.
-        topRank.unshift({ userId: userId, userName: name, score: 50 });
+        topRank.unshift(getUser);
 
         await Table.update(
           { top: JSON.stringify(topRank) },
@@ -694,12 +694,16 @@ io.on('connection', async (socket) => {
       return guessResult;
     }
     console.log(11);
+
+    // gameover 일 때
     if (userInfo.filter((user) => user.gameOver == false).length === 1) {
       console.log(12);
       const winner = await Player.findOne({
         where: { roomId, gameOver: false },
+        attributes: ['userId, userName', 'score'],
         raw: true,
       });
+
       console.log(13);
       let topRank = JSON.parse(
         (
@@ -710,17 +714,16 @@ io.on('connection', async (socket) => {
           })
         ).top
       );
+      console.log('승리 user 정보:::::', winner);
+      console.log('topRank 정보:::::', topRank);
+      topRank.unshift(winner);
+      console.log('합친 정보:::::', topRank);
 
-      console.log(
-        'topRanktopRanktopRanktopRanktopRanktopRanktopRanktopRanktopRanktopRanktopRank',
-        topRank
-      );
-      console.log(
-        'winnerwinnerwinnerwinnerwinnerwinnerwinnerwinnerwinnerwinnerwinnerwinnerwinnerwinnerwinnerwinner',
-        winner
-      );
       let endingInfo = topRank;
-      await Room.update({ isPlaying: false }, { where: { roomId } });
+      await Room.update(
+        { isPlaying: false, turn: winner.userId },
+        { where: { roomId } }
+      );
       console.log(14);
       await Table.update(
         {
@@ -737,6 +740,7 @@ io.on('connection', async (socket) => {
       console.log(15);
 
       userInfo.forEach(async (el) => {
+        console.log('초기화한 userId', el.userId);
         await Player.update(
           {
             isReady: false,
@@ -746,6 +750,10 @@ io.on('connection', async (socket) => {
           },
           { where: { userId: el.userId } }
         );
+
+        // console 확인용 탐색 :: 제거 예정
+        let data = await Player.findOne({ where: { userId: el.userId } });
+        console.log('초기화 한 user data', data);
       });
       console.log(16);
       let userInfoV2 = await Player.findAll({
