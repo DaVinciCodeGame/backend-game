@@ -15,9 +15,9 @@ module.exports = (sequelize, DataTypes) => {
         primaryKey: true,
         allowNull: false,
       },
-      roomId: {
-        type: DataTypes.INTEGER,
-      },
+      // roomId: {
+      //   type: DataTypes.INTEGER,
+      // },
       sids: {
         type: DataTypes.STRING,
       },
