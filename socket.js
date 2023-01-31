@@ -503,6 +503,7 @@ io.on('connection', async (socket) => {
     let guessResult = {};
     let userCard;
     let no_security;
+    let userInfoV2;
 
     // HACK: 타겟유저의 카드를 맞췄을 때
     if (targetHand[index].value === value) {
@@ -773,17 +774,9 @@ io.on('connection', async (socket) => {
           },
           { where: { userId: el.userId } }
         );
-
-        // console 확인용 탐색 :: 제거 예정
-        let data = await Player.findOne({
-          where: { userId: el.userId },
-          raw: true,
-        });
-        console.log('초기화 한 user data', data);
       });
-      console.log(16);
-      let userInfoV2 = await Player.findAll({
-        where: { roomId },
+      userInfoV2 = await Player.findAll({
+        where: { userId: el.userId },
         attributes: [
           'userId',
           'userName',
@@ -796,7 +789,9 @@ io.on('connection', async (socket) => {
         ],
         raw: true,
       });
-      console.log(17);
+      console.log('초기화 한 user data', userInfoV2);
+      console.log(16);
+
       let tableInfo = await Table.findOne({
         where: { roomId },
         attributes: ['blackCards', 'whiteCards', 'turn'],
