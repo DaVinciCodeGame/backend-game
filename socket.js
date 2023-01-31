@@ -248,28 +248,6 @@ io.on('connection', async (socket) => {
     if (readyCount.length === members.maxMembers) {
       userInfo.forEach((el) => io.to(el.sids).emit('game-start'));
       await Room.update({ isPlaying: true }, { where: { roomId } });
-
-      let tableInfo = await Table.findOne({
-        where: { roomId },
-        attributes: ['users', 'turn'],
-        raw: true,
-      });
-
-      let tempUsers = JSON.parse(tableInfo.users);
-
-      await Table.update(
-        {
-          turn: JSON.stringify(tempUsers[0].userId),
-          blackCards: JSON.stringify([
-            0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12,
-          ]),
-          whiteCards: JSON.stringify([
-            0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12,
-          ]),
-          top: JSON.stringify([]),
-        },
-        { where: { roomId } }
-      );
     }
   });
 
@@ -567,8 +545,8 @@ io.on('connection', async (socket) => {
             raw: true,
           })
         ).userName;
-
-        topRank.unshift({ userId: userId, userName: name });
+        // FIXME 스코어 받아와서 정보 넣어줘야함.
+        topRank.unshift({ userId: userId, userName: name, score: 50 });
 
         await Table.update(
           { top: JSON.stringify(topRank) },
@@ -647,87 +625,6 @@ io.on('connection', async (socket) => {
       await Table.update({ turn: netxTurn }, { where: { roomId } });
 
       result = false;
-      // let tempSecurity;
-      // if (userCard.security.length > 0) {
-      //   tempSecurity = JSON.parse(userCard.security);
-      //   tempSecurity.isOpen = true;
-      // }
-
-      // let tempHand = JSON.parse(userCard.hand);
-
-      // tempHand.push(tempSecurity);
-      // let jokerIndex = [];
-      // let jokerCard = [];
-      // for (let i = 0; i < tempHand.length; i++) {
-      //   if (tempHand[i].value === 12) {
-      //     jokerIndex.push(i);
-      //     jokerCard.push(tempHand[i]);
-      //   }
-      // }
-
-      // jokerIndex.map((el, i) => {
-      //   tempHand.splice(el - i, 1);
-      // });
-
-      // tempHand
-      //   .sort((a, b) => a.value - b.value)
-      //   .sort((a, b) => {
-      //     if (a.value === b.value) {
-      //       if (a.color < b.color) return -1;
-      //       else if (b.color < a.color) return 1;
-      //       else return 0;
-      //     }
-      //   });
-
-      // for (let i = 0; i < jokerIndex.length; i++) {
-      //   tempHand.splice(jokerIndex[i], 0, jokerCard[i]);
-      // }
-
-      // if (tempHand.filter((card) => card.isOpen === false).length) {
-      //   await Player.update(
-      //     { hand: JSON.stringify(tempHand), security: '' },
-      //     { where: { userId: socket.data.userId } }
-      //   );
-      //   console.log('3번콘솔', {
-      //     hand: JSON.stringify(tempHand),
-      //     security: '',
-      //   });
-      // } else {
-      //   await Player.update(
-      //     { hand: JSON.stringify(tempHand), security: '', gameOver: true },
-      //     { where: { userId: socket.data.userId } }
-      //   );
-      //   let topRank = JSON.parse(
-      //     (
-      //       await Table.findOne({
-      //         where: { roomId },
-      //         attributes: ['top'],
-      //         raw: true,
-      //       })
-      //     ).top
-      //   );
-
-      //   let name = (
-      //     await Player.findOne({
-      //       where: { userId },
-      //       attributes: ['userName'],
-      //       raw: true,
-      //     })
-      //   ).userName;
-
-      //   topRank.unshift({ userId: userId, userName: name });
-
-      //   await Table.update(
-      //     { top: JSON.stringify(topRank) },
-      //     { where: { roomId } }
-      //   );
-
-      //   console.log('4번콘솔', {
-      //     hand: JSON.stringify(tempHand),
-      //     security: '',
-      //     gameOver: true,
-      //   });
-      // }
     }
 
     // TODO: 전체적으로 뿌려주기 전에 상태값 다 입히기.
@@ -794,6 +691,11 @@ io.on('connection', async (socket) => {
     }
 
     if (userInfo.filter((user) => user.gameOver == false).length === 1) {
+      const winner = await Player.findOne({
+        where: roomId,
+        [Op.and]: { gameOver: false },
+      });
+
       let topRank = JSON.parse(
         (
           await Table.findOne({
@@ -803,10 +705,110 @@ io.on('connection', async (socket) => {
           })
         ).top
       );
+      console.log(
+        'topRanktopRanktopRanktopRanktopRanktopRanktopRanktopRanktopRanktopRanktopRank',
+        topRank
+      );
+      console.log(
+        'winnerwinnerwinnerwinnerwinnerwinnerwinnerwinnerwinnerwinnerwinnerwinnerwinnerwinnerwinnerwinner',
+        winner
+      );
+      let endingInfo = topRank;
+      await Room.update({ isPlaying: false }, { where: { roomId } });
+      await Table.update(
+        {
+          blackCards: JSON.stringify([
+            0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12,
+          ]),
+          whiteCards: JSON.stringify([
+            0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12,
+          ]),
+          top: JSON.stringify([]),
+        },
+        { where: { roomId } }
+      );
+
+      userInfo.forEach(async (el) => {
+        await Player.update(
+          {
+            isReady: false,
+            gameOver: false,
+            hand: JSON.stringify([]),
+            security: '',
+          },
+          { where: { userId: el.userId } }
+        );
+      });
+
+      let userInfoV2 = await Player.findAll({
+        where: { roomId },
+        attributes: [
+          'userId',
+          'userName',
+          'isReady',
+          'gameOver',
+          'hand',
+          'sids',
+          'userProfileImg',
+          'security',
+        ],
+        raw: true,
+      });
+
+      let tableInfo = await Table.findOne({
+        where: { roomId },
+        attributes: ['blackCards', 'whiteCards', 'turn'],
+        raw: true,
+      });
+
+      function info(temp) {
+        const some = userInfoV2.map((el) => {
+          return {
+            userId: el.userId,
+            userName: el.userName,
+            userProfileImg: '',
+            gameOver: el.gameOver ? true : false,
+            hand: JSON.parse(el.hand).map((card) => {
+              if (el.userId === temp.userId) {
+                return {
+                  color: card.color,
+                  value: card.value,
+                  isOpen: card.isOpen,
+                };
+              } else if (!card.isOpen) {
+                return {
+                  color: card.color,
+                  value: 'Back',
+                  isOpen: card.isOpen,
+                };
+              } else {
+                return {
+                  color: card.color,
+                  value: card.value,
+                  isOpen: card.isOpen,
+                };
+              }
+            }),
+          };
+        });
+
+        (no_security = userCard.security.length === 0 ? false : true),
+          (guessResult = {
+            blackCards: JSON.parse(tableInfo.blackCards).length,
+            whiteCards: JSON.parse(tableInfo.whiteCards).length,
+            turn: tableInfo.turn,
+            users: some,
+          });
+        return guessResult;
+      }
+
+      // TODO:  게임 오버
+      userInfo.forEach((el) => {
+        const gameInfo = info(el);
+        io.to(el.sids).emit('result-guess', endingInfo, gameInfo);
+      });
 
       io.to(roomId).emit('gameover', topRank);
-
-      // TODO: turn 넘길 때 죽어있는 유저는 빼고 넘겨야한다.
     } else {
       userInfo.forEach((el) => {
         const table = info(el);
