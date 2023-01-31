@@ -558,7 +558,7 @@ io.on('connection', async (socket) => {
           gameOver: true,
         });
       }
-
+      console.log(1);
       userCard = await Player.findOne({
         where: { userId },
         attributes: ['hand', 'security'],
@@ -568,7 +568,7 @@ io.on('connection', async (socket) => {
       result = true;
     } else {
       // 틀렸을 때
-
+      console.log(2);
       console.log('result false');
       console.log('타겟의 값', targetHand[index].value);
       console.log('설정한 값', value);
@@ -577,7 +577,7 @@ io.on('connection', async (socket) => {
         attributes: ['hand', 'security'],
         raw: true,
       });
-
+      console.log(3);
       console.log('test console:: ', userCard);
       let changeHand = JSON.parse(userCard.hand);
       let targetSecurity = JSON.parse(userCard.security);
@@ -592,7 +592,7 @@ io.on('connection', async (socket) => {
           changeHand[i].isOpen = true;
         }
       }
-
+      console.log(4);
       console.log('이후에 변한 값 측정 console:', changeHand);
       await Player.update(
         { security: '', hand: JSON.stringify(changeHand) },
@@ -605,7 +605,7 @@ io.on('connection', async (socket) => {
         attributes: ['turn'],
         raw: true,
       });
-
+      console.log(5);
       let usersTurn = await Table.findOne({
         where: { roomId },
         attributes: ['users'],
@@ -614,20 +614,21 @@ io.on('connection', async (socket) => {
 
       let turns = JSON.parse(usersTurn.users);
       let netxTurn = roomTurn.turn;
-
+      console.log(6);
       for (let i = 0; i < turns.length; i++) {
         if (turns[i].userId === netxTurn) {
           netxTurn = turns[(i + 1) % turns.length].userId;
           break;
         }
       }
-
+      console.log(7);
       await Table.update({ turn: netxTurn }, { where: { roomId } });
 
       result = false;
     }
 
     // TODO: 전체적으로 뿌려주기 전에 상태값 다 입히기.
+    console.log(8);
     let userInfo = await Player.findAll({
       where: { roomId },
       attributes: [
@@ -642,7 +643,7 @@ io.on('connection', async (socket) => {
       ],
       raw: true,
     });
-
+    console.log(9);
     let tableInfo = await Table.findOne({
       where: { roomId },
       attributes: ['blackCards', 'whiteCards', 'turn'],
@@ -679,7 +680,7 @@ io.on('connection', async (socket) => {
           }),
         };
       });
-
+      console.log(10);
       (no_security = userCard.security.length === 0 ? false : true),
         (guessResult = {
           blackCards: JSON.parse(tableInfo.blackCards).length,
