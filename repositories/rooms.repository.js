@@ -8,7 +8,15 @@ module.exports = class RoomsRepository {
    * @param {string} roomName
    * @param {number} maxMembers
    * @param {string | undefined} password
-   * @returns {Promise<Room>}
+   * @returns {Promise<{
+   *    roomId: number,
+   *    roomName: string,
+   *    maxMembers: number,
+   *    isPlaying: boolean,
+   *    createdAt: Date,
+   *    password: string,
+   *    Table: undefined,
+   *  }>}
    */
   create = (roomId, roomName, maxMembers, password) => {
     const room = Room.create({
@@ -24,7 +32,15 @@ module.exports = class RoomsRepository {
   /**
    *
    * @param {number} roomId
-   * @returns {Promise<Room>}
+   * @returns {Promise<{
+   *    roomId: number,
+   *    roomName: string,
+   *    maxMembers: number,
+   *    isPlaying: boolean,
+   *    createdAt: Date,
+   *    password: string,
+   *    Table: undefined,
+   *  }>}
    */
   findOneById = (roomId) => {
     return Room.findOne({
