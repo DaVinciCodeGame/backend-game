@@ -30,8 +30,6 @@ module.exports = class RoomsController {
     try {
       const { page, searchType, search } = req.query;
 
-      console.log(page && Number(page));
-
       if (
         Number.isNaN(page && Number(page)) ||
         !searchType !== !search ||
