@@ -53,7 +53,7 @@ module.exports = class RoomsRepository {
    *        top: string,
    *        turn: number,
    *      } | undefined,
-   *    }
+   *    }[]
    *  }>}
    */
   findAndCountPagedList = (page, limit) => {
@@ -89,7 +89,7 @@ module.exports = class RoomsRepository {
    *        top: string,
    *        turn: number,
    *      } | undefined,
-   *    }
+   *    }[]
    *  }>}
    */
   findAndCountPagedListFilteredByName = (page, limit, search) => {
@@ -130,7 +130,7 @@ module.exports = class RoomsRepository {
    *        top: string,
    *        turn: number,
    *      } | undefined,
-   *    }
+   *    }[]
    *  }>}
    */
   findAndCountPagedListFilteredById = (page, limit, search) => {
