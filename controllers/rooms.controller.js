@@ -31,10 +31,9 @@ module.exports = class RoomsController {
       const { page, searchType, search } = req.query;
 
       if (
-        Number.isNaN(page && Number(page)) ||
-        !searchType !== !search ||
+        (page && Number.isNaN(Number(page))) ||
         (searchType && searchType !== 'number' && searchType !== 'name') ||
-        (searchType === 'number' && Number.isNaN(Number(search))) ||
+        (searchType === 'number' && search && Number.isNaN(Number(search))) ||
         (searchType === 'name' && typeof search !== 'string')
       ) {
         throw badRequest();
@@ -50,6 +49,9 @@ module.exports = class RoomsController {
 
   quickStart = async (req, res, next) => {
     try {
+      const roomId = await this.roomsService.quickStart();
+
+      res.status(200).json(roomId);
     } catch (err) {
       next(err);
     }
