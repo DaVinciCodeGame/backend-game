@@ -644,7 +644,7 @@ io.on('connection', async (socket) => {
       raw: true,
     });
     console.log(9);
-    let tableInfo = await Table.findOne({
+    let tableInfoV2 = await Table.findOne({
       where: { roomId },
       attributes: ['blackCards', 'whiteCards', 'turn'],
       raw: true,
@@ -683,9 +683,9 @@ io.on('connection', async (socket) => {
       console.log(10);
       (no_security = userCard.security.length === 0 ? false : true),
         (guessResult = {
-          blackCards: JSON.parse(tableInfo.blackCards).length,
-          whiteCards: JSON.parse(tableInfo.whiteCards).length,
-          turn: tableInfo.turn,
+          blackCards: JSON.parse(tableInfoV2.blackCards).length,
+          whiteCards: JSON.parse(tableInfoV2.whiteCards).length,
+          turn: tableInfoV2.turn,
           users: some,
         });
       return guessResult;
