@@ -209,19 +209,19 @@ io.on('connection', async (socket) => {
     //   raw: true,
     // });
 
-    // let userInfo = await Player.findAll({
-    //   where: { roomId },
-    //   attributes: [
-    //     'userId',
-    //     'userName',
-    //     'isReady',
-    //     'gameOver',
-    //     'hand',
-    //     'sids',
-    //     'userProfileImg',
-    //   ],
-    //   raw: true,
-    // });
+    let userInfo = await Player.findAll({
+      where: { roomId },
+      attributes: [
+        'userId',
+        'userName',
+        'isReady',
+        'gameOver',
+        'hand',
+        'sids',
+        'userProfileImg',
+      ],
+      raw: true,
+    });
 
     // let userInfoV2 = userInfo.map((el) => {
     //   return {
