@@ -746,7 +746,10 @@ io.on('connection', async (socket) => {
         );
 
         // console 확인용 탐색 :: 제거 예정
-        let data = await Player.findOne({ where: { userId: el.userId } });
+        let data = await Player.findOne({
+          where: { userId: el.userId },
+          raw: true,
+        });
         console.log('초기화 한 user data', data);
       });
       console.log(16);
@@ -779,7 +782,9 @@ io.on('connection', async (socket) => {
             userProfileImg: '',
             gameOver: el.gameOver ? true : false,
             hand: JSON.parse(el.hand).map((card) => {
-              if (el.userId === temp.userId) {
+              if (card == '[]') {
+                return card;
+              } else if (el.userId === temp.userId) {
                 return {
                   color: card.color,
                   value: card.value,
