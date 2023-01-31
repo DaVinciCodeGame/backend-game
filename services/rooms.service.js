@@ -104,14 +104,17 @@ module.exports = class RoomsService {
     const { count, rows } = findResult;
 
     const rooms = rows.map(
-      ({ maxMembers, isPlaying, roomId, roomName, password }) => {
+      ({ maxMembers, isPlaying, roomId, roomName, password, Table: table }) => {
+        const currentMembers = table ? JSON.parse(table.users).length : 0;
+        const isPrivate = Boolean(password);
+
         return {
-          currentMembers: 0,
+          currentMembers,
           maxMembers,
           isPlaying,
           roomId,
           roomName,
-          isPrivate: Boolean(password),
+          isPrivate,
         };
       }
     );

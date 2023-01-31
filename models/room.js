@@ -5,7 +5,7 @@ module.exports = (sequelize, DataTypes) => {
   class Room extends Model {
     static associate(models) {
       this.belongsTo(models.Table, {
-        foreignKey: 'roomId',
+        foreignKey: 'tableId',
         onDelete: 'CASCADE',
       });
       this.hasMany(models.Player, {
