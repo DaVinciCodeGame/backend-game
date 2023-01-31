@@ -30,4 +30,29 @@ module.exports = class RoomsRepository {
       where: { roomId },
     });
   };
+
+  /**
+   *
+   * @param {number} page
+   * @param {number} limit
+   * @returns {Promise<{
+   *  totalPage: number,
+   *  rooms: {
+   *    roomId: number,
+   *    roomName: string,
+   *    maxMembers: number,
+   *    isPlaying: boolean,
+   *    createdAt: Date,
+   *    password: string
+   *  } }>}
+   */
+  findAndCountPagedList = (page, limit) => {
+    const offset = (page - 1) * limit;
+
+    return Room.findAndCountAll({
+      order: [['createdAt', 'DESC']],
+      limit,
+      offset,
+    });
+  };
 };

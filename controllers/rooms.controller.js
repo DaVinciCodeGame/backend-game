@@ -28,6 +28,23 @@ module.exports = class RoomsController {
 
   getRooms = async (req, res, next) => {
     try {
+      const { page, searchType, search } = req.query;
+
+      console.log(page && Number(page));
+
+      if (
+        Number.isNaN(page && Number(page)) ||
+        !searchType !== !search ||
+        (searchType && searchType !== 'number' && searchType !== 'name') ||
+        (searchType === 'number' && Number.isNaN(Number(search))) ||
+        (searchType === 'name' && typeof search !== 'string')
+      ) {
+        throw badRequest();
+      }
+
+      const result = await this.roomsService.getRooms(page, searchType, search);
+
+      res.status(200).json(result);
     } catch (err) {
       next(err);
     }
