@@ -764,7 +764,8 @@ io.on('connection', async (socket) => {
       );
       console.log(15);
 
-      userInfo.forEach(async (el) => {
+      
+      await Promise.all(userInfo.map(async (el) => {
         await Player.update(
           {
             isReady: false,
@@ -774,7 +775,7 @@ io.on('connection', async (socket) => {
           },
           { where: { userId: el.userId } }
         );
-      });
+      }))
       
       let tableInfo = await Table.findOne({
         where: { roomId },
@@ -806,6 +807,7 @@ io.on('connection', async (socket) => {
             userId: el.userId,
             userName: el.userName,
             userProfileImg: '',
+            isReady: el.isReady,
             gameOver: el.gameOver ? true : false,
             hand: JSON.parse(el.hand).map((card) => {
               if (card == '[]') {
