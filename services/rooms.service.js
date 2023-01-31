@@ -80,13 +80,16 @@ module.exports = class RoomsService {
     let findResult;
 
     if (searchType && search) {
-      // if (searchType === 'number') {
-      //   const roomId = Number(search);
-      // }
-      findResult = await this.roomsRepository.findAndCountPagedList(
-        page,
-        ROOMS_PER_PAGE
-      );
+      if (searchType === 'number') {
+        const roomId = Number(search);
+      } else {
+        findResult =
+          await this.roomsRepository.findAndCountPagedListFilteredByName(
+            page,
+            ROOMS_PER_PAGE,
+            search
+          );
+      }
     } else {
       findResult = await this.roomsRepository.findAndCountPagedList(
         page,

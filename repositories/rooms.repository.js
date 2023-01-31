@@ -1,4 +1,5 @@
 const { Room } = require('../models');
+const { Op } = require('sequelize');
 
 module.exports = class RoomsRepository {
   /**
@@ -50,6 +51,37 @@ module.exports = class RoomsRepository {
     const offset = (page - 1) * limit;
 
     return Room.findAndCountAll({
+      order: [['createdAt', 'DESC']],
+      limit,
+      offset,
+    });
+  };
+
+  /**
+   *
+   * @param {number} page
+   * @param {number} limit
+   * @param {string} search
+   * @returns {Promise<{
+   *  totalPage: number,
+   *  rooms: {
+   *    roomId: number,
+   *    roomName: string,
+   *    maxMembers: number,
+   *    isPlaying: boolean,
+   *    createdAt: Date,
+   *    password: string
+   *  } }>}
+   */
+  findAndCountPagedListFilteredByName = (page, limit, search) => {
+    const offset = (page - 1) * limit;
+
+    return Room.findAndCountAll({
+      where: {
+        roomName: {
+          [Op.like]: `%${search}%`,
+        },
+      },
       order: [['createdAt', 'DESC']],
       limit,
       offset,
