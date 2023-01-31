@@ -126,7 +126,33 @@ module.exports = class RoomsService {
 
   /**
    *
-   * @returns {number}
+   * @returns {Promise<number>}
    */
-  quickStart = async () => {};
+  quickStart = async () => {
+    const roomsForQuickStart =
+      await this.roomsRepository.findAllForQuickStart();
+
+    const notFullRooms = roomsForQuickStart.filter(
+      ({ maxMembers, Table: table }) => {
+        const currentMembers = table ? JSON.parse(table.users).length : 0;
+
+        return maxMembers > currentMembers;
+      }
+    );
+
+    if (notFullRooms.length === 0) {
+      const roomId = await this.getUnoccupiedRoomId();
+
+      const newRoom = await this.roomsRepository.create(
+        roomId,
+        '초보자 환영! 같이 배우면서 즐겨요.',
+        4
+      );
+      return newRoom.roomId;
+    }
+
+    const randomIndex = Math.floor(Math.random() * notFullRooms.length);
+
+    return notFullRooms[randomIndex].roomId;
+  };
 };

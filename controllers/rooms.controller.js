@@ -50,6 +50,9 @@ module.exports = class RoomsController {
 
   quickStart = async (req, res, next) => {
     try {
+      const roomId = await this.roomsService.quickStart();
+
+      res.status(200).json(roomId);
     } catch (err) {
       next(err);
     }
