@@ -776,7 +776,7 @@ io.on('connection', async (socket) => {
         );
       });
       userInfoV2 = await Player.findAll({
-        where: { userId: el.userId },
+        where: { roomId },
         attributes: [
           'userId',
           'userName',
