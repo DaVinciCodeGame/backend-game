@@ -194,11 +194,11 @@ io.on('connection', async (socket) => {
       raw: true,
     });
 
-    // let tableInfo = await Table.findOne({
-    //   where: { roomId },
-    //   attributes: ['blackCards', 'whiteCards', 'turn'],
-    //   raw: true,
-    // });
+    let tableInfo = await Table.findOne({
+      where: { roomId },
+      attributes: ['blackCards', 'whiteCards', 'turn'],
+      raw: true,
+    });
 
     let userInfo = await Player.findAll({
       where: { roomId },
@@ -225,12 +225,12 @@ io.on('connection', async (socket) => {
     //   };
     // });
 
-    // let cardResult = {
-    //   blackCards: JSON.parse(tableInfo.blackCards).length,
-    //   whiteCards: JSON.parse(tableInfo.whiteCards).length,
-    //   turn: tableInfo.turn,
-    //   users: userInfoV2,
-    // };
+    let cardResult = {
+      blackCards: JSON.parse(tableInfo.blackCards).length,
+      whiteCards: JSON.parse(tableInfo.whiteCards).length,
+      turn: tableInfo.turn,
+      users: userInfoV2,
+    };
 
     const members = await Room.findOne({
       where: { roomId },
