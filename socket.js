@@ -695,6 +695,7 @@ io.on('connection', async (socket) => {
       console.log(12);
       const winner = await Player.findOne({
         where: { roomId, gameOver: false },
+        raw: true,
       });
       console.log(13);
       let topRank = JSON.parse(
@@ -808,7 +809,7 @@ io.on('connection', async (socket) => {
       // TODO:  게임 오버
       userInfo.forEach((el) => {
         const gameInfo = info(el);
-        io.to(el.sids).emit('result-guess', endingInfo, gameInfo);
+        io.to(el.sids).emit('result-guess', endingInfo);
       });
 
       io.to(roomId).emit('gameover', topRank);
