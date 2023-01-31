@@ -546,7 +546,7 @@ io.on('connection', async (socket) => {
           })
         ).userName;
         // FIXME 스코어 받아와서 정보 넣어줘야함.
-        topRank.unshift({ userId: userId, userName: name, score: 50 });
+        topRank.unshift({ userId: userId, userName: name, rank: 50 });
 
         await Table.update(
           { top: JSON.stringify(topRank) },
