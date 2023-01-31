@@ -152,24 +152,21 @@ module.exports = class RoomsRepository {
   /**
    *
    * @returns {Promise<{
-   *    count: number,
-   *    rows: {
-   *      roomId: number,
-   *      roomName: string,
-   *      maxMembers: number,
-   *      isPlaying: boolean,
-   *      createdAt: Date,
-   *      password: string,
-   *      Table: {
-   *        tableId: number,
-   *        blackCards: string,
-   *        whiteCards: string,
-   *        users: string,
-   *        top: string,
-   *        turn: number,
-   *      } | undefined,
-   *    }[]
-   *  }>}
+   *    roomId: number,
+   *    roomName: string,
+   *    maxMembers: number,
+   *    isPlaying: boolean,
+   *    createdAt: Date,
+   *    password: string,
+   *    Table: {
+   *      tableId: number,
+   *      blackCards: string,
+   *      whiteCards: string,
+   *      users: string,
+   *      top: string,
+   *      turn: number,
+   *    } | undefined
+   * }[]>}
    */
   findAllForQuickStart = () => {
     return Room.findAll({
