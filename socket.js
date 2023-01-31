@@ -805,6 +805,11 @@ io.on('connection', async (socket) => {
           });
         return guessResult;
       }
+
+      console.log(
+        'endingInfoendingInfoendingInfoendingInfoendingInfo',
+        endingInfo
+      );
       console.log(20);
       // TODO:  게임 오버
       userInfo.forEach((el) => {
