@@ -55,6 +55,7 @@ module.exports = class RoomsRepository {
       order: [['createdAt', 'DESC']],
       limit,
       offset,
+      include: Table,
     });
   };
 
@@ -87,6 +88,7 @@ module.exports = class RoomsRepository {
       order: [['createdAt', 'DESC']],
       limit,
       offset,
+      include: Table,
     });
   };
 
@@ -119,6 +121,7 @@ module.exports = class RoomsRepository {
       order: [['createdAt', 'DESC']],
       limit,
       offset,
+      include: Table,
     });
   };
 };
