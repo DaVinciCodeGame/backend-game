@@ -1097,11 +1097,13 @@ io.on('connection', async (socket) => {
     console.log(roomId);
     console.log(userId);
 
-    let tableInfo = await Table.findOne({
-      where: { roomId },
-      attributes: ['users', 'turn'],
-      raw: true,
-    });
+    let tableInfo = await Promise.all(
+      Table.findOne({
+        where: { roomId },
+        attributes: ['users', 'turn'],
+        raw: true,
+      })
+    );
 
     let tempUsers = JSON.parse(tableInfo.users);
 
@@ -1127,6 +1129,8 @@ io.on('connection', async (socket) => {
     }
 
     // 개인이 나갈 때, 방에 정보를 뿌려줘야한다.
+    // 갖고있는 패를 열어주고 그 패가 남아있어야 한다.
+    // 한 유저가 게임 진행중에 나가고, 다른방에 들어갈 경우
   });
 });
 
