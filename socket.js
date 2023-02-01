@@ -42,25 +42,18 @@ io.on('connection', async (socket) => {
   });
 
   socket.on(eventName.JOINED, async (userId, roomId, fn) => {
-    console.log(userId);
-    console.log(roomId);
+    console.log(`userId: ${userId}`);
+    console.log(`roomId: ${roomId}`);
     // TODO:
     // game-info 필요
     // roomId에 따른 방 제목 -> 게임 시작시 상단 바 정보(비공개, 인원, 방제목)
     // room 정보 마지막 함수로
     // userName은 main DB에서 추출
-    userName = 'hohoho';
-    userProfileImg = '@#$@#$@#$임시';
-    security = '';
-    roomName = '초고수 방';
-    maxMembers = 2;
-    isPlaying = false;
-    password = 'zizonS2';
-    score = 50;
 
-    socket.join(roomId);
-    socket.data.roomId = roomId;
-    socket.data.userId = userId;
+    // TODO: 쿠키에서 받아올 예정
+    const userName = 'hohoho';
+    const userProfileImg = 'https://cdn.davinci-code.online/1675150781053';
+    const score = 50;
 
     const room = await Room.findOne({ where: { roomId } });
 
@@ -68,6 +61,10 @@ io.on('connection', async (socket) => {
       // TODO: 방 없을 때 에러 처리
       return;
     }
+
+    socket.join(roomId);
+    socket.data.roomId = roomId;
+    socket.data.userId = userId;
 
     let table = room.getTable();
 
@@ -88,7 +85,7 @@ io.on('connection', async (socket) => {
       sids: socket.id,
       userName,
       userProfileImg,
-      security,
+      security: '',
       isReady: false,
       gameOver: false,
       hand: JSON.stringify([]),
