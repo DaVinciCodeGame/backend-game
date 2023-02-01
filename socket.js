@@ -1092,11 +1092,9 @@ io.on('connection', async (socket) => {
     console.log(userId);
     let userInfoV2;
 
-    let tableInfo = await Table.findOne({
-      where: { roomId },
-      attributes: ['blackCards', 'whiteCards', 'users', 'turn'],
-      raw: true,
-    });
+    const room = Room.findOne({ where: { roomId } });
+
+    const table = room.getTable();
 
     let isPlaying = (
       await Room.findOne({
@@ -1107,7 +1105,7 @@ io.on('connection', async (socket) => {
     ).isPlaying;
     console.log('isPlaying', isPlaying);
 
-    let tempUsers = JSON.parse(tableInfo.users);
+    let tempUsers = JSON.parse(table.users);
 
     for (let i = 0; i < tempUsers.length; i++) {
       if (tempUsers[i].userId == userId) {
@@ -1385,8 +1383,8 @@ io.on('connection', async (socket) => {
           };
         });
         cardResult = {
-          blackCards: JSON.parse(tableInfo.blackCards).length,
-          whiteCards: JSON.parse(tableInfo.whiteCards).length,
+          blackCards: JSON.parse(table.blackCards).length,
+          whiteCards: JSON.parse(table.whiteCards).length,
           //turn: netxTurn,
           users: gameInfo,
         };
