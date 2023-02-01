@@ -1183,7 +1183,14 @@ io.on('connection', async (socket) => {
 
     let userInfo = await Player.findAll({
       where: { roomId },
-      attributes: ['userId', 'userName', 'gameOver', 'hand', 'sids'],
+      attributes: [
+        'userId',
+        'userName',
+        'gameOver',
+        'hand',
+        'sids',
+        'needToBeDeleted',
+      ],
       raw: true,
     });
 
