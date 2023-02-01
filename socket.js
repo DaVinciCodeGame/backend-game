@@ -32,13 +32,13 @@ io.on('connection', async (socket) => {
     console.log(`SocketEvent:${e}`);
   });
 
-  socket.on(eventName.SEND_MESSAGE, (msg, room, nickName, addMyMessage) => {
+  socket.on(eventName.SEND_MESSAGE, (msg, room, addMyMessage) => {
     console.log(msg);
     console.log(room);
     // 소켓 아이디에 맞는 닉네임을 뽑아서 msg와 같이 전송
 
-    socket.to(room).emit(eventName.RECEIVE_MESSAGE, nickName, msg);
-    addMyMessage(nickName, msg);
+    socket.to(room).emit(eventName.RECEIVE_MESSAGE, msg);
+    addMyMessage(msg);
   });
 
   socket.on(eventName.JOINED, async (userId, roomId, fn) => {
