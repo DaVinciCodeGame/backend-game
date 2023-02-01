@@ -1073,7 +1073,7 @@ io.on('connection', async (socket) => {
       attributes: ['users', 'turn'],
       raw: true,
     });
-
+    console.log(tableInfo)
     let tempUsers = JSON.parse(tableInfo.users);
 
     for (let i = 0; i < tempUsers.length; i++) {
@@ -1093,6 +1093,7 @@ io.on('connection', async (socket) => {
         },
         { where: { roomId } }
       );
+
 
       await Player.destroy({ where: { userId } });
     }
