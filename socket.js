@@ -15,6 +15,7 @@ const DB = require('./models');
 const { json } = require('sequelize');
 const e = require('express');
 const { table } = require('console');
+const { EOF } = require('dns');
 
 // 테이블 생성
 DB.sequelize
@@ -328,7 +329,14 @@ io.on('connection', async (socket) => {
 
     let userInfo = await Player.findAll({
       where: { roomId },
-      attributes: ['userId', 'userName', 'gameOver', 'hand', 'sids'],
+      attributes: [
+        'userId',
+        'userName',
+        'gameOver',
+        'hand',
+        'sids',
+        'needToBeDeleted',
+      ],
       raw: true,
     });
 
@@ -419,8 +427,10 @@ io.on('connection', async (socket) => {
         return cardResult;
       }
       userInfo.forEach((el) => {
-        const result = info(el);
-        io.to(el.sids).emit('draw-result', result);
+        if (!el.needToBeDeleted) {
+          const result = info(el);
+          io.to(el.sids).emit('draw-result', result);
+        }
       });
     }
   });
@@ -478,12 +488,21 @@ io.on('connection', async (socket) => {
     }
     let userInfo = await Player.findAll({
       where: { roomId },
-      attributes: ['userId', 'userName', 'gameOver', 'hand', 'sids'],
+      attributes: [
+        'userId',
+        'userName',
+        'gameOver',
+        'hand',
+        'sids',
+        'needToBeDeleted',
+      ],
       raw: true,
     });
-    userInfo.forEach((el) =>
-      socket.to(el.sids).emit(eventName.RESULT_SELECT, { userId, color })
-    );
+
+    userInfo.forEach((el) => {
+      if (!el.needToBeDeleted)
+        socket.to(el.sids).emit(eventName.RESULT_SELECT, { userId, color });
+    });
   });
 
   socket.on(eventName.GUESS, async (userId, { index, value }) => {
@@ -797,6 +816,7 @@ io.on('connection', async (socket) => {
           'sids',
           'userProfileImg',
           'security',
+          'needToBeDeleted',
         ],
         raw: true,
       });
@@ -859,8 +879,15 @@ io.on('connection', async (socket) => {
       });
     } else {
       userInfo.forEach((el) => {
-        const table = info(el);
-        io.to(el.sids).emit(eventName.RESULT_GUESS, result, no_security, table);
+        if (!el.needToBeDeleted) {
+          const table = info(el);
+          io.to(el.sids).emit(
+            eventName.RESULT_GUESS,
+            result,
+            no_security,
+            table
+          );
+        }
       });
     }
   });
@@ -988,8 +1015,10 @@ io.on('connection', async (socket) => {
       return cardResult;
     }
     userInfo.forEach((el) => {
-      const result = info(el);
-      io.to(el.sids).emit(eventName.ONGOING, result);
+      if (!el.needToBeDeleted) {
+        const result = info(el);
+        io.to(el.sids).emit(eventName.ONGOING, result);
+      }
     });
   });
 
@@ -1066,9 +1095,10 @@ io.on('connection', async (socket) => {
       return cardResult;
     }
     userInfo.forEach((el) => {
-      const result = info(el);
-      if (!el.needToBeDeleted)
+      if (!el.needToBeDeleted) {
+        const result = info(el);
         io.to(el.sids).emit(eventName.NEXT_GAMEINFO, result);
+      }
     });
   });
 
@@ -1196,9 +1226,10 @@ io.on('connection', async (socket) => {
       return cardResult;
     }
     userInfo.forEach((el) => {
-      const result = info(el);
-      if (!el.needToBeDeleted)
+      if (!el.needToBeDeleted) {
+        const result = info(el);
         io.to(el.sids).emit(eventName.LEAVE_USER, result);
+      }
     });
   });
 });
