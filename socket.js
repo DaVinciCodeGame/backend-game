@@ -1,21 +1,15 @@
 const http = require('http');
 const { Server } = require('socket.io');
-const { Op, Sequelize } = require('sequelize');
+const { Op } = require('sequelize');
 require('dotenv');
 const { Player, Room, Table } = require('./models');
 const app = require('./app');
 const { eventName } = require('./eventName');
 
-//dotenv.config();
+const DB = require('./models');
+// db 연결
 
 const server = http.createServer(app);
-
-// db 연결
-const DB = require('./models');
-const { json } = require('sequelize');
-const e = require('express');
-const { table } = require('console');
-const { EOF } = require('dns');
 
 // 테이블 생성
 DB.sequelize
@@ -68,18 +62,17 @@ io.on('connection', async (socket) => {
     socket.data.roomId = roomId;
     socket.data.userId = userId;
 
-    const result = await Room.findOne({ where: { roomId }, raw: true });
-    if (!result) {
-      await Room.create({
-        roomId,
-        roomName,
-        maxMembers,
-        isPlaying,
-        password,
-      });
+    const room = await Room.findOne({ where: { roomId } });
 
-      await Table.create({
-        roomId,
+    if (!room) {
+      // TODO: 방 없을 때 에러 처리
+      return;
+    }
+
+    let table = room.getTable();
+
+    if (!table) {
+      table = await Table.create({
         blackCards: JSON.stringify([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]),
         whiteCards: JSON.stringify([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]),
         users: JSON.stringify([{ userId }]),
@@ -87,47 +80,31 @@ io.on('connection', async (socket) => {
         turn: userId,
       });
 
-      await Player.create({
-        roomId,
-        userId,
-        sids: socket.id,
-        userName,
-        userProfileImg,
-        security,
-        isReady: false,
-        gameOver: false,
-        hand: JSON.stringify([]),
-        score,
-      });
-    } else {
-      const result = await Table.findOne({
-        where: { roomId },
-        attributes: ['users'],
-        raw: true,
-      });
-
-      await Player.create({
-        roomId,
-        userId,
-        sids: socket.id,
-        userName,
-        userProfileImg,
-        security,
-        isReady: false,
-        gameOver: false,
-        hand: JSON.stringify([]),
-        score,
-      });
-
-      let usersData = JSON.parse(result.users);
-
-      usersData.push({ userId });
-
-      await Table.update(
-        { users: JSON.stringify(usersData) },
-        { where: { roomId } }
-      );
+      room.setTable(table);
     }
+
+    const player = await Player.create({
+      userId,
+      sids: socket.id,
+      userName,
+      userProfileImg,
+      security,
+      isReady: false,
+      gameOver: false,
+      hand: JSON.stringify([]),
+      score,
+    });
+
+    room.addPlayer(player);
+
+    const usersData = JSON.parse(table.users);
+
+    usersData.push({ userId });
+
+    await Table.update(
+      { users: JSON.stringify(usersData) },
+      { where: { roomId } }
+    );
 
     let tableInfo = await Table.findOne({
       where: { roomId },
