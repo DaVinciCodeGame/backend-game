@@ -78,7 +78,7 @@ io.on('connection', async (socket) => {
       table = await Table.create({
         blackCards: JSON.stringify([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]),
         whiteCards: JSON.stringify([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]),
-        users: JSON.stringify([{ userId }]),
+        users: JSON.stringify([]),
         top: JSON.stringify([]),
         turn: userId,
       });
