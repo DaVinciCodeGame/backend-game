@@ -873,8 +873,8 @@ io.on('connection', async (socket) => {
         const gameInfo = infoV2(el);
         console.log('endingInfo:::::', endingInfo);
         console.log('gameInfo:::::', gameInfo);
-
-        io.to(el.sids).emit(eventName.GAMEOVER, endingInfo, gameInfo);
+        if (!el.needToBeDeleted)
+          io.to(el.sids).emit(eventName.GAMEOVER, endingInfo, gameInfo);
       });
     } else {
       userInfo.forEach((el) => {
@@ -1107,6 +1107,7 @@ io.on('connection', async (socket) => {
     const userId = socket.data.userId;
     console.log(roomId);
     console.log(userId);
+    let userInfoV2;
 
     let tableInfo = await Table.findOne({
       where: { roomId },
@@ -1153,12 +1154,40 @@ io.on('connection', async (socket) => {
           userId,
           [Op.and]: [{ roomId }],
         },
-        attributes: ['gameOver', 'hand', 'needToBeDeleted'],
+        attributes: [
+          'userId',
+          'userName',
+          'score',
+          'gameOver',
+          'hand',
+          'needToBeDeleted',
+        ],
         raw: true,
       });
-      console.log('outUseroutUser', outUser);
-      if (outUser.gameOver === false) outUser.gameOver = true;
-      if (outUser.needToBeDeleted === false) outUser.needToBeDeleted = true;
+
+      let topRank = JSON.parse(
+        (
+          await Table.findOne({
+            where: { roomId },
+            attributes: ['top'],
+            raw: true,
+          })
+        ).top
+      );
+      // FIXME: 두번 저장되는 오류 잡기.
+      topRank.unshift({
+        userId: outUser.userId,
+        userName: outUser.userName,
+        score: outUser.score,
+      });
+
+      await Table.update(
+        { top: JSON.stringify(topRank) },
+        { where: { roomId } }
+      );
+
+      console.log('outUser', outUser);
+
       let outUserHand = JSON.parse(outUser.hand);
       outUserHand.forEach((card) => {
         if (card.isOpen === false) card.isOpen = true;
@@ -1167,19 +1196,18 @@ io.on('connection', async (socket) => {
 
       await Player.update(
         {
-          gameOver: outUser.gameOver,
-          needToBeDeleted: outUser.needToBeDeleted,
+          gameOver: true,
+          needToBeDeleted: true,
           hand: outUser.hand,
         },
         { where: { userId, [Op.and]: [{ roomId }] } }
       );
-      console.log('outUseroutUser', outUser);
 
       // 게임 진행중이 아닐 때.
     } else {
       await Player.destroy({ where: { userId } });
     }
-
+    console.log('outUser 진행 1');
     let userInfo = await Player.findAll({
       where: { roomId },
       attributes: [
@@ -1192,51 +1220,203 @@ io.on('connection', async (socket) => {
       ],
       raw: true,
     });
-
-    function info(temp) {
-      const gameInfo = userInfo.map((el) => {
-        return {
-          userId: el.userId,
-          userName: el.userName,
-          userProfileImg: '',
-          gameOver: el.gameOver ? true : false,
-          hand: JSON.parse(el.hand).map((card) => {
-            if (el.userId === temp.userId) {
-              return {
-                color: card.color,
-                value: card.value,
-                isOpen: card.isOpen,
-              };
-            } else if (!card.isOpen) {
-              return {
-                color: card.color,
-                value: 'Back',
-                isOpen: card.isOpen,
-              };
-            } else {
-              return {
-                color: card.color,
-                value: card.value,
-                isOpen: card.isOpen,
-              };
-            }
-          }),
-        };
+    console.log('outUser다음 진행 확인.2');
+    console.log(userInfo.filter((user) => user.gameOver == false).length);
+    // 게임이 끝난 상태인지 확인.
+    if (userInfo.filter((user) => user.gameOver == false).length === 1) {
+      console.log(
+        '====================================GAME OVER===================================='
+      );
+      const winner = await Player.findOne({
+        where: {
+          roomId,
+          [Op.and]: [{ gameOver: false }],
+        },
+        attributes: ['userId', 'userName', 'score'],
+        raw: true,
       });
-      cardResult = {
-        blackCards: JSON.parse(tableInfo.blackCards).length,
-        whiteCards: JSON.parse(tableInfo.whiteCards).length,
-        //turn: netxTurn,
-        users: gameInfo,
-      };
-      return cardResult;
-    }
-    userInfo.forEach((el) => {
-      if (!el.needToBeDeleted) {
-        const result = info(el);
-        io.to(el.sids).emit(eventName.LEAVE_USER, result);
+
+      console.log(13);
+      let topRank = JSON.parse(
+        (
+          await Table.findOne({
+            where: { roomId },
+            attributes: ['top'],
+            raw: true,
+          })
+        ).top
+      );
+      console.log('승리 user 정보:::::', winner);
+      console.log('topRank 정보:::::', topRank);
+      topRank.unshift(winner);
+      console.log('합친 정보:::::', topRank);
+
+      let endingInfo = topRank;
+      await Room.update(
+        { isPlaying: false, turn: winner.userId },
+        { where: { roomId } }
+      );
+      console.log(14);
+      await Table.update(
+        {
+          blackCards: JSON.stringify([
+            0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12,
+          ]),
+          whiteCards: JSON.stringify([
+            0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12,
+          ]),
+          top: JSON.stringify([]),
+        },
+        { where: { roomId } }
+      );
+      console.log(15);
+
+      await Promise.all(
+        userInfo.map(async (el) => {
+          await Player.update(
+            {
+              isReady: false,
+              gameOver: false,
+              hand: JSON.stringify([]),
+              security: '',
+            },
+            { where: { userId: el.userId } }
+          );
+        })
+      );
+
+      let tableInfo = await Table.findOne({
+        where: { roomId },
+        attributes: ['blackCards', 'whiteCards', 'turn'],
+        raw: true,
+      });
+
+      userInfoV2 = await Player.findAll({
+        where: { roomId },
+        attributes: [
+          'userId',
+          'userName',
+          'isReady',
+          'gameOver',
+          'hand',
+          'sids',
+          'userProfileImg',
+          'security',
+          'needToBeDeleted',
+        ],
+        raw: true,
+      });
+
+      console.log(18);
+      function infoV2(temp) {
+        const some = userInfoV2.map((el) => {
+          return {
+            userId: el.userId,
+            userName: el.userName,
+            userProfileImg: '',
+            isReady: el.isReady,
+            gameOver: el.gameOver ? true : false,
+            hand: JSON.parse(el.hand).map((card) => {
+              if (card == '[]') {
+                return card;
+              } else if (el.userId === temp.userId) {
+                return {
+                  color: card.color,
+                  value: card.value,
+                  isOpen: card.isOpen,
+                };
+              } else if (!card.isOpen) {
+                return {
+                  color: card.color,
+                  value: 'Back',
+                  isOpen: card.isOpen,
+                };
+              } else {
+                return {
+                  color: card.color,
+                  value: card.value,
+                  isOpen: card.isOpen,
+                };
+              }
+            }),
+          };
+        });
+        console.log(19);
+
+        guessResult = {
+          blackCards: JSON.parse(tableInfo.blackCards).length,
+          whiteCards: JSON.parse(tableInfo.whiteCards).length,
+          turn: tableInfo.turn,
+          users: some,
+        };
+        return guessResult;
       }
-    });
+
+      console.log(20);
+      // TODO:  게임 오버
+      userInfo.forEach((el) => {
+        const gameInfo = infoV2(el);
+
+        if (!el.needToBeDeleted) {
+          io.to(el.sids).emit(eventName.GAMEOVER, endingInfo, gameInfo);
+        }
+      });
+
+      userInfoV2.map(async (user) => {
+        if (user.needToBeDeleted === 1) {
+          await Player.destroy({
+            where: { userId: user.userId, [Op.and]: [{ roomId }] },
+          });
+        }
+      });
+    } else {
+      console.log('just roomOut');
+      function info(temp) {
+        const gameInfo = userInfo.map((el) => {
+          return {
+            userId: el.userId,
+            userName: el.userName,
+            userProfileImg: '',
+            gameOver: el.gameOver ? true : false,
+            hand: JSON.parse(el.hand).map((card) => {
+              if (el.userId === temp.userId) {
+                return {
+                  color: card.color,
+                  value: card.value,
+                  isOpen: card.isOpen,
+                };
+              } else if (!card.isOpen) {
+                return {
+                  color: card.color,
+                  value: 'Back',
+                  isOpen: card.isOpen,
+                };
+              } else {
+                return {
+                  color: card.color,
+                  value: card.value,
+                  isOpen: card.isOpen,
+                };
+              }
+            }),
+          };
+        });
+        cardResult = {
+          blackCards: JSON.parse(tableInfo.blackCards).length,
+          whiteCards: JSON.parse(tableInfo.whiteCards).length,
+          //turn: netxTurn,
+          users: gameInfo,
+        };
+        return cardResult;
+      }
+      console.log('LEAVE_USER 요청');
+      userInfo.forEach((el) => {
+        if (!el.needToBeDeleted) {
+          const result = info(el);
+          io.to(el.sids).emit(eventName.LEAVE_USER, result);
+        }
+      });
+    }
   });
 });
 
