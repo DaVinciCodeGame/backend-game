@@ -57,6 +57,9 @@ io.on('connection', async (socket) => {
 
     const room = await Room.findOne({ where: { roomId } });
 
+    console.log('방 정보:');
+    console.log(room);
+
     if (!room) {
       // TODO: 방 없을 때 에러 처리
       return;
@@ -67,6 +70,9 @@ io.on('connection', async (socket) => {
     socket.data.userId = userId;
 
     let table = room.getTable();
+
+    console.log('테이블 정보 1차:');
+    console.log(table);
 
     if (!table) {
       table = await Table.create({
@@ -79,6 +85,9 @@ io.on('connection', async (socket) => {
 
       room.setTable(table);
     }
+
+    console.log('테이블 정보 2차:');
+    console.log(table);
 
     const player = await Player.create({
       userId,
