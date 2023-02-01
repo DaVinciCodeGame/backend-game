@@ -24,5 +24,6 @@ const eventName = {
   SELECT_CARD_AS_SECURITY: 'select-card-as-security',
   ROOM_OUT: 'room-out',
   ONGOING: 'ongoing',
+  LEAVE_USER: 'leave-user',
 };
 module.exports = { eventName };
