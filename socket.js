@@ -567,10 +567,9 @@ io.on('connection', async (socket) => {
           { where: { roomId } }
         );
 
-        console.log('2번콘솔', {
-          hand: JSON.stringify(targetHand),
-          gameOver: true,
-        });
+        await Room.update({ isPlaying: false }, { where: { roomId } });
+
+        console.log('2번콘솔');
       }
       console.log(1);
       userCard = await Player.findOne({
