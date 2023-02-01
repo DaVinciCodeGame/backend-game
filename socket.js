@@ -69,7 +69,7 @@ io.on('connection', async (socket) => {
     socket.data.roomId = roomId;
     socket.data.userId = userId;
 
-    let table = room.getTable();
+    let table = await room.getTable();
 
     console.log('테이블 정보 1차:');
     console.log(table);
