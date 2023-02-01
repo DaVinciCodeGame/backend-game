@@ -1092,9 +1092,9 @@ io.on('connection', async (socket) => {
     console.log(userId);
     let userInfoV2;
 
-    const room = Room.findOne({ where: { roomId } });
+    const room = await Room.findOne({ where: { roomId } });
 
-    const table = room.getTable();
+    const table = await room.getTable();
 
     let isPlaying = (
       await Room.findOne({
