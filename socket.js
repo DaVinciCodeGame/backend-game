@@ -83,7 +83,7 @@ io.on('connection', async (socket) => {
         turn: userId,
       });
 
-      room.setTable(table);
+      await Promise.all([room.setTable(table), table.setRoom(room)]);
     }
 
     console.log('테이블 정보 2차:');
