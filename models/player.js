@@ -45,6 +45,10 @@ module.exports = (sequelize, DataTypes) => {
       score: {
         type: DataTypes.INTEGER,
       },
+      needToBeDeleted: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: false,
+      },
     },
     {
       sequelize,
