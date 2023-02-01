@@ -177,7 +177,7 @@ io.on('connection', async (socket) => {
     console.log('roomId', roomId);
 
     const userReady = await Player.findOne({
-      where: { userId },
+      where: { userId, [Op.or]: [{ roomId }] },
       attributes: ['isReady'],
       raw: true,
     });
@@ -493,7 +493,7 @@ io.on('connection', async (socket) => {
     let targetHand = JSON.parse(
       (
         await Player.findOne({
-          where: { userId },
+          where: { userId, [Op.or]: [{ roomId }] },
           attributes: ['hand'],
           raw: true,
         })
@@ -535,7 +535,7 @@ io.on('connection', async (socket) => {
         );
 
         let getUser = await Player.findOne({
-          where: { userId },
+          where: { userId, [Op.or]: [{ roomId }] },
           attributes: ['userId', 'userName', 'score'],
           raw: true,
         });
@@ -554,7 +554,7 @@ io.on('connection', async (socket) => {
       }
       console.log(1);
       userCard = await Player.findOne({
-        where: { userId },
+        where: { userId, [Op.or]: [{ roomId }] },
         attributes: ['hand', 'security'],
         raw: true,
       });
@@ -567,7 +567,7 @@ io.on('connection', async (socket) => {
       console.log('타겟의 값', targetHand[index].value);
       console.log('설정한 값', value);
       userCard = await Player.findOne({
-        where: { userId: socket.data.userId },
+        where: { userId: socket.data.userId, [Op.or]: [{ roomId }] },
         attributes: ['hand', 'security'],
         raw: true,
       });
@@ -612,7 +612,7 @@ io.on('connection', async (socket) => {
         );
 
         let getUser = await Player.findOne({
-          where: { userId: socket.data.userId },
+          where: { userId: socket.data.userId, [Op.or]: [{ roomId }] },
           attributes: ['userId', 'userName', 'score', 'gameOver'],
           raw: true,
         });
@@ -664,8 +664,8 @@ io.on('connection', async (socket) => {
           //   if(turns[i].userId ==)
           // }
 
-          getUser.map((userInfo) => {
-            if (userInfo.userId === asdf) {
+          getUser.map((user) => {
+            if (user.userId === asdf) {
               asd;
             }
           });
@@ -693,6 +693,7 @@ io.on('connection', async (socket) => {
         'sids',
         'userProfileImg',
         'security',
+        'needToBeDeleted',
       ],
       raw: true,
     });
@@ -881,12 +882,20 @@ io.on('connection', async (socket) => {
         console.log('endingInfo:::::', endingInfo);
         console.log('gameInfo:::::', gameInfo);
 
-        io.to(el.sids).emit(eventName.GAMEOVER, endingInfo, gameInfo);
+        if (!el.needToBeDeleted)
+          io.to(el.sids).emit(eventName.GAMEOVER, endingInfo, gameInfo);
       });
     } else {
       userInfo.forEach((el) => {
         const table = info(el);
-        io.to(el.sids).emit(eventName.RESULT_GUESS, result, no_security, table);
+
+        if (!el.needToBeDeleted)
+          io.to(el.sids).emit(
+            eventName.RESULT_GUESS,
+            result,
+            no_security,
+            table
+          );
       });
     }
   });
@@ -908,7 +917,7 @@ io.on('connection', async (socket) => {
     } else {
       // TODO: 담보 불러서 저장하기.
       let userInfo = await Player.findOne({
-        where: { userId },
+        where: { userId, [Op.or]: [{ roomId }] },
         attributes: ['security', 'hand'],
         raw: true,
       });
@@ -950,17 +959,25 @@ io.on('connection', async (socket) => {
         userHand.splice(jokerIndex[i], 0, jokerCard[i]);
       }
 
-      await Player.update(
-        { hand: JSON.stringify(userHand) },
-        { where: { userId } }
+      await Promise.all(
+        Player.update({ hand: JSON.stringify(userHand) }, { where: { userId } })
       );
     }
 
-    let userInfo = await Player.findAll({
-      where: { roomId },
-      attributes: ['userId', 'userName', 'gameOver', 'hand', 'sids'],
-      raw: true,
-    });
+    let userInfo = await Promise.all(
+      Player.findAll({
+        where: { roomId },
+        attributes: [
+          'userId',
+          'userName',
+          'gameOver',
+          'hand',
+          'sids',
+          'needToBeDeleted',
+        ],
+        raw: true,
+      })
+    );
 
     let tableInfo = await Table.findOne({
       where: { roomId },
@@ -1008,7 +1025,7 @@ io.on('connection', async (socket) => {
     }
     userInfo.forEach((el) => {
       const result = info(el);
-      io.to(el.sids).emit(eventName.ONGOING, result);
+      if (!el.needToBeDeleted) io.to(el.sids).emit(eventName.ONGOING, result);
     });
   });
 
@@ -1097,11 +1114,18 @@ io.on('connection', async (socket) => {
     console.log(roomId);
     console.log(userId);
 
-    let tableInfo = await Table.findOne({
+    const isPlaying = await Room.findOne({
       where: { roomId },
-      attributes: ['users', 'turn'],
-      raw: true,
-    });
+      attribures: ['isPlaying'],
+    }).isPlaying;
+
+    let tableInfo = await Promise.all(
+      Table.findOne({
+        where: { roomId },
+        attributes: ['users', 'turn'],
+        raw: true,
+      })
+    );
 
     let tempUsers = JSON.parse(tableInfo.users);
 
@@ -1118,15 +1142,111 @@ io.on('connection', async (socket) => {
       await Table.update(
         {
           users: JSON.stringify(tempUsers),
-          turn: JSON.stringify(tempUsers[0].userId),
         },
         { where: { roomId } }
       );
 
-      await Player.destroy({ where: { userId } });
+      // 게임이 진행중인지 아닌지에 대한 구분
+      // 개인이 나갈 때, 방에 정보를 뿌려줘야한다.
+      // 갖고있는 패를 열어주고 그 패가 남아있어야 한다.
+      // 한 유저가 게임 진행중에 나가고, 다른방에 들어갈 경우
+      if (isPlaying) {
+        let userInfo = await Promise.all(
+          Player.findOne({
+            where: { userId, [Op.or]: [{ roomId }] },
+            attributes: ['hand'],
+            raw: true,
+          })
+        );
+
+        console.log('gameOut한 user의 정보', userInfo);
+        let userHand = JSON.parse(userInfo.hand);
+
+        userHand.forEach((card) => {
+          if (card.isOpen === false) card.isOpen = true;
+        });
+
+        await Promise.all(
+          Player.update(
+            {
+              needToBeDeleted: true,
+              hand: JSON.stringify(userHand),
+              gameOver: true,
+            },
+            { where: { userId } }
+          )
+        );
+      } else {
+        await Player.destroy({ where: { userId, [Op.or]: [{ roomId }] } });
+      }
     }
 
-    // 개인이 나갈 때, 방에 정보를 뿌려줘야한다.
+    // 사용자 정보 출력
+
+    let userInfo = await Promise.all(
+      Player.findAll({
+        where: { roomId },
+        attributes: [
+          'userId',
+          'userName',
+          'gameOver',
+          'hand',
+          'sids',
+          'needToBeDeleted',
+        ],
+        raw: true,
+      })
+    );
+
+    let tableInfoV2 = await Table.findOne({
+      where: { roomId },
+      attributes: ['blackCards', 'whiteCards', 'users', 'turn'],
+      raw: true,
+    });
+
+    function info(temp) {
+      const gameInfo = userInfo.map((el) => {
+        return {
+          userId: el.userId,
+          userName: el.userName,
+          userProfileImg: '',
+          gameOver: el.gameOver ? true : false,
+          hand: JSON.parse(el.hand).map((card) => {
+            if (el.userId === temp.userId) {
+              return {
+                color: card.color,
+                value: card.value,
+                isOpen: card.isOpen,
+              };
+            } else if (!card.isOpen) {
+              return {
+                color: card.color,
+                value: 'Back',
+                isOpen: card.isOpen,
+              };
+            } else {
+              return {
+                color: card.color,
+                value: card.value,
+                isOpen: card.isOpen,
+              };
+            }
+          }),
+        };
+      });
+      cardResult = {
+        blackCards: JSON.parse(tableInfoV2.blackCards).length,
+        whiteCards: JSON.parse(tableInfoV2.whiteCards).length,
+        turn: tableInfoV2.turn,
+        users: gameInfo,
+      };
+      return cardResult;
+    }
+    userInfo.forEach((el) => {
+      const result = info(el);
+      if (!el.needToBeDeleted)
+        io.to(el.sids).emit(eventName.LEAVE_USER, result);
+    });
   });
 });
 
