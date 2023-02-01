@@ -960,7 +960,10 @@ io.on('connection', async (socket) => {
       }
 
       await Promise.all(
-        Player.update({ hand: JSON.stringify(userHand) }, { where: { userId } })
+        Player.update(
+          { hand: JSON.stringify(userHand) },
+          { where: { userId }, [Op.or]: [{ roomId }] }
+        )
       );
     }
 
