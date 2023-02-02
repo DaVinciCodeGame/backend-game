@@ -1,6 +1,7 @@
 const bcrypt = require('bcrypt');
 
 const RoomsRepository = require('../repositories/rooms.repository');
+const RoomCheckResult = require('../utils/room-check-result');
 
 const ROOMS_PER_PAGE = 12;
 
@@ -122,6 +123,33 @@ module.exports = class RoomsService {
     const totalPage = Math.ceil(count / ROOMS_PER_PAGE);
 
     return { totalPage, rooms };
+  };
+
+  /**
+   *
+   * @param {number} roomId
+   * @param {string} password
+   * @returns {Promise<RoomCheckResult>}
+   */
+  checkRoom = async (roomId, password) => {
+    const room = await this.roomsRepository.findOneById(roomId);
+
+    if (!room) return new RoomCheckResult(101, '해당하는 방이 없습니다.');
+
+    const currentMembers = room.Table ? JSON.parse(room.Table.users).length : 0;
+
+    if (currentMembers >= maxMembers)
+      return new RoomCheckResult(102, '방이 가득 찼습니다.');
+
+    if (room.isPlaying)
+      return new RoomCheckResult(103, '해당 방은 현재 게임이 진행 중입니다.');
+
+    if (room.password)
+      return await bcrypt
+        .compare(password, room.password)
+        .catch(() => new RoomCheckResult(104, '비밀번호가 틀렸습니다.'));
+
+    return new RoomCheckResult(1);
   };
 
   /**

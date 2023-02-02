@@ -33,7 +33,9 @@ module.exports = class RoomsController {
 
       if (Number.isNaN(Number(roomId))) throw badRequest('잘못된 요청입니다.');
 
-      res.status(200).send();
+      const result = await this.roomsService.checkRoom(roomId, password);
+
+      res.status(200).send(result);
     } catch (err) {
       next(err);
     }
