@@ -39,12 +39,20 @@ module.exports = class RoomsRepository {
    *    isPlaying: boolean,
    *    createdAt: Date,
    *    password: string,
-   *    Table: undefined,
-   *  }>}
+   *    Table: {
+   *      tableId: number,
+   *      blackCards: string,
+   *      whiteCards: string,
+   *      users: string,
+   *      top: string,
+   *      turn: number,
+   *    } | undefined
+   *  } | undefined>}
    */
   findOneById = (roomId) => {
     return Room.findOne({
       where: { roomId },
+      include: Table,
     });
   };
 

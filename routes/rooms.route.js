@@ -7,8 +7,9 @@ const roomsRouter = Router();
 const roomsController = new RoomsController();
 
 roomsRouter
-  .post('/', authorize, roomsController.createRoom)
+  .post('/', roomsController.createRoom)
   .get('/', roomsController.getRooms)
-  .get('/quick-start', authorize, roomsController.quickStart);
+  .get('/quick-start', roomsController.quickStart)
+  .post('/:roomId', roomsController.checkRoom);
 
 module.exports = roomsRouter;
