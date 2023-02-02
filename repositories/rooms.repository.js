@@ -45,6 +45,7 @@ module.exports = class RoomsRepository {
   findOneById = (roomId) => {
     return Room.findOne({
       where: { roomId },
+      include: Table,
     });
   };
 
