@@ -184,7 +184,7 @@ io.on('connection', async (socket) => {
 
     let tableInfo = await Table.findOne({
       where: { roomId },
-      attributes: ['blackCards', 'whiteCards', 'turn'],
+      attributes: ['blackCards', 'whiteCards', 'turn', 'users'],
       raw: true,
     });
 
@@ -227,7 +227,7 @@ io.on('connection', async (socket) => {
     });
 
     userInfo.forEach((el) => io.to(el.sids).emit('add-ready', cardResult));
-    if (readyCount.length === members.maxMembers) {
+    if (readyCount.length === JSON.parse(tableInfo.users).length) {
       userInfo.forEach((el) => io.to(el.sids).emit('game-start'));
       await Room.update({ isPlaying: true }, { where: { roomId } });
     }
