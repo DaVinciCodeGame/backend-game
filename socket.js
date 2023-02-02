@@ -1050,16 +1050,6 @@ io.on('connection', async (socket) => {
       }
     }
 
-    // let turns = JSON.parse(tableInfo.users);
-    // let netxTurn = tableInfo.turn;
-
-    // for (let i = 0; i < turns.length; i++) {
-    //   if (turns[i].userId === netxTurn) {
-    //     netxTurn = turns[(i + 1) % turns.length].userId;
-    //     break;
-    //   }
-    // }
-
     await Table.update({ turn: tableInfo.turn }, { where: { roomId } });
 
     // gameInfo 내보내기
@@ -1096,7 +1086,7 @@ io.on('connection', async (socket) => {
       cardResult = {
         blackCards: JSON.parse(tableInfo.blackCards).length,
         whiteCards: JSON.parse(tableInfo.whiteCards).length,
-        turn: netxTurn,
+        turn: tableInfo.turn,
         users: gameInfo,
       };
       return cardResult;
