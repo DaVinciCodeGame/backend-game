@@ -7,6 +7,6 @@ router
   .get('/', (req, res) => {
     res.status(200).json('ok');
   })
-  .use('/rooms', roomsRouter);
+  .use('/rooms', authorize, roomsRouter);
 
 module.exports = router;
