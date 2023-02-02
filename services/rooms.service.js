@@ -138,7 +138,7 @@ module.exports = class RoomsService {
 
     const currentMembers = room.Table ? JSON.parse(room.Table.users).length : 0;
 
-    if (currentMembers >= maxMembers)
+    if (currentMembers >= room.maxMembers)
       return new RoomCheckResult(102, '방이 가득 찼습니다.');
 
     if (room.isPlaying)
