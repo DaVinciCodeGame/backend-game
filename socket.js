@@ -7,6 +7,7 @@ const app = require('./app');
 const { eventName } = require('./eventName');
 
 const DB = require('./models');
+const { off } = require('process');
 // db 연결
 
 const server = http.createServer(app);
@@ -1031,7 +1032,7 @@ io.on('connection', async (socket) => {
     }
 
     await Table.update({ turn: netxTurn }, { where: { roomId } });
-
+    // gameInfo 내보내기
     let userInfo = await Player.findAll({
       where: { roomId },
       attributes: ['userId', 'userName', 'gameOver', 'hand', 'sids'],
@@ -1094,7 +1095,11 @@ io.on('connection', async (socket) => {
     let userInfo;
 
     const room = await Room.findOne({ where: { roomId } });
-
+    const player = await Player.findAll({
+      where: { roomId },
+      attributes: ['userId', 'gameOver'],
+      raw: true,
+    });
     const table = await room.getTable();
 
     let isPlaying = (
@@ -1117,15 +1122,54 @@ io.on('connection', async (socket) => {
     console.log(2);
     if (tempUsers.length == 0) {
       await Room.destroy({ where: { roomId } });
-    } else {
-      await Table.update(
-        {
-          users: JSON.stringify(tempUsers),
-          turn: JSON.stringify(tempUsers[0].userId),
-        },
-        { where: { roomId } }
-      );
     }
+    console.log(
+      '================table.turn===========================',
+      table.turn
+    );
+    console.log('table', table);
+    console.log('table.users', table.users);
+    console.log('table.turn', table.turn);
+    console.log('player', player);
+
+    // 해당 턴이였던 사람이 나가면 다음 사람으로 턴 넘겨주기.
+    // 여러명인 경우도 생각.
+    if (table.turn === userId) {
+      const users = JSON.parse(table.users);
+
+      for (let i = 0; i < users.length; i++) {
+        if (users[i].userId === table.turn) {
+          for (let j = 1; j < 4; j++) {
+            player.map((el) => {
+              if (
+                el.userId === users[(i + j) % room.maxMembers].userId &&
+                !el.gameOver
+              ) {
+                console.log(
+                  '이전 이전 이전 이전 이전 이전 turntable.turn',
+                  table.turn
+                );
+                table.turn = el.userId;
+                console.log(
+                  '이후 이후 이후 이후 이후 이후 turntable.turn',
+                  table.turn
+                );
+              }
+            });
+            break;
+          }
+        }
+      }
+    }
+
+    await Table.update(
+      {
+        users: JSON.stringify(tempUsers),
+        turn: table.turn,
+      },
+      { where: { roomId } }
+    );
+
     console.log(3);
 
     // 게임 진행중일 때
@@ -1400,7 +1444,7 @@ io.on('connection', async (socket) => {
         cardResult = {
           blackCards: JSON.parse(table.blackCards).length,
           whiteCards: JSON.parse(table.whiteCards).length,
-          //turn: netxTurn,
+          turn: table.turn,
           users: gameInfo,
         };
         return cardResult;
