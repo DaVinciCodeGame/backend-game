@@ -29,10 +29,9 @@ module.exports = class RoomsController {
   checkRoom = async (req, res, next) => {
     try {
       const { roomId } = req.params;
-
       const { password } = req.body;
 
-      if (!roomId) throw badRequest('잘못된 요청입니다.');
+      if (Number.isNaN(Number(roomId))) throw badRequest('잘못된 요청입니다.');
 
       res.status(200).send();
     } catch (err) {
