@@ -1164,7 +1164,7 @@ io.on('connection', async (socket) => {
       }
     } else {
       console.log(2);
-      if (users.length == 0) {
+      if (users.length == 1) {
         await Room.destroy({ where: { roomId } });
         return;
       }
