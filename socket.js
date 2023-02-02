@@ -1156,17 +1156,18 @@ io.on('connection', async (socket) => {
           }
         }
       }
+      for (let i = 0; i < users.length; i++) {
+        if (users[i].userId == userId) {
+          users.splice(i, 1);
+          break;
+        }
+      }
     } else {
-      // for (let i = 0; i < tempUsers.length; i++) {
-      //   if (tempUsers[i].userId == userId) {
-      //     tempUsers.splice(i, 1);
-      //     break;
-      //   }
-      // }
       console.log(2);
-      // if (tempUsers.length == 0) {
-      await Room.destroy({ where: { roomId } });
-      // }
+      if (users.length == 0) {
+        await Room.destroy({ where: { roomId } });
+        return;
+      }
     }
 
     // 해당 턴이였던 사람이 나가면 다음 사람으로 턴 넘겨주기.
@@ -1174,7 +1175,7 @@ io.on('connection', async (socket) => {
 
     await Table.update(
       {
-        users: JSON.stringify(tempUsers),
+        users: JSON.stringify(users),
         turn: table.turn,
       },
       { where: { roomId } }
