@@ -1125,6 +1125,7 @@ io.on('connection', async (socket) => {
     ).isPlaying;
     console.log('isPlaying', isPlaying);
     const users = JSON.parse(table.users);
+
     if (users.length > 1) {
       if (table.turn === userId) {
         console.log(users);
@@ -1162,14 +1163,15 @@ io.on('connection', async (socket) => {
           break;
         }
       }
-    } else {
-      console.log(2);
-      if (users.length == 1) {
-        console.log('삭제된 부분 확인 8888888888888888');
-        await Room.destroy({ where: { roomId } });
-        return;
-      }
     }
+    // else {
+    //   console.log(2);
+    //   if (users.length == 1) {
+    //     console.log('삭제된 부분 확인 8888888888888888');
+    //     await Room.destroy({ where: { roomId } });
+    //     return;
+    //   }
+    // }
 
     // 해당 턴이였던 사람이 나가면 다음 사람으로 턴 넘겨주기.
     // 여러명인 경우도 생각.
@@ -1407,7 +1409,12 @@ io.on('connection', async (socket) => {
       // 게임 진행중이 아닐 때.
     } else {
       console.log('삭제된 부분 확인 999999999999999');
+
       await Player.destroy({ where: { userId } });
+      if (await Player.findAll({ where: { roomId } })) {
+        await Room.destroy({ where: { roomId } });
+        return;
+      }
 
       console.log('just roomOut');
 
