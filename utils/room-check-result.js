@@ -1,13 +1,13 @@
-class Result {
+class RoomCheckResult {
   /**
    *
    * @param {number} code
-   * @param {string} message
+   * @param {string | undefined} message
    */
   constructor(code, message) {
     this.code = code;
-    this.message = message;
+    if (message) this.message = message;
   }
 }
 
-module.exports = Result;
+module.exports = RoomCheckResult;
