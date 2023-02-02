@@ -1408,13 +1408,12 @@ io.on('connection', async (socket) => {
       }
       // 게임 진행중이 아닐 때.
     } else {
-      console.log('삭제된 부분 확인 999999999999999');
-
       await Player.destroy({ where: { userId } });
-      if (await Player.findAll({ where: { roomId } })) {
-        await Room.destroy({ where: { roomId } });
-        return;
-      }
+      // if ((await Player.findAll({ where: { roomId } })).length) {
+      //   console.log('삭제된 부분 확인 999999999999999');
+      //   await Room.destroy({ where: { roomId } });
+      //   return;
+      // }
 
       console.log('just roomOut');
 
