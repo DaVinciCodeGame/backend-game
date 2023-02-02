@@ -40,7 +40,7 @@ module.exports = class RoomsRepository {
    *    createdAt: Date,
    *    password: string,
    *    Table: undefined,
-   *  }>}
+   *  } | undefined>}
    */
   findOneById = (roomId) => {
     return Room.findOne({
