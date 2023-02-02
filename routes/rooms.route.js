@@ -10,6 +10,6 @@ roomsRouter
   .post('/', roomsController.createRoom)
   .get('/', roomsController.getRooms)
   .get('/quick-start', roomsController.quickStart)
-  .post('/:roomId');
+  .post('/:roomId', roomsController.checkRoom);
 
 module.exports = roomsRouter;
