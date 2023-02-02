@@ -26,6 +26,20 @@ module.exports = class RoomsController {
     }
   };
 
+  checkRoom = async (req, res, next) => {
+    try {
+      const { roomId } = req.params;
+
+      const { password } = req.body;
+
+      if (!roomId) throw badRequest('잘못된 요청입니다.');
+
+      res.status(200).send();
+    } catch (err) {
+      next(err);
+    }
+  };
+
   getRooms = async (req, res, next) => {
     try {
       const { page, searchType, search } = req.query;
