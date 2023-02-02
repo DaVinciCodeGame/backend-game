@@ -8,6 +8,7 @@ const { eventName } = require('./eventName');
 
 const DB = require('./models');
 const { off } = require('process');
+const { table } = require('console');
 // db 연결
 
 const server = http.createServer(app);
@@ -1015,32 +1016,55 @@ io.on('connection', async (socket) => {
   socket.on(eventName.NEXT_TURN, async () => {
     const roomId = socket.data.roomId;
 
+    let player = await Player.findAll({ where: { roomId } });
+    const room = await Room.findOne({ where: { roomId } });
     let tableInfo = await Table.findOne({
       where: { roomId },
       attributes: ['blackCards', 'whiteCards', 'users', 'turn'],
       raw: true,
     });
 
-    let turns = JSON.parse(tableInfo.users);
-    let netxTurn = tableInfo.turn;
+    const users = JSON.parse(tableInfo.users);
 
-    for (let i = 0; i < turns.length; i++) {
-      if (turns[i].userId === netxTurn) {
-        netxTurn = turns[(i + 1) % turns.length].userId;
-        break;
+    for (let i = 0; i < users.length; i++) {
+      if (users[i].userId === tableInfo.turn) {
+        for (let j = 1; j < 4; j++) {
+          player.map((el) => {
+            if (
+              el.userId === users[(i + j) % room.maxMembers].userId &&
+              !el.gameOver
+            ) {
+              console.log(
+                '이전 이전 이전 이전 이전 이전 turntable.turn',
+                tableInfo.turn
+              );
+              tableInfo.turn = el.userId;
+              console.log(
+                '이후 이후 이후 이후 이후 이후 turntable.turn',
+                tableInfo.turn
+              );
+            }
+          });
+          break;
+        }
       }
     }
 
-    await Table.update({ turn: netxTurn }, { where: { roomId } });
-    // gameInfo 내보내기
-    let userInfo = await Player.findAll({
-      where: { roomId },
-      attributes: ['userId', 'userName', 'gameOver', 'hand', 'sids'],
-      raw: true,
-    });
+    // let turns = JSON.parse(tableInfo.users);
+    // let netxTurn = tableInfo.turn;
 
+    // for (let i = 0; i < turns.length; i++) {
+    //   if (turns[i].userId === netxTurn) {
+    //     netxTurn = turns[(i + 1) % turns.length].userId;
+    //     break;
+    //   }
+    // }
+
+    await Table.update({ turn: tableInfo.turn }, { where: { roomId } });
+
+    // gameInfo 내보내기
     function info(temp) {
-      const gameInfo = userInfo.map((el) => {
+      const gameInfo = player.map((el) => {
         return {
           userId: el.userId,
           userName: el.userName,
@@ -1077,7 +1101,7 @@ io.on('connection', async (socket) => {
       };
       return cardResult;
     }
-    userInfo.forEach((el) => {
+    player.forEach((el) => {
       if (!el.needToBeDeleted) {
         const result = info(el);
         io.to(el.sids).emit(eventName.NEXT_GAMEINFO, result);
@@ -1111,6 +1135,38 @@ io.on('connection', async (socket) => {
     ).isPlaying;
     console.log('isPlaying', isPlaying);
 
+    if (table.turn === userId) {
+      const users = JSON.parse(table.users);
+      console.log(users);
+      let count = 0;
+      for (let i = 0; i < users.length; i++) {
+        if (users[i].userId === table.turn) {
+          for (let j = 1; j < 4; j++) {
+            player.map((el) => {
+              if (count == 0) {
+                if (
+                  el.userId === users[(i + j) % room.maxMembers].userId &&
+                  !el.gameOver
+                ) {
+                  console.log(
+                    '이전 이전 이전 이전 이전 이전 turntable.turn',
+                    table.turn
+                  );
+                  table.turn = el.userId;
+                  count = 1;
+                  console.log(
+                    '이후 이후 이후 이후 이후 이후 turntable.turn',
+                    table.turn
+                  );
+                }
+              }
+            });
+            break;
+          }
+        }
+      }
+    }
+
     let tempUsers = JSON.parse(table.users);
 
     for (let i = 0; i < tempUsers.length; i++) {
@@ -1123,44 +1179,9 @@ io.on('connection', async (socket) => {
     if (tempUsers.length == 0) {
       await Room.destroy({ where: { roomId } });
     }
-    console.log(
-      '================table.turn===========================',
-      table.turn
-    );
-    console.log('table', table);
-    console.log('table.users', table.users);
-    console.log('table.turn', table.turn);
-    console.log('player', player);
 
     // 해당 턴이였던 사람이 나가면 다음 사람으로 턴 넘겨주기.
     // 여러명인 경우도 생각.
-    if (table.turn === userId) {
-      const users = JSON.parse(table.users);
-
-      for (let i = 0; i < users.length; i++) {
-        if (users[i].userId === table.turn) {
-          for (let j = 1; j < 4; j++) {
-            player.map((el) => {
-              if (
-                el.userId === users[(i + j) % room.maxMembers].userId &&
-                !el.gameOver
-              ) {
-                console.log(
-                  '이전 이전 이전 이전 이전 이전 turntable.turn',
-                  table.turn
-                );
-                table.turn = el.userId;
-                console.log(
-                  '이후 이후 이후 이후 이후 이후 turntable.turn',
-                  table.turn
-                );
-              }
-            });
-            break;
-          }
-        }
-      }
-    }
 
     await Table.update(
       {
