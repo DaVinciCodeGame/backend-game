@@ -1075,8 +1075,8 @@ io.on('connection', async (socket) => {
       if (users[i].userId === tableInfo.turn) {
         for (let j = 1; j < 4; j++) {
           for (let z = 0; z < 4; z++) {
-            console.log('player[0]', player[0]);
-            console.log('player[1]', player[1]);
+            console.log('player[0]', player[0].userId);
+            console.log('player[1]', player[1].userId);
             if (users[(i + j) % users.length].userId == player[z].userId) {
               if (player[z].gameOver === false) {
                 console.log(player[z].userId);
