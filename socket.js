@@ -227,10 +227,11 @@ io.on('connection', async (socket) => {
     });
 
     userInfo.forEach((el) => io.to(el.sids).emit('add-ready', cardResult));
-    if (readyCount.length === JSON.parse(tableInfo.users).length) {
-      userInfo.forEach((el) => io.to(el.sids).emit('game-start'));
-      await Room.update({ isPlaying: true }, { where: { roomId } });
-    }
+    if (JSON.parse(tableInfo.users).length > 1)
+      if (readyCount.length === JSON.parse(tableInfo.users).length) {
+        userInfo.forEach((el) => io.to(el.sids).emit('game-start'));
+        await Room.update({ isPlaying: true }, { where: { roomId } });
+      }
   });
 
   socket.on(eventName.FIRST_DRAW, async (userId, black, myCard) => {
@@ -1157,21 +1158,18 @@ io.on('connection', async (socket) => {
           }
         }
       }
-      for (let i = 0; i < users.length; i++) {
-        if (users[i].userId == userId) {
-          users.splice(i, 1);
-          break;
-        }
+    }
+
+    for (let i = 0; i < users.length; i++) {
+      if (users[i].userId == userId) {
+        users.splice(i, 1);
+        break;
       }
     }
-    // else {
-    //   console.log(2);
-    //   if (users.length == 1) {
-    //     console.log('삭제된 부분 확인 8888888888888888');
-    //     await Room.destroy({ where: { roomId } });
-    //     return;
-    //   }
-    // }
+
+    if (users.length == 0) {
+      await Room.destroy({ where: { roomId } });
+    }
 
     // 해당 턴이였던 사람이 나가면 다음 사람으로 턴 넘겨주기.
     // 여러명인 경우도 생각.
@@ -1408,12 +1406,9 @@ io.on('connection', async (socket) => {
       }
       // 게임 진행중이 아닐 때.
     } else {
+      // 마지막 유저가 나갈 때 방 삭제.
+
       await Player.destroy({ where: { userId } });
-      // if ((await Player.findAll({ where: { roomId } })).length) {
-      //   console.log('삭제된 부분 확인 999999999999999');
-      //   await Room.destroy({ where: { roomId } });
-      //   return;
-      // }
 
       console.log('just roomOut');
 
