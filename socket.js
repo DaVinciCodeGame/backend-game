@@ -707,7 +707,7 @@ io.on('connection', async (socket) => {
         return {
           userId: el.userId,
           userName: el.userName,
-          userProfileImg: '',
+          userProfileImg: el.userProfileImg,
           gameOver: el.gameOver ? true : false,
           hand: JSON.parse(el.hand).map((card) => {
             if (el.userId === temp.userId) {
@@ -835,7 +835,7 @@ io.on('connection', async (socket) => {
           return {
             userId: el.userId,
             userName: el.userName,
-            userProfileImg: '',
+            userProfileImg: el.userProfileImg,
             isReady: el.isReady,
             gameOver: el.gameOver ? true : false,
             hand: JSON.parse(el.hand).map((card) => {
@@ -987,7 +987,7 @@ io.on('connection', async (socket) => {
         return {
           userId: el.userId,
           userName: el.userName,
-          userProfileImg: '',
+          userProfileImg: el.userProfileImg,
           gameOver: el.gameOver ? true : false,
           hand: JSON.parse(el.hand).map((card) => {
             if (el.userId === temp.userId) {
@@ -1058,19 +1058,20 @@ io.on('connection', async (socket) => {
 
     const tableInfo = await Table.findOne({ where: { roomId } });
 
-    const netxTurn = 0;
-    const turns = JSON.parse(tableInfo.users);
-    console.log('player', player);
-    console.log('tableInfo.turn', tableInfo.turn);
+    const nextTurn = tableInfo.turn;
+    const users = JSON.parse(tableInfo.users);
+    console.log('player--------------', player);
+    console.log('users--------------', users);
+    console.log('진행 중이던 턴:', nextTurn);
 
-    for (let i = 0; i < turns.length; i++) {
-      if (turns[i].userId === tableInfo.turn) {
+    for (let i = 0; i < users.length; i++) {
+      if (users[i].userId === tableInfo.turn) {
         for (let j = 1; j < 4; j++) {
           for (z = 0; z < 4; z++) {
-            if (turns[(i + j) % turns.length].userId == player[z].userId) {
+            if (users[(i + j) % users.length].userId == player[z].userId) {
               if (player[z].gameOver === false) {
                 console.log(player[z].userId);
-                netxTurn = player[z].userId;
+                nextTurn = player[z].userId;
                 break;
               }
             }
@@ -1078,7 +1079,7 @@ io.on('connection', async (socket) => {
         }
       }
     }
-
+    console.log('다음 진행될 턴:', nextTurn);
     // const users = JSON.parse(tableInfo.users);
 
     // for (let i = 0; i < users.length; i++) {
@@ -1105,7 +1106,7 @@ io.on('connection', async (socket) => {
     //   }
     // }
 
-    await Table.update({ turn: netxTurn }, { where: { roomId } });
+    await Table.update({ turn: nextTurn }, { where: { roomId } });
 
     // gameInfo 내보내기
     function info(temp) {
