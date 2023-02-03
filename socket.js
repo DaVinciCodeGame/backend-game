@@ -1058,7 +1058,7 @@ io.on('connection', async (socket) => {
 
     const tableInfo = await Table.findOne({ where: { roomId } });
 
-    const nextTurn = tableInfo.turn;
+    let nextTurn = tableInfo.turn;
     const users = JSON.parse(tableInfo.users);
     // console.log('player--------------', player);
     // console.log('users--------------', users);
