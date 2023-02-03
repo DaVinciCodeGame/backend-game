@@ -1038,13 +1038,14 @@ io.on('connection', async (socket) => {
   socket.on(eventName.NEXT_TURN, async () => {
     const roomId = socket.data.roomId;
 
-    let player = await Player.findAll({ where: { roomId } });
+    const player = await Player.findAll({ where: { roomId } });
     const room = await Room.findOne({ where: { roomId } });
 
     const tableInfo = await Table.findOne({ where: { roomId } });
 
     const netxTurn = 0;
     const turns = JSON.parse(tableInfo.users);
+    console.log('player', player);
 
     for (let i = 0; i < turns.length; i++) {
       if (turns[i].userId === tableInfo.turn) {
