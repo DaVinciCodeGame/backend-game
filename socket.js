@@ -1037,7 +1037,7 @@ io.on('connection', async (socket) => {
       { where: { userId } }
     );
   });
-  //  FIXMEFIXMEFIXMEFIXMEFIXMEFIXMEFIXMEFIXMEFIXMEFIXMEFIXMEFIXMEFIXMEFIXME
+
   socket.on(eventName.NEXT_TURN, async () => {
     const roomId = socket.data.roomId;
 
@@ -1047,23 +1047,50 @@ io.on('connection', async (socket) => {
       raw: true,
     });
 
-    let turns = JSON.parse(tableInfo.users);
-    let netxTurn = tableInfo.turn;
-
-    for (let i = 0; i < turns.length; i++) {
-      if (turns[i].userId === netxTurn) {
-        netxTurn = turns[(i + 1) % turns.length].userId;
-        break;
-      }
-    }
-
-    await Table.update({ turn: netxTurn }, { where: { roomId } });
-
     let userInfo = await Player.findAll({
       where: { roomId },
       attributes: ['userId', 'userName', 'gameOver', 'hand', 'sids'],
       raw: true,
     });
+
+    let turns = JSON.parse(tableInfo.users);
+    let nextTurn = tableInfo.turn;
+    let turnIndex = 0;
+
+    for (let i = 0; i < turns.length; i++) {
+      if (turns[i].userId === nextTurn) {
+        turnIndex = i;
+        break;
+      }
+    }
+
+    let flag = 0;
+
+    for (let i = 1; i < turns.length + 1; i++) {
+      for (let j = 0; j < userInfo.length; j++) {
+        if (
+          turns[(turnIndex + i) % turns.length].userId == userInfo[j].userId &&
+          !userInfo[j].gameOver
+        ) {
+          console.log('userInfo[j].userId:', userInfo[j].userId);
+          nextTurn = userInfo[j].userId;
+          flag = 1;
+          break;
+        }
+      }
+      if (flag) {
+        break;
+      }
+    }
+
+    // for (let i = 0; i < turns.length; i++) {
+    //   if (turns[i].userId === nextTurn) {
+    //     nextTurn = turns[(i + 1) % turns.length].userId;
+    //     break;
+    //   }
+    // }
+
+    await Table.update({ turn: nextTurn }, { where: { roomId } });
 
     function info(temp) {
       const gameInfo = userInfo.map((el) => {
@@ -1098,7 +1125,7 @@ io.on('connection', async (socket) => {
       cardResult = {
         blackCards: JSON.parse(tableInfo.blackCards).length,
         whiteCards: JSON.parse(tableInfo.whiteCards).length,
-        turn: netxTurn,
+        turn: nextTurn,
         users: gameInfo,
       };
       return cardResult;
