@@ -638,44 +638,33 @@ io.on('connection', async (socket) => {
       let nextTurn = table.turn;
       let turns = JSON.parse(table.users);
 
+      let turnIndex = 0;
+
       for (let i = 0; i < turns.length; i++) {
-        if (turns[i].userId === table.turn) {
-          for (let j = 1; j < 4; j++) {
-            for (z = 0; z < 4; z++) {
-              if (turns[(i + j) % turns.length].userId == player[z].userId) {
-                if (player[z].gameOver === false) {
-                  console.log(player[z].userId);
-                  nextTurn = player[z].userId;
-                  break;
-                }
-              }
-            }
-          }
+        if (turns[i].userId === nextTurn) {
+          turnIndex = i;
+          break;
         }
       }
 
-      // // FIXME turn 진행 순서 여러명일 때 기준으로 수정 필요.
-      // let roomTurn = await Table.findOne({
-      //   where: { roomId },
-      //   attributes: ['turn'],
-      //   raw: true,
-      // });
-      // console.log(5);
-      // let usersTurn = await Table.findOne({
-      //   where: { roomId },
-      //   attributes: ['users'],
-      //   raw: true,
-      // });
+      let flag = 0;
 
-      // let turns = JSON.parse(usersTurn.users);
-      // let netxTurn = roomTurn.turn;
-      // console.log(6);
-      // for (let i = 0; i < turns.length; i++) {
-      //   if (turns[i].userId === netxTurn) {
-      //     netxTurn = turns[(i + 1) % turns.length].userId;
-      //     break;
-      //   }
-      // }
+      for (let i = 1; i < turns.length + 1; i++) {
+        for (let j = 0; j < player.length; j++) {
+          if (
+            turns[(turnIndex + i) % turns.length].userId == player[j].userId &&
+            !player[j].gameOver
+          ) {
+            nextTurn = player[j].userId;
+            flag = 1;
+            break;
+          }
+        }
+        if (flag) {
+          break;
+        }
+      }
+
       console.log(7);
       await Table.update({ turn: nextTurn }, { where: { roomId } });
 
