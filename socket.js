@@ -630,7 +630,7 @@ io.on('connection', async (socket) => {
         );
       }
 
-      const table = await Table.findOnd({ where: { roomId } });
+      const table = await Table.findOne({ where: { roomId } });
       const player = await Player.findAll({ where: { roomId } });
       const netxTurn = 0;
       const turns = JSON.parse(table.users);
