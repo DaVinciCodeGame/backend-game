@@ -1151,7 +1151,7 @@ io.on('connection', async (socket) => {
       cardResult = {
         blackCards: JSON.parse(tableInfo.blackCards).length,
         whiteCards: JSON.parse(tableInfo.whiteCards).length,
-        turn: netxTurn,
+        turn: nextTurn,
         users: gameInfo,
       };
       return cardResult;
