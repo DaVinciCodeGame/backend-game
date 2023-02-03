@@ -19,7 +19,7 @@ app.use(
 app.use(helmet());
 app.use(compression());
 app.use(cookieParser());
-app.use(morgan('dev'));
+app.use(morgan(process.env.NODE_ENV === 'development' ? 'dev' : 'combined'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(routes);
