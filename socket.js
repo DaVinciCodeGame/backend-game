@@ -1038,7 +1038,8 @@ io.on('connection', async (socket) => {
   socket.on(eventName.NEXT_TURN, async () => {
     const roomId = socket.data.roomId;
 
-    const player = await Player.findAll({ where: { roomId } });
+    const players = await Player.findAll({ where: { roomId } });
+    const player = players[0];
     const room = await Room.findOne({ where: { roomId } });
 
     const tableInfo = await Table.findOne({ where: { roomId } });
