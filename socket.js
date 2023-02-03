@@ -1070,16 +1070,13 @@ io.on('connection', async (socket) => {
     // console.log(' player[1]:', player[1]);
     // console.log(' player[0].userId:', player[0].userId);
     // console.log(' player[1].userId:', player[1].userId);
-
+    console.log('이전 턴:', nextTurn);
     for (let i = 0; i < users.length; i++) {
       if (users[i].userId === tableInfo.turn) {
         for (let j = 1; j < player.length; j++) {
           for (let z = 0; z < player.length; z++) {
-            console.log('player[0]', player[0].userId);
-            console.log('player[1]', player[1].userId);
             if (users[(i + j) % users.length].userId == player[z].userId) {
               if (player[z].gameOver == false) {
-                console.log(player[z].userId);
                 nextTurn = player[z].userId;
                 break;
               }
