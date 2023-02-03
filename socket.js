@@ -7,7 +7,7 @@ const app = require('./app');
 const { eventName } = require('./eventName');
 
 const DB = require('./models');
-const { off } = require('process');
+const { off, hasUncaughtExceptionCaptureCallback } = require('process');
 const { table } = require('console');
 // db 연결
 
@@ -138,7 +138,7 @@ io.on('connection', async (socket) => {
       return {
         userId: el.userId,
         userName: el.userName,
-        userProfileImg,
+        userProfileImg: el.userProfileImg,
         isReady: el.isReady ? true : false,
         gameOver: el.gameOver ? true : false,
         hand: JSON.parse(el.hand),
@@ -331,7 +331,7 @@ io.on('connection', async (socket) => {
         return {
           userId: el.userId,
           userName: el.userName,
-          userProfileImg: '',
+          userProfileImg: el.userProfileImg,
           gameOver: el.gameOver ? true : false,
           hand: JSON.parse(el.hand).map((card) => {
             console.log('카드 value:', card.value);
@@ -346,7 +346,7 @@ io.on('connection', async (socket) => {
         return {
           userId: el.userId,
           userName: el.userName,
-          userProfileImg: '',
+          userProfileImg: el.userProfileImg,
           gameOver: el.gameOver ? true : false,
           hand: JSON.parse(el.hand).map((card) => {
             return {
@@ -379,7 +379,7 @@ io.on('connection', async (socket) => {
           return {
             userId: el.userId,
             userName: el.userName,
-            userProfileImg: '',
+            userProfileImg: el.userProfileImg,
             gameOver: el.gameOver ? true : false,
             hand: JSON.parse(el.hand).map((card) => {
               if (el.userId === temp.userId) {
@@ -631,9 +631,9 @@ io.on('connection', async (socket) => {
       }
 
       const table = await Table.findOne({ where: { roomId } });
-      const player = await Player.findAll({ where: { roomId } });
-      const netxTurn = 0;
-      const turns = JSON.parse(table.users);
+      let player = await Player.findAll({ where: { roomId } });
+      let netxTurn = 0;
+      let turns = JSON.parse(table.users);
 
       for (let i = 0; i < turns.length; i++) {
         if (turns[i].userId === table.turn) {
@@ -1038,8 +1038,22 @@ io.on('connection', async (socket) => {
   socket.on(eventName.NEXT_TURN, async () => {
     const roomId = socket.data.roomId;
 
-    const players = await Player.findAll({ where: { roomId } });
-    const player = players[0];
+    const player = await Player.findAll({
+      where: { roomId },
+      attributes: [
+        'userId',
+        'userName',
+        'isReady',
+        'gameOver',
+        'hand',
+        'userProfileImg',
+        'security',
+        'score',
+        'needToBeDeleted',
+      ],
+      raw: true,
+    });
+
     const room = await Room.findOne({ where: { roomId } });
 
     const tableInfo = await Table.findOne({ where: { roomId } });
@@ -1047,6 +1061,7 @@ io.on('connection', async (socket) => {
     const netxTurn = 0;
     const turns = JSON.parse(tableInfo.users);
     console.log('player', player);
+    console.log('tableInfo.turn', tableInfo.turn);
 
     for (let i = 0; i < turns.length; i++) {
       if (turns[i].userId === tableInfo.turn) {
@@ -1098,7 +1113,7 @@ io.on('connection', async (socket) => {
         return {
           userId: el.userId,
           userName: el.userName,
-          userProfileImg: '',
+          userProfileImg: el.userProfileImg,
           gameOver: el.gameOver ? true : false,
           hand: JSON.parse(el.hand).map((card) => {
             if (el.userId === temp.userId) {
@@ -1386,7 +1401,7 @@ io.on('connection', async (socket) => {
             return {
               userId: el.userId,
               userName: el.userName,
-              userProfileImg: '',
+              userProfileImg: el.userProfileImg,
               isReady: el.isReady,
               gameOver: el.gameOver ? true : false,
               hand: JSON.parse(el.hand).map((card) => {
@@ -1469,7 +1484,7 @@ io.on('connection', async (socket) => {
           return {
             userId: el.userId,
             userName: el.userName,
-            userProfileImg: '',
+            userProfileImg: el.userProfileImg,
             gameOver: el.gameOver ? true : false,
             hand: JSON.parse(el.hand).map((card) => {
               if (el.userId === temp.userId) {
