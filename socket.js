@@ -1041,7 +1041,7 @@ io.on('connection', async (socket) => {
     let player = await Player.findAll({ where: { roomId } });
     const room = await Room.findOne({ where: { roomId } });
 
-    const tableInfo = await Table.findOnd({ where: { roomId } });
+    const tableInfo = await Table.findOne({ where: { roomId } });
 
     const netxTurn = 0;
     const turns = JSON.parse(tableInfo.users);
