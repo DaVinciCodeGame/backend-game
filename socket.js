@@ -1059,58 +1059,37 @@ io.on('connection', async (socket) => {
     const tableInfo = await Table.findOne({ where: { roomId } });
 
     let nextTurn = tableInfo.turn;
-    const users = JSON.parse(tableInfo.users);
-    // console.log('player--------------', player);
-    // console.log('users--------------', users);
-    // console.log('진행 중이던 턴:', nextTurn);
-    // console.log('test consoel-----------', users[5 % users.length]);
-    // console.log('test consoel-----.userId', users[5 % users.length].userId);
-    // console.log('--------------------------------------------------------');
-    // console.log(' player[0]:', player[0]);
-    // console.log(' player[1]:', player[1]);
-    // console.log(' player[0].userId:', player[0].userId);
-    // console.log(' player[1].userId:', player[1].userId);
-    console.log('이전 턴:', nextTurn);
-    for (let i = 0; i < users.length; i++) {
-      if (users[i].userId === tableInfo.turn) {
-        for (let j = 1; j < player.length; j++) {
-          for (let z = 0; z < player.length; z++) {
-            if (users[(i + j) % users.length].userId == player[z].userId) {
-              if (player[z].gameOver == false) {
-                nextTurn = player[z].userId;
-                break;
-              }
-            }
-          }
-        }
+    const turns = JSON.parse(tableInfo.users);
+
+
+
+    for (let i = 0; i < turns.length; i++) {
+      if (turns[i].userId === nextTurn) {
+        nextTurn = turns[(i + 1) % turns.length].userId;
+        break;
       }
     }
-    console.log('다음 진행될 턴:', nextTurn);
-    // const users = JSON.parse(tableInfo.users);
 
+
+
+   
+    // console.log('이전 턴:', nextTurn);
     // for (let i = 0; i < users.length; i++) {
     //   if (users[i].userId === tableInfo.turn) {
-    //     for (let j = 1; j < 4; j++) {
-    //       player.map((el) => {
-    //         if (
-    //           el.userId === users[(i + j) % room.maxMembers].userId &&
-    //           !el.gameOver
-    //         ) {
-    //           console.log(
-    //             '이전 이전 이전 이전 이전 이전 turntable.turn',
-    //             tableInfo.turn
-    //           );
-    //           tableInfo.turn = el.userId;
-    //           console.log(
-    //             '이후 이후 이후 이후 이후 이후 turntable.turn',
-    //             tableInfo.turn
-    //           );
+    //     for (let j = 1; j < player.length; j++) {
+    //       for (let z = 0; z < player.length; z++) {
+    //         if (users[(i + j) % users.length].userId == player[z].userId) {
+    //           if (player[z].gameOver == false) {
+    //             nextTurn = player[z].userId;
+    //             break;
+    //           }
     //         }
-    //       });
-    //       break;
+    //       }
     //     }
     //   }
     // }
+    console.log('다음 진행될 턴:', nextTurn);
+    
 
     //await Table.update({ turn: nextTurn }, { where: { roomId } });
 
