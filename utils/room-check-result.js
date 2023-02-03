@@ -7,6 +7,8 @@ class RoomCheckResult {
   constructor(code, message) {
     this.code = code;
     if (message) this.message = message;
+
+    console.log(`만들어진 객체: ${this}`);
   }
 }
 
