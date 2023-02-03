@@ -1065,6 +1065,11 @@ io.on('connection', async (socket) => {
     console.log('진행 중이던 턴:', nextTurn);
     console.log('test consoel-----------', users[5 % users.length]);
     console.log('test consoel-----.userId', users[5 % users.length].userId);
+    console.log('--------------------------------------------------------');
+    console.log(' player[0]:', player[0]);
+    console.log(' player[1]:', player[1]);
+    console.log(' player[0].userId:', player[0].userId);
+    console.log(' player[1].userId:', player[1].userId);
 
     for (let i = 0; i < users.length; i++) {
       if (users[i].userId === tableInfo.turn) {
