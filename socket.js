@@ -632,7 +632,7 @@ io.on('connection', async (socket) => {
 
       const table = await Table.findOne({ where: { roomId } });
       let player = await Player.findAll({ where: { roomId } });
-      let nextTurn = 0;
+      let nextTurn = table.turn;
       let turns = JSON.parse(table.users);
 
       for (let i = 0; i < turns.length; i++) {
@@ -737,7 +737,7 @@ io.on('connection', async (socket) => {
         (guessResult = {
           blackCards: JSON.parse(tableInfoV2.blackCards).length,
           whiteCards: JSON.parse(tableInfoV2.whiteCards).length,
-          turn: nextTurn,
+          turn: tableInfoV2.turn,
           users: some,
         });
       return guessResult;
