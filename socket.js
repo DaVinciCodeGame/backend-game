@@ -1085,7 +1085,7 @@ io.on('connection', async (socket) => {
         return {
           userId: el.userId,
           userName: el.userName,
-          userProfileImg: '',
+          userProfileImg: el.userProfileImg,
           gameOver: el.gameOver ? true : false,
           hand: JSON.parse(el.hand).map((card) => {
             if (el.userId === temp.userId) {
