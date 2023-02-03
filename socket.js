@@ -630,28 +630,49 @@ io.on('connection', async (socket) => {
         );
       }
 
-      // FIXME turn 진행 순서 여러명일 때 기준으로 수정 필요.
-      let roomTurn = await Table.findOne({
-        where: { roomId },
-        attributes: ['turn'],
-        raw: true,
-      });
-      console.log(5);
-      let usersTurn = await Table.findOne({
-        where: { roomId },
-        attributes: ['users'],
-        raw: true,
-      });
+      const table = await Table.findOnd({ where: { roomId } });
+      const player = await Player.findAll({ where: { roomId } });
+      const netxTurn = 0;
+      const turns = JSON.parse(table.users);
 
-      let turns = JSON.parse(usersTurn.users);
-      let netxTurn = roomTurn.turn;
-      console.log(6);
       for (let i = 0; i < turns.length; i++) {
-        if (turns[i].userId === netxTurn) {
-          netxTurn = turns[(i + 1) % turns.length].userId;
-          break;
+        if (turns[i].userId === table.turn) {
+          for (let j = 1; j < 4; j++) {
+            for (z = 0; z < 4; z++) {
+              if (turns[(i + j) % turns.length].userId == player[z].userId) {
+                if (player[z].gameOver === false) {
+                  console.log(player[z].userId);
+                  netxTurn = player[z].userId;
+                  break;
+                }
+              }
+            }
+          }
         }
       }
+
+      // // FIXME turn 진행 순서 여러명일 때 기준으로 수정 필요.
+      // let roomTurn = await Table.findOne({
+      //   where: { roomId },
+      //   attributes: ['turn'],
+      //   raw: true,
+      // });
+      // console.log(5);
+      // let usersTurn = await Table.findOne({
+      //   where: { roomId },
+      //   attributes: ['users'],
+      //   raw: true,
+      // });
+
+      // let turns = JSON.parse(usersTurn.users);
+      // let netxTurn = roomTurn.turn;
+      // console.log(6);
+      // for (let i = 0; i < turns.length; i++) {
+      //   if (turns[i].userId === netxTurn) {
+      //     netxTurn = turns[(i + 1) % turns.length].userId;
+      //     break;
+      //   }
+      // }
       console.log(7);
       await Table.update({ turn: netxTurn }, { where: { roomId } });
 
@@ -1019,39 +1040,55 @@ io.on('connection', async (socket) => {
 
     let player = await Player.findAll({ where: { roomId } });
     const room = await Room.findOne({ where: { roomId } });
-    let tableInfo = await Table.findOne({
-      where: { roomId },
-      attributes: ['blackCards', 'whiteCards', 'users', 'turn'],
-      raw: true,
-    });
 
-    const users = JSON.parse(tableInfo.users);
+    const tableInfo = await Table.findOnd({ where: { roomId } });
 
-    for (let i = 0; i < users.length; i++) {
-      if (users[i].userId === tableInfo.turn) {
+    const netxTurn = 0;
+    const turns = JSON.parse(tableInfo.users);
+
+    for (let i = 0; i < turns.length; i++) {
+      if (turns[i].userId === tableInfo.turn) {
         for (let j = 1; j < 4; j++) {
-          player.map((el) => {
-            if (
-              el.userId === users[(i + j) % room.maxMembers].userId &&
-              !el.gameOver
-            ) {
-              console.log(
-                '이전 이전 이전 이전 이전 이전 turntable.turn',
-                tableInfo.turn
-              );
-              tableInfo.turn = el.userId;
-              console.log(
-                '이후 이후 이후 이후 이후 이후 turntable.turn',
-                tableInfo.turn
-              );
+          for (z = 0; z < 4; z++) {
+            if (turns[(i + j) % turns.length].userId == player[z].userId) {
+              if (player[z].gameOver === false) {
+                console.log(player[z].userId);
+                netxTurn = player[z].userId;
+                break;
+              }
             }
-          });
-          break;
+          }
         }
       }
     }
 
-    await Table.update({ turn: tableInfo.turn }, { where: { roomId } });
+    // const users = JSON.parse(tableInfo.users);
+
+    // for (let i = 0; i < users.length; i++) {
+    //   if (users[i].userId === tableInfo.turn) {
+    //     for (let j = 1; j < 4; j++) {
+    //       player.map((el) => {
+    //         if (
+    //           el.userId === users[(i + j) % room.maxMembers].userId &&
+    //           !el.gameOver
+    //         ) {
+    //           console.log(
+    //             '이전 이전 이전 이전 이전 이전 turntable.turn',
+    //             tableInfo.turn
+    //           );
+    //           tableInfo.turn = el.userId;
+    //           console.log(
+    //             '이후 이후 이후 이후 이후 이후 turntable.turn',
+    //             tableInfo.turn
+    //           );
+    //         }
+    //       });
+    //       break;
+    //     }
+    //   }
+    // }
+
+    await Table.update({ turn: netxTurn }, { where: { roomId } });
 
     // gameInfo 내보내기
     function info(temp) {
@@ -1087,7 +1124,7 @@ io.on('connection', async (socket) => {
       cardResult = {
         blackCards: JSON.parse(tableInfo.blackCards).length,
         whiteCards: JSON.parse(tableInfo.whiteCards).length,
-        turn: tableInfo.turn,
+        turn: netxTurn,
         users: gameInfo,
       };
       return cardResult;
