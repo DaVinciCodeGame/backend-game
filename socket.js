@@ -25,11 +25,12 @@ const io = new Server(server, {
   cors: {
     origin: ['http://localhost:3000', 'https://frontend-delta-puce.vercel.app'],
     method: ['GET', 'POST'],
+    credentials: true,
   },
 });
 
 io.on('connection', async (socket) => {
-  console.log(socket.handshake.headers.cookie);
+  console.log(socket.handshake.headers);
 
   console.log('connect', socket.id);
   socket.onAny(async (e) => {
