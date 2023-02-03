@@ -1112,7 +1112,7 @@ io.on('connection', async (socket) => {
     //   }
     // }
 
-    await Table.update({ turn: nextTurn }, { where: { roomId } });
+    //await Table.update({ turn: nextTurn }, { where: { roomId } });
 
     // gameInfo 내보내기
     function info(temp) {
