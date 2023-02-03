@@ -632,7 +632,7 @@ io.on('connection', async (socket) => {
 
       const table = await Table.findOne({ where: { roomId } });
       let player = await Player.findAll({ where: { roomId } });
-      let netxTurn = 0;
+      let nextTurn = 0;
       let turns = JSON.parse(table.users);
 
       for (let i = 0; i < turns.length; i++) {
@@ -642,7 +642,7 @@ io.on('connection', async (socket) => {
               if (turns[(i + j) % turns.length].userId == player[z].userId) {
                 if (player[z].gameOver === false) {
                   console.log(player[z].userId);
-                  netxTurn = player[z].userId;
+                  nextTurn = player[z].userId;
                   break;
                 }
               }
@@ -674,7 +674,7 @@ io.on('connection', async (socket) => {
       //   }
       // }
       console.log(7);
-      await Table.update({ turn: netxTurn }, { where: { roomId } });
+      await Table.update({ turn: nextTurn }, { where: { roomId } });
 
       result = false;
     }
@@ -737,7 +737,7 @@ io.on('connection', async (socket) => {
         (guessResult = {
           blackCards: JSON.parse(tableInfoV2.blackCards).length,
           whiteCards: JSON.parse(tableInfoV2.whiteCards).length,
-          turn: tableInfoV2.turn,
+          turn: nextTurn,
           users: some,
         });
       return guessResult;
@@ -1063,11 +1063,13 @@ io.on('connection', async (socket) => {
     console.log('player--------------', player);
     console.log('users--------------', users);
     console.log('진행 중이던 턴:', nextTurn);
+    console.log('test consoel-----------', users[5 % users.length]);
+    console.log('test consoel-----.userId', users[5 % users.length].userId);
 
     for (let i = 0; i < users.length; i++) {
       if (users[i].userId === tableInfo.turn) {
         for (let j = 1; j < 4; j++) {
-          for (z = 0; z < 4; z++) {
+          for (let z = 0; z < 4; z++) {
             if (users[(i + j) % users.length].userId == player[z].userId) {
               if (player[z].gameOver === false) {
                 console.log(player[z].userId);
