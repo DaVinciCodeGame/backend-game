@@ -29,6 +29,8 @@ const io = new Server(server, {
 });
 
 io.on('connection', async (socket) => {
+  console.log(socket.handshake.headers.cookie);
+
   console.log('connect', socket.id);
   socket.onAny(async (e) => {
     console.log(`SocketEvent:${e}`);
@@ -1034,7 +1036,7 @@ io.on('connection', async (socket) => {
       { where: { userId } }
     );
   });
- //  FIXMEFIXMEFIXMEFIXMEFIXMEFIXMEFIXMEFIXMEFIXMEFIXMEFIXMEFIXMEFIXMEFIXME
+  //  FIXMEFIXMEFIXMEFIXMEFIXMEFIXMEFIXMEFIXMEFIXMEFIXMEFIXMEFIXMEFIXMEFIXME
   socket.on(eventName.NEXT_TURN, async () => {
     const roomId = socket.data.roomId;
 
