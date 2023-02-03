@@ -1072,7 +1072,6 @@ io.on('connection', async (socket) => {
           turns[(turnIndex + i) % turns.length].userId == userInfo[j].userId &&
           !userInfo[j].gameOver
         ) {
-          console.log('userInfo[j].userId:', userInfo[j].userId);
           nextTurn = userInfo[j].userId;
           flag = 1;
           break;
