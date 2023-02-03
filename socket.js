@@ -1078,7 +1078,7 @@ io.on('connection', async (socket) => {
             console.log('player[0]', player[0].userId);
             console.log('player[1]', player[1].userId);
             if (users[(i + j) % users.length].userId == player[z].userId) {
-              if (player[z].gameOver === false) {
+              if (player[z].gameOver == false) {
                 console.log(player[z].userId);
                 nextTurn = player[z].userId;
                 break;
