@@ -70,6 +70,8 @@ io.on('connection', async (socket) => {
       return;
     }
 
+    // TODO: Joined가 한번씩 작동안하는 상황이 있다.
+    // 찾아서 로직 수정 필요.
     socket.join(roomId);
     socket.data.roomId = roomId;
     socket.data.userId = userId;
@@ -86,6 +88,7 @@ io.on('connection', async (socket) => {
         users: JSON.stringify([]),
         top: JSON.stringify([]),
         turn: userId,
+        roomId,
       });
 
       await Promise.all([room.setTable(table), table.setRoom(room)]);
@@ -325,6 +328,7 @@ io.on('connection', async (socket) => {
         'hand',
         'sids',
         'needToBeDeleted',
+        'userProfileImg',
       ],
       raw: true,
     });
@@ -964,6 +968,7 @@ io.on('connection', async (socket) => {
         'hand',
         'sids',
         'needToBeDeleted',
+        'userProfileImg',
       ],
       raw: true,
     });
@@ -1071,13 +1076,6 @@ io.on('connection', async (socket) => {
       }
     }
 
-    // for (let i = 0; i < turns.length; i++) {
-    //   if (turns[i].userId === nextTurn) {
-    //     nextTurn = turns[(i + 1) % turns.length].userId;
-    //     break;
-    //   }
-    // }
-
     await Table.update({ turn: nextTurn }, { where: { roomId } });
 
     function info(temp) {
@@ -1125,105 +1123,6 @@ io.on('connection', async (socket) => {
       }
     });
   });
-
-  // socket.on(eventName.NEXT_TURN, async () => {
-  //   const roomId = socket.data.roomId;
-
-  //   const player = await Player.findAll({
-  //     where: { roomId },
-  //     attributes: [
-  //       'userId',
-  //       'userName',
-  //       'isReady',
-  //       'gameOver',
-  //       'hand',
-  //       'userProfileImg',
-  //       'security',
-  //       'score',
-  //       'needToBeDeleted',
-  //     ],
-  //     raw: true,
-  //   });
-
-  //   const room = await Room.findOne({ where: { roomId } });
-
-  //   const tableInfo = await Table.findOne({ where: { roomId } });
-
-  //   let nextTurn = tableInfo.turn;
-  //   const turns = JSON.parse(tableInfo.users);
-
-  //   for (let i = 0; i < turns.length; i++) {
-  //     if (turns[i].userId === nextTurn) {
-  //       nextTurn = turns[(i + 1) % turns.length].userId;
-  //       break;
-  //     }
-  //   }
-
-  //   // console.log('이전 턴:', nextTurn);
-  //   // for (let i = 0; i < users.length; i++) {
-  //   //   if (users[i].userId === tableInfo.turn) {
-  //   //     for (let j = 1; j < player.length; j++) {
-  //   //       for (let z = 0; z < player.length; z++) {
-  //   //         if (users[(i + j) % users.length].userId == player[z].userId) {
-  //   //           if (player[z].gameOver == false) {
-  //   //             nextTurn = player[z].userId;
-  //   //             break;
-  //   //           }
-  //   //         }
-  //   //       }
-  //   //     }
-  //   //   }
-  //   // }
-  //   console.log('다음 진행될 턴:', nextTurn);
-
-  //   await Table.update({ turn: nextTurn }, { where: { roomId } });
-
-  //   // gameInfo 내보내기
-  //   function info(temp) {
-  //     const gameInfo = player.map((el) => {
-  //       return {
-  //         userId: el.userId,
-  //         userName: el.userName,
-  //         userProfileImg: el.userProfileImg,
-  //         gameOver: el.gameOver ? true : false,
-  //         hand: JSON.parse(el.hand).map((card) => {
-  //           if (el.userId === temp.userId) {
-  //             return {
-  //               color: card.color,
-  //               value: card.value,
-  //               isOpen: card.isOpen,
-  //             };
-  //           } else if (!card.isOpen) {
-  //             return {
-  //               color: card.color,
-  //               value: 'Back',
-  //               isOpen: card.isOpen,
-  //             };
-  //           } else {
-  //             return {
-  //               color: card.color,
-  //               value: card.value,
-  //               isOpen: card.isOpen,
-  //             };
-  //           }
-  //         }),
-  //       };
-  //     });
-  //     cardResult = {
-  //       blackCards: JSON.parse(tableInfo.blackCards).length,
-  //       whiteCards: JSON.parse(tableInfo.whiteCards).length,
-  //       turn: nextTurn,
-  //       users: gameInfo,
-  //     };
-  //     return cardResult;
-  //   }
-  //   player.forEach((el) => {
-  //     if (!el.needToBeDeleted) {
-  //       const result = info(el);
-  //       io.to(el.sids).emit(eventName.NEXT_GAMEINFO, result);
-  //     }
-  //   });
-  // });
 
   socket.on(eventName.ROOM_OUT, async () => {
     // 방 나갈 때
