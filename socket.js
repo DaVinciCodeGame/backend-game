@@ -7,8 +7,6 @@ const app = require('./app');
 const { eventName } = require('./eventName');
 
 const DB = require('./models');
-const { off, hasUncaughtExceptionCaptureCallback } = require('process');
-const { table } = require('console');
 // db 연결
 
 const server = http.createServer(app);
@@ -33,13 +31,28 @@ io.on('connection', async (socket) => {
   console.log(socket.handshake.headers);
 
   console.log('connect', socket.id);
-  socket.onAny(async (e) => {
-    console.log(`SocketEvent:${e}`);
+
+  socket.onAny((event, ...args) => {
+    console.log(`들어온 이벤트 이름: ${event}`);
+    if (args) {
+      console.log('매개변수:');
+      args.forEach((arg) => {
+        console.log(arg);
+      });
+    }
+  });
+
+  socket.onAnyOutgoing((event, ...args) => {
+    console.log(`나가는 이벤트 이름: ${event}`);
+    if (args) {
+      console.log('매개변수:');
+      args.forEach((arg) => {
+        console.log(arg);
+      });
+    }
   });
 
   socket.on(eventName.SEND_MESSAGE, (msg, room, addMyMessage) => {
-    console.log(msg);
-    console.log(room);
     // 소켓 아이디에 맞는 닉네임을 뽑아서 msg와 같이 전송
 
     socket.to(room).emit(eventName.RECEIVE_MESSAGE, msg);
@@ -47,8 +60,6 @@ io.on('connection', async (socket) => {
   });
 
   socket.on(eventName.JOINED, async (userId, roomId, fn) => {
-    console.log(`userId: ${userId}`);
-    console.log(`roomId: ${roomId}`);
     // TODO:
     // game-info 필요
     // roomId에 따른 방 제목 -> 게임 시작시 상단 바 정보(비공개, 인원, 방제목)
@@ -62,9 +73,6 @@ io.on('connection', async (socket) => {
 
     const room = await Room.findOne({ where: { roomId } });
 
-    console.log('방 정보:');
-    console.log(room);
-
     if (!room) {
       // TODO: 방 없을 때 에러 처리
       return;
@@ -75,9 +83,6 @@ io.on('connection', async (socket) => {
     socket.data.userId = userId;
 
     let table = await room.getTable();
-
-    console.log('테이블 정보 1차:');
-    console.log(table);
 
     if (!table) {
       table = await Table.create({
@@ -90,9 +95,6 @@ io.on('connection', async (socket) => {
 
       await Promise.all([room.setTable(table), table.setRoom(room)]);
     }
-
-    console.log('테이블 정보 2차:');
-    console.log(table);
 
     const player = await Player.create({
       userId,
@@ -163,7 +165,6 @@ io.on('connection', async (socket) => {
 
   socket.on(eventName.READY, async (userId) => {
     const roomId = socket.data.roomId;
-    console.log('userId', userId);
     console.log('roomId', roomId);
 
     const userReady = await Player.findOne({
@@ -223,12 +224,6 @@ io.on('connection', async (socket) => {
       users: userInfoV2,
     };
 
-    const members = await Room.findOne({
-      where: { roomId },
-      attributes: ['maxMembers'],
-      raw: true,
-    });
-
     userInfo.forEach((el) => io.to(el.sids).emit('add-ready', cardResult));
     if (JSON.parse(tableInfo.users).length > 1)
       if (readyCount.length === JSON.parse(tableInfo.users).length) {
@@ -240,8 +235,6 @@ io.on('connection', async (socket) => {
   socket.on(eventName.FIRST_DRAW, async (userId, black, myCard) => {
     const roomId = socket.data.roomId;
     const white = 3 - black;
-    console.log('userId', userId);
-    console.log('black', black);
     let getCards = [];
 
     let cardResult = await Table.findOne({
@@ -496,9 +489,6 @@ io.on('connection', async (socket) => {
 
   socket.on(eventName.GUESS, async (userId, { index, value }) => {
     const roomId = socket.data.roomId;
-    console.log(userId);
-    console.log(index);
-    console.log(value);
     let targetHand = JSON.parse(
       (
         await Player.findOne({
@@ -892,9 +882,6 @@ io.on('connection', async (socket) => {
 
   socket.on(eventName.PLACE_JOKER, async (userId, hand) => {
     const roomId = socket.data.roomId;
-    console.log(userId);
-    console.log(hand);
-    console.log(typeof hand);
     // hand가 있으면 수정해서 보내주고,
     // 없으면 그냥 전체적인Info  // 없을 때는 Null
 
@@ -1125,105 +1112,6 @@ io.on('connection', async (socket) => {
       }
     });
   });
-
-  // socket.on(eventName.NEXT_TURN, async () => {
-  //   const roomId = socket.data.roomId;
-
-  //   const player = await Player.findAll({
-  //     where: { roomId },
-  //     attributes: [
-  //       'userId',
-  //       'userName',
-  //       'isReady',
-  //       'gameOver',
-  //       'hand',
-  //       'userProfileImg',
-  //       'security',
-  //       'score',
-  //       'needToBeDeleted',
-  //     ],
-  //     raw: true,
-  //   });
-
-  //   const room = await Room.findOne({ where: { roomId } });
-
-  //   const tableInfo = await Table.findOne({ where: { roomId } });
-
-  //   let nextTurn = tableInfo.turn;
-  //   const turns = JSON.parse(tableInfo.users);
-
-  //   for (let i = 0; i < turns.length; i++) {
-  //     if (turns[i].userId === nextTurn) {
-  //       nextTurn = turns[(i + 1) % turns.length].userId;
-  //       break;
-  //     }
-  //   }
-
-  //   // console.log('이전 턴:', nextTurn);
-  //   // for (let i = 0; i < users.length; i++) {
-  //   //   if (users[i].userId === tableInfo.turn) {
-  //   //     for (let j = 1; j < player.length; j++) {
-  //   //       for (let z = 0; z < player.length; z++) {
-  //   //         if (users[(i + j) % users.length].userId == player[z].userId) {
-  //   //           if (player[z].gameOver == false) {
-  //   //             nextTurn = player[z].userId;
-  //   //             break;
-  //   //           }
-  //   //         }
-  //   //       }
-  //   //     }
-  //   //   }
-  //   // }
-  //   console.log('다음 진행될 턴:', nextTurn);
-
-  //   await Table.update({ turn: nextTurn }, { where: { roomId } });
-
-  //   // gameInfo 내보내기
-  //   function info(temp) {
-  //     const gameInfo = player.map((el) => {
-  //       return {
-  //         userId: el.userId,
-  //         userName: el.userName,
-  //         userProfileImg: el.userProfileImg,
-  //         gameOver: el.gameOver ? true : false,
-  //         hand: JSON.parse(el.hand).map((card) => {
-  //           if (el.userId === temp.userId) {
-  //             return {
-  //               color: card.color,
-  //               value: card.value,
-  //               isOpen: card.isOpen,
-  //             };
-  //           } else if (!card.isOpen) {
-  //             return {
-  //               color: card.color,
-  //               value: 'Back',
-  //               isOpen: card.isOpen,
-  //             };
-  //           } else {
-  //             return {
-  //               color: card.color,
-  //               value: card.value,
-  //               isOpen: card.isOpen,
-  //             };
-  //           }
-  //         }),
-  //       };
-  //     });
-  //     cardResult = {
-  //       blackCards: JSON.parse(tableInfo.blackCards).length,
-  //       whiteCards: JSON.parse(tableInfo.whiteCards).length,
-  //       turn: nextTurn,
-  //       users: gameInfo,
-  //     };
-  //     return cardResult;
-  //   }
-  //   player.forEach((el) => {
-  //     if (!el.needToBeDeleted) {
-  //       const result = info(el);
-  //       io.to(el.sids).emit(eventName.NEXT_GAMEINFO, result);
-  //     }
-  //   });
-  // });
 
   socket.on(eventName.ROOM_OUT, async () => {
     // 방 나갈 때
@@ -1588,7 +1476,6 @@ io.on('connection', async (socket) => {
         };
         return cardResult;
       }
-      console.log('LEAVE_USER 요청');
       userInfo.forEach((el) => {
         if (!el.needToBeDeleted) {
           const result = info(el);
