@@ -7,7 +7,10 @@ const app = require('./app');
 const { eventName } = require('./eventName');
 
 const DB = require('./models');
+const cookieParser = require('./utils/cookie-parser');
 const CustomError = require('./utils/custom-error');
+const verifyToken = require('./utils/verify-token');
+const { default: axios } = require('axios');
 // db 연결
 
 const server = http.createServer(app);
@@ -30,9 +33,26 @@ const io = new Server(server, {
 
 io.on('connection', async (socket) => {
   try {
-    console.log(socket.handshake.headers);
+    const { cookie } = socket.handshake.headers;
+
+    if (!cookie)
+      throw new CustomError('요청에 쿠키가 포합되어 있지 않습니다.', 301);
+
+    const { accessToken } = cookieParser(cookie);
+
+    if (!accessToken)
+      throw new CustomError('엑세스 토큰이 담긴 쿠키가 없습니다.', 302);
+
+    const { userId } = verifyToken(accessToken);
+
+    if (!userId) throw new CustomError('엑세스 토큰이 유효하지 않습니다.', 303);
+
+    const userInfo = await axios.get(
+      `${process.env.MAIN_SERVER_URL}/p/users/${userId}`
+    );
 
     console.log('connect', socket.id);
+    console.log(userInfo);
 
     socket.onAny((event, ...args) => {
       console.log(`들어온 이벤트 이름: ${event}`);
