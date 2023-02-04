@@ -32,13 +32,11 @@ const io = new Server(server, {
 });
 
 io.on('connection', async (socket) => {
-
   try {
     const { cookie } = socket.handshake.headers;
 
     if (!cookie)
       throw new CustomError('요청에 쿠키가 포합되어 있지 않습니다.', 301);
-
 
     const { accessToken } = cookieParser(cookie);
 
@@ -107,7 +105,6 @@ io.on('connection', async (socket) => {
 
       socket.join(roomId);
       socket.data.roomId = roomId;
-      socket.data.userId = userId;
 
       let table = await room.getTable();
 
@@ -122,6 +119,7 @@ io.on('connection', async (socket) => {
           users: JSON.stringify([]),
           top: JSON.stringify([]),
           turn: userId,
+          roomId,
         });
 
         await Promise.all([room.setTable(table), table.setRoom(room)]);
@@ -130,8 +128,8 @@ io.on('connection', async (socket) => {
       const player = await Player.create({
         userId,
         sids: socket.id,
-        userName,
-        userProfileImg,
+        userName: socket.data.userName,
+        userProfileImg: socket.data.userProfileImg,
         security: '',
         isReady: false,
         gameOver: false,
@@ -142,7 +140,6 @@ io.on('connection', async (socket) => {
       room.addPlayer(player);
 
       const usersData = JSON.parse(table.users);
-
 
       usersData.push({ userId });
 
@@ -170,7 +167,6 @@ io.on('connection', async (socket) => {
         ],
         raw: true,
       });
-
 
       let userInfoV2 = userInfo.map((el) => {
         return {
@@ -351,6 +347,7 @@ io.on('connection', async (socket) => {
           'hand',
           'sids',
           'needToBeDeleted',
+          'userProfileImg',
         ],
         raw: true,
       });
@@ -985,6 +982,7 @@ io.on('connection', async (socket) => {
           'hand',
           'sids',
           'needToBeDeleted',
+          'userProfileImg',
         ],
         raw: true,
       });
@@ -1039,47 +1037,6 @@ io.on('connection', async (socket) => {
           io.to(el.sids).emit(eventName.ONGOING, result);
         }
       });
-
-
-      userHand
-        .sort((a, b) => a.value - b.value)
-        .sort((a, b) => {
-          if (a.value === b.value) {
-            if (a.color < b.color) return -1;
-            else if (b.color < a.color) return 1;
-            else return 0;
-          }
-        });
-
-      for (let i = 0; i < jokerIndex.length; i++) {
-        userHand.splice(jokerIndex[i], 0, jokerCard[i]);
-      }
-
-      await Player.update(
-        { hand: JSON.stringify(userHand) },
-        { where: { userId } }
-      );
-    }
-
-    let userInfo = await Player.findAll({
-      where: { roomId },
-      attributes: [
-        'userId',
-        'userName',
-        'gameOver',
-        'hand',
-        'sids',
-        'needToBeDeleted',
-        'userProfileImg',
-      ],
-      raw: true,
-    });
-
-    let tableInfo = await Table.findOne({
-      where: { roomId },
-      attributes: ['blackCards', 'whiteCards', 'users', 'turn'],
-      raw: true,
-
     });
 
     socket.on(
@@ -1137,10 +1094,7 @@ io.on('connection', async (socket) => {
         }
       }
 
-     
-
       await Table.update({ turn: nextTurn }, { where: { roomId } });
-
 
       function info(temp) {
         const gameInfo = userInfo.map((el) => {
@@ -1187,26 +1141,6 @@ io.on('connection', async (socket) => {
         }
       });
     });
-
-  });
-
-  socket.on(eventName.ROOM_OUT, async () => {
-    // 방 나갈 때
-    const roomId = socket.data.roomId;
-    const userId = socket.data.userId;
-    console.log(roomId);
-    console.log(userId);
-    let userInfoV2;
-    let userInfo;
-
-    const room = await Room.findOne({ where: { roomId } });
-    const player = await Player.findAll({
-      where: { roomId },
-      attributes: ['userId', 'gameOver'],
-      raw: true,
-    });
-    const table = await room.getTable();
-
 
     socket.on(eventName.ROOM_OUT, async () => {
       // 방 나갈 때
@@ -1529,6 +1463,7 @@ io.on('connection', async (socket) => {
             'hand',
             'sids',
             'needToBeDeleted',
+            'userProfileImg',
           ],
           raw: true,
         });
