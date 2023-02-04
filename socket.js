@@ -280,7 +280,7 @@ io.on('connection', async (socket) => {
         users: userInfoV2,
       };
 
-      const roomInfo = {
+      let roomInfo = {
         maxMembers: room.maxMembers,
         members: userInfoV2.length,
         isPlaying: room.isPlaying,
@@ -295,6 +295,7 @@ io.on('connection', async (socket) => {
 
       if (JSON.parse(tableInfo.users).length > 1)
         if (readyCount.length === JSON.parse(tableInfo.users).length) {
+          roomInfo.isPlaying = true;
           userInfo.forEach((el) =>
             io.to(el.sids).emit(eventName.GAME_START, roomInfo)
           );
