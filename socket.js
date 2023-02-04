@@ -191,14 +191,27 @@ io.on('connection', async (socket) => {
         users: userInfoV2,
       };
 
+      console.log('members 값 확인 console.log', userInfoV2.length);
+      // TODO: 보내주기 위한 roomInfo
+      const roomInfo = {
+        maxMembers: room.maxMembers,
+        members: userInfoV2.length,
+        isPlaying: room.isPlaying,
+        secret: room.password ? true : false,
+        roomId: room.roomId,
+        roomName: room.roomName,
+      };
+
       userInfo.forEach((el) =>
-        socket.to(el.sids).emit(eventName.ADD_READY, cardResult)
+        socket.to(el.sids).emit(eventName.ADD_READY, cardResult, roomInfo)
       );
       fn(cardResult);
     });
 
-    socket.on(eventName.READY, async (userId) => {
+    socket.on(eventName.READY, async () => {
       const roomId = socket.data.roomId;
+  
+
       console.log('roomId', roomId);
 
       const userReady = await Player.findOne({
