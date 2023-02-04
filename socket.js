@@ -33,8 +33,25 @@ io.on('connection', async (socket) => {
   console.log(socket.handshake.headers);
 
   console.log('connect', socket.id);
-  socket.onAny(async (e) => {
-    console.log(`SocketEvent:${e}`);
+
+  socket.onAny((event, ...args) => {
+    console.log(`들어온 이벤트 이름: ${event}`);
+    if (args) {
+      console.log('매개변수:');
+      args.forEach((arg) => {
+        console.log(arg);
+      });
+    }
+  });
+
+  socket.onAnyOutgoing((event, ...args) => {
+    console.log(`나가는 이벤트 이름: ${event}`);
+    if (args) {
+      console.log('매개변수:');
+      args.forEach((arg) => {
+        console.log(arg);
+      });
+    }
   });
 
   socket.on(eventName.SEND_MESSAGE, (msg, room, addMyMessage) => {
