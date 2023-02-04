@@ -47,12 +47,15 @@ io.on('connection', async (socket) => {
 
     if (!userId) throw new CustomError('엑세스 토큰이 유효하지 않습니다.', 303);
 
-    const userInfo = await axios.get(
+    const { data } = await axios.get(
       `${process.env.MAIN_SERVER_URL}/p/users/${userId}`
     );
 
-    console.log('connect', socket.id);
-    console.log(userInfo);
+    socket.data.userId = data.userId;
+    socket.data.userName = data.username;
+    socket.data.userProfileImg = data.profileImageUrl;
+
+    console.log(socket.data);
 
     socket.onAny((event, ...args) => {
       console.log(`들어온 이벤트 이름: ${event}`);
