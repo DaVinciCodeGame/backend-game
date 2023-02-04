@@ -55,8 +55,6 @@ io.on('connection', async (socket) => {
   });
 
   socket.on(eventName.SEND_MESSAGE, (msg, room, addMyMessage) => {
-    console.log(msg);
-    console.log(room);
     // 소켓 아이디에 맞는 닉네임을 뽑아서 msg와 같이 전송
 
     socket.to(room).emit(eventName.RECEIVE_MESSAGE, msg);
@@ -64,8 +62,6 @@ io.on('connection', async (socket) => {
   });
 
   socket.on(eventName.JOINED, async (userId, roomId, fn) => {
-    console.log(`userId: ${userId}`);
-    console.log(`roomId: ${roomId}`);
     // TODO:
     // game-info 필요
     // roomId에 따른 방 제목 -> 게임 시작시 상단 바 정보(비공개, 인원, 방제목)
@@ -79,9 +75,6 @@ io.on('connection', async (socket) => {
 
     const room = await Room.findOne({ where: { roomId } });
 
-    console.log('방 정보:');
-    console.log(room);
-
     if (!room) {
       // TODO: 방 없을 때 에러 처리
       return;
@@ -92,9 +85,6 @@ io.on('connection', async (socket) => {
     socket.data.userId = userId;
 
     let table = await room.getTable();
-
-    console.log('테이블 정보 1차:');
-    console.log(table);
 
     if (!table) {
       table = await Table.create({
@@ -107,9 +97,6 @@ io.on('connection', async (socket) => {
 
       await Promise.all([room.setTable(table), table.setRoom(room)]);
     }
-
-    console.log('테이블 정보 2차:');
-    console.log(table);
 
     const player = await Player.create({
       userId,
@@ -180,7 +167,6 @@ io.on('connection', async (socket) => {
 
   socket.on(eventName.READY, async (userId) => {
     const roomId = socket.data.roomId;
-    console.log('userId', userId);
     console.log('roomId', roomId);
 
     const userReady = await Player.findOne({
@@ -257,8 +243,6 @@ io.on('connection', async (socket) => {
   socket.on(eventName.FIRST_DRAW, async (userId, black, myCard) => {
     const roomId = socket.data.roomId;
     const white = 3 - black;
-    console.log('userId', userId);
-    console.log('black', black);
     let getCards = [];
 
     let cardResult = await Table.findOne({
@@ -513,9 +497,6 @@ io.on('connection', async (socket) => {
 
   socket.on(eventName.GUESS, async (userId, { index, value }) => {
     const roomId = socket.data.roomId;
-    console.log(userId);
-    console.log(index);
-    console.log(value);
     let targetHand = JSON.parse(
       (
         await Player.findOne({
@@ -671,28 +652,6 @@ io.on('connection', async (socket) => {
         }
       }
 
-      // // FIXME turn 진행 순서 여러명일 때 기준으로 수정 필요.
-      // let roomTurn = await Table.findOne({
-      //   where: { roomId },
-      //   attributes: ['turn'],
-      //   raw: true,
-      // });
-      // console.log(5);
-      // let usersTurn = await Table.findOne({
-      //   where: { roomId },
-      //   attributes: ['users'],
-      //   raw: true,
-      // });
-
-      // let turns = JSON.parse(usersTurn.users);
-      // let netxTurn = roomTurn.turn;
-      // console.log(6);
-      // for (let i = 0; i < turns.length; i++) {
-      //   if (turns[i].userId === netxTurn) {
-      //     netxTurn = turns[(i + 1) % turns.length].userId;
-      //     break;
-      //   }
-      // }
       console.log(7);
       await Table.update({ turn: nextTurn }, { where: { roomId } });
 
@@ -920,9 +879,6 @@ io.on('connection', async (socket) => {
 
   socket.on(eventName.PLACE_JOKER, async (userId, hand) => {
     const roomId = socket.data.roomId;
-    console.log(userId);
-    console.log(hand);
-    console.log(typeof hand);
     // hand가 있으면 수정해서 보내주고,
     // 없으면 그냥 전체적인Info  // 없을 때는 Null
 
@@ -1590,7 +1546,6 @@ io.on('connection', async (socket) => {
         };
         return cardResult;
       }
-      console.log('LEAVE_USER 요청');
       userInfo.forEach((el) => {
         if (!el.needToBeDeleted) {
           const result = info(el);
