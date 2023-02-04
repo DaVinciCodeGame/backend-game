@@ -560,9 +560,9 @@ io.on('connection', async (socket) => {
       });
     });
 
-    socket.on(eventName.GUESS, async ({ index, value }) => {
+    socket.on(eventName.GUESS, async (userId, { index, value }) => {
       const roomId = socket.data.roomId;
-      const userId = socket.data.userId;
+
       let targetHand = JSON.parse(
         (
           await Player.findOne({
