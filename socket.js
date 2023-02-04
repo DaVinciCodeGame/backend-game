@@ -80,7 +80,7 @@ io.on('connection', async (socket) => {
       addMyMessage(msg);
     });
 
-    socket.on(eventName.JOINED, async (userId, roomId, fn) => {
+    socket.on(eventName.JOINED, async (roomId, fn) => {
       // TODO:
       // game-info 필요
       // roomId에 따른 방 제목 -> 게임 시작시 상단 바 정보(비공개, 인원, 방제목)
@@ -101,8 +101,9 @@ io.on('connection', async (socket) => {
 
       socket.join(roomId);
       socket.data.roomId = roomId;
-      socket.data.userId = userId;
-      // socket.data.userId = data.userId;
+      // socket.data.userId = userId;
+      socket.data.userId = data.userId;
+      const userId = data.userId;
       socket.data.userProfileImg = data.profileImageUrl;
       socket.data.userName = data.username;
 
@@ -1064,7 +1065,14 @@ io.on('connection', async (socket) => {
 
       let userInfo = await Player.findAll({
         where: { roomId },
-        attributes: ['userId', 'userName', 'gameOver', 'hand', 'sids'],
+        attributes: [
+          'userId',
+          'userName',
+          'gameOver',
+          'hand',
+          'sids',
+          'userProfileImg',
+        ],
         raw: true,
       });
 
@@ -1292,7 +1300,7 @@ io.on('connection', async (socket) => {
             })
           ).top
         );
-     
+
         topRank.unshift({
           userId: outUser.userId,
           userName: outUser.userName,
