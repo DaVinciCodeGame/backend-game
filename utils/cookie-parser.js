@@ -1,7 +1,7 @@
 /**
  *
  * @param {string} rawCookies
- * @returns {{[name: string]: string}} parsed cookies
+ * @returns {{[name: string]: string | undefined}} parsed cookies
  */
 function cookieParser(rawCookies) {
   if (!rawCookies || typeof rawCookies !== 'string') {
