@@ -110,10 +110,16 @@ io.on('connection', async (socket) => {
       socket.data.userName = data.username;
 
       // FIXME: 유저 중복으로 joined 안먹는 부분 수정 필요
-      // const duplicate = await Player.findOne({ where: { userId } });
-      // if (duplicate) {
-      //   await Player.destroy({ where: { userId } });
-      // }
+      const duplicate = await Player.findOne({ where: { userId } });
+      if (duplicate) {
+        const newError = new CustomError(
+          '이미 다른 방에 참여 중인 Player 입니다.',
+          999
+        );
+
+        io.to(socket.id).emit(eventName.ERROR, newError);
+        return;
+      }
 
       console.log('socket.data.userId', socket.data.userId);
       console.log('입력 받은 userId', userId);
