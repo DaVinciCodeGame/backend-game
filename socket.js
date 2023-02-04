@@ -75,8 +75,9 @@ io.on('connection', async (socket) => {
 
     socket.on(eventName.SEND_MESSAGE, (msg, room, addMyMessage) => {
       // 소켓 아이디에 맞는 닉네임을 뽑아서 msg와 같이 전송
+      const userName = socket.data.userName;
 
-      socket.to(room).emit(eventName.RECEIVE_MESSAGE, msg);
+      socket.to(room).emit(eventName.RECEIVE_MESSAGE, msg, userName);
       addMyMessage(msg);
     });
 
