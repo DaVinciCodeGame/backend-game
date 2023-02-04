@@ -6,7 +6,7 @@ const jwt = require('jsonwebtoken');
  * @returns {jwt.JwtPayload}
  */
 function verifyToken(token) {
-  const payload = jwt.verify(accessToken, process.env.JWT_SECRET);
+  const payload = jwt.verify(token, process.env.JWT_SECRET);
 
   if (
     typeof payload === 'string' ||
