@@ -6,17 +6,14 @@ const authorize = async (req, res, next) => {
 
   try {
     if (!accessToken)
-      throw unauthorized('인증 정보가 유효하지 않습니다.', '쿠키 없음');
+      throw unauthorized('쿠키에 엑세스 토큰이 포함되어 있지 않습니다.');
 
     let payload;
 
     try {
       payload = jwt.verify(accessToken, process.env.JWT_SECRET);
     } catch (err) {
-      throw unauthorized(
-        '인증 정보가 유효하지 않습니다.',
-        '유효하지 않은 토큰'
-      );
+      throw unauthorized('엑세스 토큰이 유효하지 않습니다.');
     }
 
     if (
@@ -24,10 +21,7 @@ const authorize = async (req, res, next) => {
       typeof payload.userId !== 'number' ||
       !payload.exp
     )
-      throw unauthorized(
-        '인증 정보가 유효하지 않습니다.',
-        '내용이 유효하지 않음'
-      );
+      throw unauthorized('엑세스 토큰의 내용이 유효하지 않습니다.');
 
     res.locals.userId = payload.userId;
     res.locals.accessTokenExp = payload.exp * 1000 - Date.now();
