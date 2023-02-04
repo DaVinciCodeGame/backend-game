@@ -103,8 +103,8 @@ io.on('connection', async (socket) => {
       socket.data.roomId = roomId;
       socket.data.userId = userId;
       socket.data.userProfileImg = data.profileImageUrl;
+      socket.data.userName = data.username;
       // socket.data.userId = data.userId;
-      // socket.data.userName = data.username;
 
       console.log('socket.data.userId', socket.data.userId);
       console.log('입력 받은 userId', userId);
