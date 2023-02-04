@@ -469,8 +469,9 @@ io.on('connection', async (socket) => {
       }
     });
 
-    socket.on(eventName.COLOR_SELECTED, async (userId, color, myCard) => {
+    socket.on(eventName.COLOR_SELECTED, async (color, myCard) => {
       let roomId = socket.data.roomId;
+      const userId = socket.data.userId;
       let oneCard = {};
       let cardResult = await Table.findOne({
         where: { roomId },
@@ -539,8 +540,9 @@ io.on('connection', async (socket) => {
       });
     });
 
-    socket.on(eventName.GUESS, async (userId, { index, value }) => {
+    socket.on(eventName.GUESS, async ({ index, value }) => {
       const roomId = socket.data.roomId;
+      const userId = socket.data.userId;
       let targetHand = JSON.parse(
         (
           await Player.findOne({
@@ -933,7 +935,8 @@ io.on('connection', async (socket) => {
       }
     });
 
-    socket.on(eventName.PLACE_JOKER, async (userId, hand) => {
+    socket.on(eventName.PLACE_JOKER, async (hand) => {
+      const userId = socket.data.userId;
       const roomId = socket.data.roomId;
       // hand가 있으면 수정해서 보내주고,
       // 없으면 그냥 전체적인Info  // 없을 때는 Null
