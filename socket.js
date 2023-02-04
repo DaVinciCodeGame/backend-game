@@ -90,6 +90,7 @@ io.on('connection', async (socket) => {
       // TODO: 쿠키에서 받아올 예정
       // const userName = 'hohoho';
       // const userProfileImg = 'https://cdn.davinci-code.online/1675150781053';
+
       const score = 0;
 
       const room = await Room.findOne({ where: { roomId } });
@@ -106,6 +107,12 @@ io.on('connection', async (socket) => {
       const userId = data.userId;
       socket.data.userProfileImg = data.profileImageUrl;
       socket.data.userName = data.username;
+
+      // FIXME: 유저 중복으로 joined 안먹는 부분 수정 필요
+      // const duplicate = await Player.findOne({ where: { userId } });
+      // if (duplicate) {
+      //   await Player.destroy({ where: { userId } });
+      // }
 
       console.log('socket.data.userId', socket.data.userId);
       console.log('입력 받은 userId', userId);
@@ -215,6 +222,7 @@ io.on('connection', async (socket) => {
       console.log('roomId"', roomId);
       console.log('userId:', userId);
 
+      const room = await Room.findOne({ where: { roomId } });
       const userReady = await Player.findOne({
         where: { userId, [Op.and]: [{ roomId }] },
         attributes: ['isReady'],
@@ -272,12 +280,24 @@ io.on('connection', async (socket) => {
         users: userInfoV2,
       };
 
+      const roomInfo = {
+        maxMembers: room.maxMembers,
+        members: userInfoV2.length,
+        isPlaying: room.isPlaying,
+        secret: room.password ? true : false,
+        roomId: room.roomId,
+        roomName: room.roomName,
+      };
+
       userInfo.forEach((el) =>
-        io.to(el.sids).emit(eventName.ADD_READY, cardResult)
+        io.to(el.sids).emit(eventName.ADD_READY, cardResult, roomInfo)
       );
+
       if (JSON.parse(tableInfo.users).length > 1)
         if (readyCount.length === JSON.parse(tableInfo.users).length) {
-          userInfo.forEach((el) => io.to(el.sids).emit(eventName.GAME_START));
+          userInfo.forEach((el) =>
+            io.to(el.sids).emit(eventName.GAME_START, roomInfo)
+          );
           await Room.update({ isPlaying: true }, { where: { roomId } });
         }
     });
