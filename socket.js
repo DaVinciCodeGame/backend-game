@@ -32,11 +32,13 @@ const io = new Server(server, {
 });
 
 io.on('connection', async (socket) => {
+
   try {
     const { cookie } = socket.handshake.headers;
 
     if (!cookie)
       throw new CustomError('요청에 쿠키가 포합되어 있지 않습니다.', 301);
+
 
     const { accessToken } = cookieParser(cookie);
 
@@ -141,6 +143,7 @@ io.on('connection', async (socket) => {
 
       const usersData = JSON.parse(table.users);
 
+
       usersData.push({ userId });
 
       await Table.update(
@@ -167,6 +170,7 @@ io.on('connection', async (socket) => {
         ],
         raw: true,
       });
+
 
       let userInfoV2 = userInfo.map((el) => {
         return {
@@ -1035,6 +1039,47 @@ io.on('connection', async (socket) => {
           io.to(el.sids).emit(eventName.ONGOING, result);
         }
       });
+
+
+      userHand
+        .sort((a, b) => a.value - b.value)
+        .sort((a, b) => {
+          if (a.value === b.value) {
+            if (a.color < b.color) return -1;
+            else if (b.color < a.color) return 1;
+            else return 0;
+          }
+        });
+
+      for (let i = 0; i < jokerIndex.length; i++) {
+        userHand.splice(jokerIndex[i], 0, jokerCard[i]);
+      }
+
+      await Player.update(
+        { hand: JSON.stringify(userHand) },
+        { where: { userId } }
+      );
+    }
+
+    let userInfo = await Player.findAll({
+      where: { roomId },
+      attributes: [
+        'userId',
+        'userName',
+        'gameOver',
+        'hand',
+        'sids',
+        'needToBeDeleted',
+        'userProfileImg',
+      ],
+      raw: true,
+    });
+
+    let tableInfo = await Table.findOne({
+      where: { roomId },
+      attributes: ['blackCards', 'whiteCards', 'users', 'turn'],
+      raw: true,
+
     });
 
     socket.on(
@@ -1092,14 +1137,10 @@ io.on('connection', async (socket) => {
         }
       }
 
-      // for (let i = 0; i < turns.length; i++) {
-      //   if (turns[i].userId === nextTurn) {
-      //     nextTurn = turns[(i + 1) % turns.length].userId;
-      //     break;
-      //   }
-      // }
+     
 
       await Table.update({ turn: nextTurn }, { where: { roomId } });
+
 
       function info(temp) {
         const gameInfo = userInfo.map((el) => {
@@ -1146,6 +1187,26 @@ io.on('connection', async (socket) => {
         }
       });
     });
+
+  });
+
+  socket.on(eventName.ROOM_OUT, async () => {
+    // 방 나갈 때
+    const roomId = socket.data.roomId;
+    const userId = socket.data.userId;
+    console.log(roomId);
+    console.log(userId);
+    let userInfoV2;
+    let userInfo;
+
+    const room = await Room.findOne({ where: { roomId } });
+    const player = await Player.findAll({
+      where: { roomId },
+      attributes: ['userId', 'gameOver'],
+      raw: true,
+    });
+    const table = await room.getTable();
+
 
     socket.on(eventName.ROOM_OUT, async () => {
       // 방 나갈 때
