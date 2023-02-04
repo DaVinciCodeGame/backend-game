@@ -51,10 +51,6 @@ io.on('connection', async (socket) => {
       `${process.env.MAIN_SERVER_URL}/p/users/${userId}`
     );
 
-    socket.data.userId = data.userId;
-    socket.data.userName = data.username;
-    socket.data.userProfileImg = data.profileImageUrl;
-
     console.log(socket.data);
 
     socket.onAny((event, ...args) => {
@@ -105,6 +101,13 @@ io.on('connection', async (socket) => {
 
       socket.join(roomId);
       socket.data.roomId = roomId;
+      socket.data.userId = data.userId;
+      socket.data.userName = data.username;
+      socket.data.userProfileImg = data.profileImageUrl;
+
+      console.log('socket.data.userId', socket.data.userId);
+      console.log('입력 받은 userId', userId);
+      console.log('socket.data.userName', socket.data.userName);
 
       let table = await room.getTable();
 
