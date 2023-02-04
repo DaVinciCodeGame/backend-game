@@ -55,6 +55,8 @@ io.on('connection', async (socket) => {
     socket.data.userName = data.username;
     socket.data.userProfileImg = data.profileImageUrl;
 
+    console.log(socket.data);
+
     socket.onAny((event, ...args) => {
       console.log(`들어온 이벤트 이름: ${event}`);
       if (args) {
