@@ -144,12 +144,8 @@ module.exports = class RoomsService {
     if (room.isPlaying)
       return new RoomCheckResult(103, '해당 방은 현재 게임이 진행 중입니다.');
 
-    if (room.password)
-      try {
-        await bcrypt.compare(password, room.password);
-      } catch {
-        return new RoomCheckResult(104, '비밀번호가 틀렸습니다.');
-      }
+    if (room.password && !(await bcrypt.compare(password, room.password)))
+      return new RoomCheckResult(104, '비밀번호가 틀렸습니다.');
 
     return new RoomCheckResult(1);
   };
