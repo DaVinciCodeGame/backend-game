@@ -201,18 +201,19 @@ io.on('connection', async (socket) => {
         roomId: room.roomId,
         roomName: room.roomName,
       };
-
+      
       userInfo.forEach((el) =>
         socket.to(el.sids).emit(eventName.ADD_READY, cardResult, roomInfo)
       );
-      fn(cardResult);
+      fn(cardResult, roomInfo);
     });
 
     socket.on(eventName.READY, async () => {
       const roomId = socket.data.roomId;
-  
+      const userId = socket.data.userId;
 
-      console.log('roomId', roomId);
+      console.log('roomId"', roomId);
+      console.log('userId:', userId);
 
       const userReady = await Player.findOne({
         where: { userId, [Op.and]: [{ roomId }] },
