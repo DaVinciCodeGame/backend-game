@@ -1554,6 +1554,8 @@ io.on('connection', async (socket) => {
           raw: true,
         });
 
+        const room = await Room.findOne({ where: { roomId } });
+
         function info(temp) {
           const gameInfo = userInfo.map((el) => {
             return {
@@ -1592,10 +1594,20 @@ io.on('connection', async (socket) => {
           };
           return cardResult;
         }
+
+        const roomInfo = {
+          maxMembers: room.maxMembers,
+          members: userInfo.length,
+          isPlaying: room.isPlaying,
+          secret: room.password ? true : false,
+          roomId: room.roomId,
+          roomName: room.roomName,
+        };
+
         userInfo.forEach((el) => {
           if (!el.needToBeDeleted) {
             const result = info(el);
-            io.to(el.sids).emit(eventName.LEAVE_USER, result);
+            io.to(el.sids).emit(eventName.LEAVE_USER, result, roomInfo);
           }
         });
       }
