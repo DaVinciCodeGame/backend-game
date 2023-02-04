@@ -1,7 +1,7 @@
 const errorHandler = (err, req, res, next) => {
   console.error(err.stack);
 
-  if (err.isBoom) console.error(err.data);
+  if (err.isBoom && err.data) console.error(err.data);
 
   if (err.isBoom)
     res.status(err.output.statusCode).json({ errorMessage: err.message });
