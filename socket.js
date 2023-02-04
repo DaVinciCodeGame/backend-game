@@ -201,7 +201,7 @@ io.on('connection', async (socket) => {
         roomId: room.roomId,
         roomName: room.roomName,
       };
-      
+
       userInfo.forEach((el) =>
         socket.to(el.sids).emit(eventName.ADD_READY, cardResult, roomInfo)
       );
@@ -272,17 +272,20 @@ io.on('connection', async (socket) => {
         users: userInfoV2,
       };
 
-      userInfo.forEach((el) => io.to(el.sids).emit('add-ready', cardResult));
+      userInfo.forEach((el) =>
+        io.to(el.sids).emit(eventName.ADD_READY, cardResult)
+      );
       if (JSON.parse(tableInfo.users).length > 1)
         if (readyCount.length === JSON.parse(tableInfo.users).length) {
-          userInfo.forEach((el) => io.to(el.sids).emit('game-start'));
+          userInfo.forEach((el) => io.to(el.sids).emit(eventName.GAME_START));
           await Room.update({ isPlaying: true }, { where: { roomId } });
         }
     });
 
-    socket.on(eventName.FIRST_DRAW, async (userId, black, myCard) => {
+    socket.on(eventName.FIRST_DRAW, async (black, myCard) => {
       const roomId = socket.data.roomId;
       const white = 3 - black;
+      const userId = socket.data.userId;
       let getCards = [];
 
       let cardResult = await Table.findOne({
@@ -460,7 +463,7 @@ io.on('connection', async (socket) => {
         userInfo.forEach((el) => {
           if (!el.needToBeDeleted) {
             const result = info(el);
-            io.to(el.sids).emit('draw-result', result);
+            io.to(el.sids).emit(eventName.DRAW_RESULT, result);
           }
         });
       }
