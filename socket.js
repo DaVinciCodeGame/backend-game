@@ -88,9 +88,9 @@ io.on('connection', async (socket) => {
       // userName은 main DB에서 추출
 
       // TODO: 쿠키에서 받아올 예정
-      const userName = 'hohoho';
-      const userProfileImg = 'https://cdn.davinci-code.online/1675150781053';
-      const score = 50;
+      // const userName = 'hohoho';
+      // const userProfileImg = 'https://cdn.davinci-code.online/1675150781053';
+      const score = 0;
 
       const room = await Room.findOne({ where: { roomId } });
 
@@ -102,9 +102,9 @@ io.on('connection', async (socket) => {
       socket.join(roomId);
       socket.data.roomId = roomId;
       socket.data.userId = userId;
+      // socket.data.userId = data.userId;
       socket.data.userProfileImg = data.profileImageUrl;
       socket.data.userName = data.username;
-      // socket.data.userId = data.userId;
 
       console.log('socket.data.userId', socket.data.userId);
       console.log('입력 받은 userId', userId);
@@ -1154,11 +1154,12 @@ io.on('connection', async (socket) => {
       console.log(userId);
       let userInfoV2;
       let userInfo;
+      let nextTurn;
 
       const room = await Room.findOne({ where: { roomId } });
       const player = await Player.findAll({
         where: { roomId },
-        attributes: ['userId', 'gameOver'],
+        attributes: ['userId', 'userName', 'gameOver', 'hand', 'sids'],
         raw: true,
       });
       const table = await room.getTable();
@@ -1176,33 +1177,66 @@ io.on('connection', async (socket) => {
       if (users.length > 1) {
         if (table.turn === userId) {
           console.log(users);
-          let count = 0;
-          for (let i = 0; i < users.length; i++) {
-            if (users[i].userId === table.turn) {
-              for (let j = 1; j < 4; j++) {
-                player.map((el) => {
-                  if (count == 0) {
-                    if (
-                      el.userId === users[(i + j) % room.maxMembers].userId &&
-                      !el.gameOver
-                    ) {
-                      console.log(
-                        '이전 이전 이전 이전 이전 이전 turntable.turn',
-                        table.turn
-                      );
-                      table.turn = el.userId;
-                      count = 1;
-                      console.log(
-                        '이후 이후 이후 이후 이후 이후 turntable.turn',
-                        table.turn
-                      );
-                    }
-                  }
-                });
+
+          let turns = JSON.parse(table.users);
+          nextTurn = table.turn;
+          let turnIndex = 0;
+
+          for (let i = 0; i < turns.length; i++) {
+            if (turns[i].userId === nextTurn) {
+              turnIndex = i;
+              break;
+            }
+          }
+
+          let flag = 0;
+
+          for (let i = 1; i < turns.length + 1; i++) {
+            for (let j = 0; j < player.length; j++) {
+              if (
+                turns[(turnIndex + i) % turns.length].userId ==
+                  player[j].userId &&
+                !player[j].gameOver
+              ) {
+                nextTurn = player[j].userId;
+                flag = 1;
                 break;
               }
             }
+            if (flag) {
+              break;
+            }
           }
+
+          await Table.update({ turn: nextTurn }, { where: { roomId } });
+
+          // let count = 0;
+          // for (let i = 0; i < users.length; i++) {
+          //   if (users[i].userId === table.turn) {
+          //     for (let j = 1; j < 4; j++) {
+          //       player.map((el) => {
+          //         if (count == 0) {
+          //           if (
+          //             el.userId === users[(i + j) % room.maxMembers].userId &&
+          //             !el.gameOver
+          //           ) {
+          //             console.log(
+          //               '이전 이전 이전 이전 이전 이전 turntable.turn',
+          //               table.turn
+          //             );
+          //             table.turn = el.userId;
+          //             count = 1;
+          //             console.log(
+          //               '이후 이후 이후 이후 이후 이후 turntable.turn',
+          //               table.turn
+          //             );
+          //           }
+          //         }
+          //       });
+          //       break;
+          //     }
+          //   }
+          // }
         }
       }
 
@@ -1223,7 +1257,7 @@ io.on('connection', async (socket) => {
       await Table.update(
         {
           users: JSON.stringify(users),
-          turn: table.turn,
+          turn: nextTurn,
         },
         { where: { roomId } }
       );
@@ -1258,7 +1292,7 @@ io.on('connection', async (socket) => {
             })
           ).top
         );
-        // FIXME: 두번 저장되는 오류 잡기.
+     
         topRank.unshift({
           userId: outUser.userId,
           userName: outUser.userName,
