@@ -99,6 +99,9 @@ io.on('connection', async (socket) => {
         return;
       }
 
+      const { data } = await axios.get(
+        `${process.env.MAIN_SERVER_URL}/p/users/${userId}`
+      );
       socket.join(roomId);
       socket.data.roomId = roomId;
       socket.data.userId = data.userId;
