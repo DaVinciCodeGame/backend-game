@@ -840,8 +840,14 @@ io.on('connection', async (socket) => {
             topRank
           )
         ).data;
-        console.log('메인 서버에서 받아온 순위 및 점수 표출 ---------', result);
-        let endingInfo = result;
+
+        let endingInfo = {
+          userId: result.userId,
+          userName: result.username,
+          prevScore: result.prevScore,
+          score: result.score,
+          change: result.change,
+        };
         await Room.update(
           { isPlaying: false, turn: winner.userId },
           { where: { roomId } }
@@ -1207,7 +1213,6 @@ io.on('connection', async (socket) => {
       });
     });
 
-    // const result = await axios.post(`${process.env.MAIN_SERVER_URL}/p/game-result`, [])
     socket.on(eventName.ROOM_OUT, async () => {
       console.log('들어온', socket.id);
       // 방 나갈 때
@@ -1398,12 +1403,14 @@ io.on('connection', async (socket) => {
               topRank
             )
           ).data;
-          console.log(
-            '메인 서버에서 받아온 순위 및 점수 표출 ---------',
-            result
-          );
 
-          let endingInfo = result;
+          let endingInfo = {
+            userId: result.userId,
+            userName: result.username,
+            prevScore: result.prevScore,
+            score: result.score,
+            change: result.change,
+          };
           await Room.update(
             { isPlaying: false, turn: winner.userId },
             { where: { roomId } }
