@@ -1,7 +1,7 @@
+require('dotenv/config');
 const http = require('http');
 const { Server } = require('socket.io');
 const { Op } = require('sequelize');
-require('dotenv');
 const { Player, Room, Table } = require('./models');
 const app = require('./app');
 const { eventName } = require('./eventName');
