@@ -621,7 +621,7 @@ io.on('connection', async (socket) => {
             raw: true,
           });
           // FIXME 스코어 받아와서 정보 넣어줘야함.
-          topRank.unshift(getUser);
+          topRank.unshift(getUser.userId);
 
           await Table.update(
             { top: JSON.stringify(topRank) },
@@ -694,7 +694,7 @@ io.on('connection', async (socket) => {
             raw: true,
           });
 
-          topRank.unshift(getUser);
+          topRank.unshift(getUser.userId);
 
           await Table.update(
             { top: JSON.stringify(topRank) },
@@ -831,7 +831,7 @@ io.on('connection', async (socket) => {
         );
         console.log('승리 user 정보:::::', winner);
         console.log('topRank 정보:::::', topRank);
-        topRank.unshift(winner);
+        topRank.unshift(winner.userId);
         console.log('합친 정보:::::', topRank);
 
         const result = await axios.post(
@@ -1322,11 +1322,7 @@ io.on('connection', async (socket) => {
           ).top
         );
 
-        topRank.unshift({
-          userId: outUser.userId,
-          // userName: outUser.userName,
-          // score: outUser.score,
-        });
+        topRank.unshift(outUser.userId);
 
         await Table.update(
           { top: JSON.stringify(topRank) },
@@ -1390,7 +1386,7 @@ io.on('connection', async (socket) => {
           );
           console.log('승리 user 정보:::::', winner);
           console.log('topRank 정보:::::', topRank);
-          topRank.unshift(winner);
+          topRank.unshift(winner.userId);
           console.log('합친 정보:::::', topRank);
 
           const result = await axios.post(
@@ -1566,7 +1562,7 @@ io.on('connection', async (socket) => {
                     color: card.color,
                     value: 'Back',
                     isOpen: card.isOpen,
-                  };
+                  
                 } else {
                   return {
                     color: card.color,
