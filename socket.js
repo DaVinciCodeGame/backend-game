@@ -841,13 +841,15 @@ io.on('connection', async (socket) => {
           )
         ).data;
 
-        let endingInfo = {
-          userId: result.userId,
-          userName: result.username,
-          prevScore: result.prevScore,
-          score: result.score,
-          change: result.change,
-        };
+        let endingInfo = result.map((user) => {
+          return {
+            userId: user.userId,
+            userName: user.username,
+            prevScore: user.prevScore,
+            score: user.score,
+            change: user.change,
+          };
+        });
         await Room.update(
           { isPlaying: false, turn: winner.userId },
           { where: { roomId } }
@@ -1404,13 +1406,15 @@ io.on('connection', async (socket) => {
             )
           ).data;
 
-          let endingInfo = {
-            userId: result.userId,
-            userName: result.username,
-            prevScore: result.prevScore,
-            score: result.score,
-            change: result.change,
-          };
+          let endingInfo = result.map((user) => {
+            return {
+              userId: user.userId,
+              userName: user.username,
+              prevScore: user.prevScore,
+              score: user.score,
+              change: user.change,
+            };
+          });
           await Room.update(
             { isPlaying: false, turn: winner.userId },
             { where: { roomId } }
@@ -1595,7 +1599,6 @@ io.on('connection', async (socket) => {
 
         const room = await Room.findOne({ where: { roomId } });
         if (room) {
-          
           let roomInfo = {
             maxMembers: room.maxMembers,
             members: userInfo.length,
