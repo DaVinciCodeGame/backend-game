@@ -1585,8 +1585,8 @@ io.on('connection', async (socket) => {
         }
 
         const room = await Room.findOne({ where: { roomId } });
-
-        const roomInfo = {
+        console.log('받아오는 room 정보 test console:::::::::::::::::', room);
+        let roomInfo = {
           maxMembers: room.maxMembers,
           members: userInfo.length,
           isPlaying: room.isPlaying,
