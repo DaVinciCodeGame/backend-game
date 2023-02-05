@@ -1209,7 +1209,7 @@ io.on('connection', async (socket) => {
 
     // const result = await axios.post(`${process.env.MAIN_SERVER_URL}/p/game-result`, [])
     socket.on(eventName.ROOM_OUT, async () => {
-      console.log("들어온",socket.id);
+      console.log('들어온', socket.id);
       // 방 나갈 때
       const roomId = socket.data.roomId;
       const userId = socket.data.userId;
@@ -1508,6 +1508,7 @@ io.on('connection', async (socket) => {
 
           console.log(20);
           // TODO:  게임 오버
+
           userInfo.forEach((el) => {
             const gameInfo = infoV2(el);
 
@@ -1586,22 +1587,24 @@ io.on('connection', async (socket) => {
         }
 
         const room = await Room.findOne({ where: { roomId } });
-        console.log('받아오는 room 정보 test console:::::::::::::::::', room);
-        let roomInfo = {
-          maxMembers: room.maxMembers,
-          members: userInfo.length,
-          isPlaying: room.isPlaying,
-          secret: room.password ? true : false,
-          roomId: room.roomId,
-          roomName: room.roomName,
-        };
+        if (room) {
+          console.log('받아오는 room 정보 test console:::::::::::::::::', room);
+          let roomInfo = {
+            maxMembers: room.maxMembers,
+            members: userInfo.length,
+            isPlaying: room.isPlaying,
+            secret: room.password ? true : false,
+            roomId: room.roomId,
+            roomName: room.roomName,
+          };
 
-        userInfo.forEach((el) => {
-          if (!el.needToBeDeleted) {
-            const result = info(el);
-            io.to(el.sids).emit(eventName.LEAVE_USER, result, roomInfo);
-          }
-        });
+          userInfo.forEach((el) => {
+            if (!el.needToBeDeleted) {
+              const result = info(el);
+              io.to(el.sids).emit(eventName.LEAVE_USER, result, roomInfo);
+            }
+          });
+        }
       }
     });
   } catch (err) {
