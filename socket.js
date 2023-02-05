@@ -1562,7 +1562,7 @@ io.on('connection', async (socket) => {
                     color: card.color,
                     value: 'Back',
                     isOpen: card.isOpen,
-                  
+                  };
                 } else {
                   return {
                     color: card.color,
