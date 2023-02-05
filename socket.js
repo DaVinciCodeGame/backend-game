@@ -1209,6 +1209,7 @@ io.on('connection', async (socket) => {
 
     // const result = await axios.post(`${process.env.MAIN_SERVER_URL}/p/game-result`, [])
     socket.on(eventName.ROOM_OUT, async () => {
+      console.log("들어온",socket.id);
       // 방 나갈 때
       const roomId = socket.data.roomId;
       const userId = socket.data.userId;
