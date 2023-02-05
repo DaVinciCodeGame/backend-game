@@ -15,6 +15,12 @@ const production = {
   host: process.env.MYSQL_HOST,
   dialect: 'mysql',
   logging: false,
+  pool: {
+    max: 30,
+    min: 20,
+    acquire: 30000,
+    idle: 10000,
+  },
 };
 
 const test = {
