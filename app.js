@@ -22,6 +22,12 @@ app.use(cookieParser());
 app.use(morgan(process.env.NODE_ENV === 'development' ? 'dev' : 'combined'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use((req, res, next) => {
+  console.log(req.params);
+  console.log(req.query);
+  console.log(req.body);
+  next();
+});
 app.use(routes);
 app.use(errorHandler);
 
