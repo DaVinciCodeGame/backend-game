@@ -1545,8 +1545,6 @@ io.on('connection', async (socket) => {
           raw: true,
         });
 
-        const room = await Room.findOne({ where: { roomId } });
-
         function info(temp) {
           const gameInfo = userInfo.map((el) => {
             return {
@@ -1585,6 +1583,8 @@ io.on('connection', async (socket) => {
           };
           return cardResult;
         }
+
+        const room = await Room.findOne({ where: { roomId } });
 
         const roomInfo = {
           maxMembers: room.maxMembers,
