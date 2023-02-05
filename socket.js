@@ -98,6 +98,9 @@ io.on('connection', async (socket) => {
 
       if (!room) {
         // TODO: 방 없을 때 에러 처리
+        const newError = new CustomError('방이 없습니다.', 999);
+
+        io.to(socket.id).emit(eventName.ERROR, newError);
         return;
       }
 
@@ -120,10 +123,6 @@ io.on('connection', async (socket) => {
         io.to(socket.id).emit(eventName.ERROR, newError);
         return;
       }
-
-      console.log('socket.data.userId', socket.data.userId);
-      console.log('입력 받은 userId', userId);
-      console.log('socket.data.userName', socket.data.userName);
 
       let table = await room.getTable();
 
@@ -1270,7 +1269,6 @@ io.on('connection', async (socket) => {
           }
 
           await Table.update({ turn: nextTurn }, { where: { roomId } });
-
         }
       }
 
@@ -1335,8 +1333,6 @@ io.on('connection', async (socket) => {
           { where: { roomId } }
         );
 
-        console.log('outUser', outUser);
-
         let outUserHand = JSON.parse(outUser.hand);
         outUserHand.forEach((card) => {
           if (card.isOpen === false) card.isOpen = true;
@@ -1366,7 +1362,7 @@ io.on('connection', async (socket) => {
           raw: true,
         });
         console.log('outUser다음 진행 확인.2');
-        console.log(userInfo.filter((user) => user.gameOver == false).length);
+
         // 게임이 끝난 상태인지 확인.
         if (userInfo.filter((user) => user.gameOver == false).length === 1) {
           console.log(
@@ -1401,7 +1397,10 @@ io.on('connection', async (socket) => {
             `${process.env.MAIN_SERVER_URL}/p/game-result`,
             topRank
           );
-          console.log('메인 서버에서 받아온 순위 및 점수 표출 ---------', result);
+          console.log(
+            '메인 서버에서 받아온 순위 및 점수 표출 ---------',
+            result
+          );
 
           let endingInfo = result;
           await Room.update(
@@ -1462,36 +1461,38 @@ io.on('connection', async (socket) => {
           console.log(18);
           function infoV2(temp) {
             const some = userInfoV2.map((el) => {
-              return {
-                userId: el.userId,
-                userName: el.userName,
-                userProfileImg: el.userProfileImg,
-                isReady: el.isReady,
-                gameOver: el.gameOver ? true : false,
-                hand: JSON.parse(el.hand).map((card) => {
-                  if (card == '[]') {
-                    return card;
-                  } else if (el.userId === temp.userId) {
-                    return {
-                      color: card.color,
-                      value: card.value,
-                      isOpen: card.isOpen,
-                    };
-                  } else if (!card.isOpen) {
-                    return {
-                      color: card.color,
-                      value: 'Back',
-                      isOpen: card.isOpen,
-                    };
-                  } else {
-                    return {
-                      color: card.color,
-                      value: card.value,
-                      isOpen: card.isOpen,
-                    };
-                  }
-                }),
-              };
+              if (!el.needToBeDeleted) {
+                return {
+                  userId: el.userId,
+                  userName: el.userName,
+                  userProfileImg: el.userProfileImg,
+                  isReady: el.isReady,
+                  gameOver: el.gameOver ? true : false,
+                  hand: JSON.parse(el.hand).map((card) => {
+                    if (card == '[]') {
+                      return card;
+                    } else if (el.userId === temp.userId) {
+                      return {
+                        color: card.color,
+                        value: card.value,
+                        isOpen: card.isOpen,
+                      };
+                    } else if (!card.isOpen) {
+                      return {
+                        color: card.color,
+                        value: 'Back',
+                        isOpen: card.isOpen,
+                      };
+                    } else {
+                      return {
+                        color: card.color,
+                        value: card.value,
+                        isOpen: card.isOpen,
+                      };
+                    }
+                  }),
+                };
+              }
             });
             console.log(19);
 
