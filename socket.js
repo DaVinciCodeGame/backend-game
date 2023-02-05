@@ -617,7 +617,8 @@ io.on('connection', async (socket) => {
 
           let getUser = await Player.findOne({
             where: { userId, [Op.and]: [{ roomId }] },
-            attributes: ['userId', 'userName', 'score'],
+            attributes: ['userId'],
+            //attributes: ['userId', 'userName', 'score'],
             raw: true,
           });
           // FIXME 스코어 받아와서 정보 넣어줘야함.
@@ -632,6 +633,7 @@ io.on('connection', async (socket) => {
 
           console.log('2번콘솔');
         }
+
         console.log(1);
         userCard = await Player.findOne({
           where: { userId, [Op.and]: [{ roomId }] },
@@ -651,12 +653,9 @@ io.on('connection', async (socket) => {
           attributes: ['hand', 'security'],
           raw: true,
         });
-        console.log(3);
-        console.log('test console:: ', userCard);
+
         let changeHand = JSON.parse(userCard.hand);
         let targetSecurity = JSON.parse(userCard.security);
-        console.log('test console::changeHand ', changeHand);
-        console.log('test console::targetSecurity ', targetSecurity);
 
         for (let i = 0; i < changeHand.length; i++) {
           if (
@@ -667,8 +666,6 @@ io.on('connection', async (socket) => {
           }
         }
         console.log(4);
-        console.log('changeHand값 :', changeHand);
-        console.log('이후에 변한 값 측정 console:', changeHand);
 
         if (changeHand.filter((card) => card.isOpen === false).length) {
           await Player.update(
@@ -693,10 +690,11 @@ io.on('connection', async (socket) => {
 
           let getUser = await Player.findOne({
             where: { userId: socket.data.userId, [Op.and]: [{ roomId }] },
-            attributes: ['userId', 'userName', 'score'],
+            attributes: ['userId'],
+            //attributes: ['userId', 'userName', 'score'],
             raw: true,
           });
-          // FIXME 스코어 받아와서 정보 넣어줘야함.
+
           topRank.unshift(getUser);
 
           await Table.update(
@@ -817,7 +815,8 @@ io.on('connection', async (socket) => {
             roomId,
             [Op.and]: [{ gameOver: false }],
           },
-          attributes: ['userId', 'userName', 'score'],
+          attributes: ['userId'],
+          // attributes: ['userId', 'userName', 'score'],
           raw: true,
         });
 
@@ -836,7 +835,12 @@ io.on('connection', async (socket) => {
         topRank.unshift(winner);
         console.log('합친 정보:::::', topRank);
 
-        let endingInfo = topRank;
+        const result = await axios.post(
+          `${process.env.MAIN_SERVER_URL}/p/game-result`,
+          topRank
+        );
+        console.log('메인 서버에서 받아온 순위 및 점수 표출 ---------', result);
+        let endingInfo = result;
         await Room.update(
           { isPlaying: false, turn: winner.userId },
           { where: { roomId } }
@@ -1202,6 +1206,7 @@ io.on('connection', async (socket) => {
       });
     });
 
+    // const result = await axios.post(`${process.env.MAIN_SERVER_URL}/p/game-result`, [])
     socket.on(eventName.ROOM_OUT, async () => {
       // 방 나갈 때
       const roomId = socket.data.roomId;
@@ -1266,33 +1271,6 @@ io.on('connection', async (socket) => {
 
           await Table.update({ turn: nextTurn }, { where: { roomId } });
 
-          // let count = 0;
-          // for (let i = 0; i < users.length; i++) {
-          //   if (users[i].userId === table.turn) {
-          //     for (let j = 1; j < 4; j++) {
-          //       player.map((el) => {
-          //         if (count == 0) {
-          //           if (
-          //             el.userId === users[(i + j) % room.maxMembers].userId &&
-          //             !el.gameOver
-          //           ) {
-          //             console.log(
-          //               '이전 이전 이전 이전 이전 이전 turntable.turn',
-          //               table.turn
-          //             );
-          //             table.turn = el.userId;
-          //             count = 1;
-          //             console.log(
-          //               '이후 이후 이후 이후 이후 이후 turntable.turn',
-          //               table.turn
-          //             );
-          //           }
-          //         }
-          //       });
-          //       break;
-          //     }
-          //   }
-          // }
         }
       }
 
@@ -1306,9 +1284,6 @@ io.on('connection', async (socket) => {
       if (users.length == 0) {
         await Room.destroy({ where: { roomId } });
       }
-
-      // 해당 턴이였던 사람이 나가면 다음 사람으로 턴 넘겨주기.
-      // 여러명인 경우도 생각.
 
       await Table.update(
         {
@@ -1351,8 +1326,8 @@ io.on('connection', async (socket) => {
 
         topRank.unshift({
           userId: outUser.userId,
-          userName: outUser.userName,
-          score: outUser.score,
+          // userName: outUser.userName,
+          // score: outUser.score,
         });
 
         await Table.update(
@@ -1402,7 +1377,8 @@ io.on('connection', async (socket) => {
               roomId,
               [Op.and]: [{ gameOver: false }],
             },
-            attributes: ['userId', 'userName', 'score'],
+            attributes: ['userId'],
+            //attributes: ['userId', 'userName', 'score'],
             raw: true,
           });
 
@@ -1421,7 +1397,13 @@ io.on('connection', async (socket) => {
           topRank.unshift(winner);
           console.log('합친 정보:::::', topRank);
 
-          let endingInfo = topRank;
+          const result = await axios.post(
+            `${process.env.MAIN_SERVER_URL}/p/game-result`,
+            topRank
+          );
+          console.log('메인 서버에서 받아온 순위 및 점수 표출 ---------', result);
+
+          let endingInfo = result;
           await Room.update(
             { isPlaying: false, turn: winner.userId },
             { where: { roomId } }
