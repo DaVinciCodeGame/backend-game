@@ -834,10 +834,12 @@ io.on('connection', async (socket) => {
         topRank.unshift(winner.userId);
         console.log('합친 정보:::::', topRank);
 
-        const result = await axios.post(
-          `${process.env.MAIN_SERVER_URL}/p/game-result`,
-          topRank
-        );
+        const result = (
+          await axios.post(
+            `${process.env.MAIN_SERVER_URL}/p/game-result`,
+            topRank
+          )
+        ).data;
         console.log('메인 서버에서 받아온 순위 및 점수 표출 ---------', result);
         let endingInfo = result;
         await Room.update(
@@ -1389,10 +1391,12 @@ io.on('connection', async (socket) => {
           topRank.unshift(winner.userId);
           console.log('합친 정보:::::', topRank);
 
-          const result = await axios.post(
-            `${process.env.MAIN_SERVER_URL}/p/game-result`,
-            topRank
-          );
+          const result = (
+            await axios.post(
+              `${process.env.MAIN_SERVER_URL}/p/game-result`,
+              topRank
+            )
+          ).data;
           console.log(
             '메인 서버에서 받아온 순위 및 점수 표출 ---------',
             result
