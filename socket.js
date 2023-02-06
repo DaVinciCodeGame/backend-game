@@ -11,6 +11,8 @@ const cookieParser = require('./utils/cookie-parser');
 const CustomError = require('./utils/custom-error');
 const verifyToken = require('./utils/verify-token');
 const { default: axios } = require('axios');
+const { createAdapter } = require('@socket.io/cluster-adapter');
+const { setupWorker } = require('@socket.io/sticky');
 // db 연결
 
 const server = http.createServer(app);
@@ -30,6 +32,10 @@ const io = new Server(server, {
     credentials: true,
   },
 });
+
+io.adapter(createAdapter());
+
+setupWorker(io);
 
 io.on('connection', async (socket) => {
   try {
