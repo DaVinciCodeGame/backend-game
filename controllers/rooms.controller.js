@@ -58,7 +58,13 @@ module.exports = class RoomsController {
 
   getRooms = async (req, res, next) => {
     try {
-      const { page, searchType, search } = req.query;
+      const {
+        page,
+        'search-type': searchType,
+        search,
+        'is-waiting': isWaiting,
+        'is-public': isPublic,
+      } = req.query;
 
       if (
         (page && Number.isNaN(Number(page))) ||
@@ -69,7 +75,13 @@ module.exports = class RoomsController {
         throw badRequest();
       }
 
-      const result = await this.roomsService.getRooms(page, searchType, search);
+      const result = await this.roomsService.getRooms(
+        page,
+        searchType,
+        search,
+        isWaiting === 'true',
+        isPublic === 'true'
+      );
 
       res.status(200).json(result);
     } catch (err) {

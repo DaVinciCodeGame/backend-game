@@ -66,7 +66,9 @@ module.exports = class RoomsService {
    * 
    * @param {number} page 
    * @param {'number' | 'name'} searchType 
-   * @param {string} search 
+   * @param {string} search
+   * @param {boolean} isWaiting
+   * @param {boolean} isPublic
    * @returns {Promise<{ totalPage: number, rooms: {
           currentMembers: number,
           maxMembers: number,
@@ -77,7 +79,7 @@ module.exports = class RoomsService {
         }
       }>}
    */
-  getRooms = async (page, searchType, search) => {
+  getRooms = async (page, searchType, search, isWaiting, isPublic) => {
     let findResult;
 
     if (searchType && search) {
@@ -86,20 +88,26 @@ module.exports = class RoomsService {
           await this.roomsRepository.findAndCountPagedListFilteredById(
             page,
             ROOMS_PER_PAGE,
-            search
+            search,
+            isWaiting,
+            isPublic
           );
       } else {
         findResult =
           await this.roomsRepository.findAndCountPagedListFilteredByName(
             page,
             ROOMS_PER_PAGE,
-            search
+            search,
+            isWaiting,
+            isPublic
           );
       }
     } else {
       findResult = await this.roomsRepository.findAndCountPagedList(
         page,
-        ROOMS_PER_PAGE
+        ROOMS_PER_PAGE,
+        isWaiting,
+        isPublic
       );
     }
     const { count, rows } = findResult;

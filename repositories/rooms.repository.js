@@ -60,6 +60,8 @@ module.exports = class RoomsRepository {
    *
    * @param {number} page
    * @param {number} limit
+   * @param {boolean} isWaiting
+   * @param {boolean} isPublic
    * @returns {Promise<{
    *    count: number,
    *    rows: {
@@ -80,15 +82,21 @@ module.exports = class RoomsRepository {
    *    }[]
    *  }>}
    */
-  findAndCountPagedList = (page, limit) => {
+  findAndCountPagedList = (page, limit, isWaiting, isPublic) => {
     const offset = (page - 1) * limit;
 
-    return Room.findAndCountAll({
+    const findOptions = {
       order: [['createdAt', 'DESC']],
       limit,
       offset,
       include: Table,
-    });
+      where: {},
+    };
+
+    if (isWaiting) findOptions.where.isPlaying = false;
+    if (isPublic) findOptions.where.password = null;
+
+    return Room.findAndCountAll(findOptions);
   };
 
   /**
@@ -96,6 +104,8 @@ module.exports = class RoomsRepository {
    * @param {number} page
    * @param {number} limit
    * @param {string} search
+   * @param {boolean} isWaiting
+   * @param {boolean} isPublic
    * @returns {Promise<{
    *    count: number,
    *    rows: {
@@ -116,20 +126,27 @@ module.exports = class RoomsRepository {
    *    }[]
    *  }>}
    */
-  findAndCountPagedListFilteredByName = (page, limit, search) => {
+  findAndCountPagedListFilteredByName = (
+    page,
+    limit,
+    search,
+    isWaiting,
+    isPublic
+  ) => {
     const offset = (page - 1) * limit;
 
-    return Room.findAndCountAll({
-      where: {
-        roomName: {
-          [Op.like]: `%${search}%`,
-        },
-      },
+    const findOptions = {
+      where: { roomName: { [Op.like]: `%${search}%` } },
       order: [['createdAt', 'DESC']],
       limit,
       offset,
       include: Table,
-    });
+    };
+
+    if (isWaiting) findOptions.where.isPlaying = false;
+    if (isPublic) findOptions.where.password = null;
+
+    return Room.findAndCountAll(findOptions);
   };
 
   /**
@@ -137,6 +154,8 @@ module.exports = class RoomsRepository {
    * @param {number} page
    * @param {number} limit
    * @param {string} search
+   * @param {boolean} isWaiting
+   * @param {boolean} isPublic
    * @returns {Promise<{
    *    count: number,
    *    rows: {
@@ -157,20 +176,27 @@ module.exports = class RoomsRepository {
    *    }[]
    *  }>}
    */
-  findAndCountPagedListFilteredById = (page, limit, search) => {
+  findAndCountPagedListFilteredById = (
+    page,
+    limit,
+    search,
+    isWaiting,
+    isPublic
+  ) => {
     const offset = (page - 1) * limit;
 
-    return Room.findAndCountAll({
-      where: {
-        roomId: {
-          [Op.like]: `%${search}%`,
-        },
-      },
+    const findOptions = {
+      where: { roomId: { [Op.like]: `%${search}%` } },
       order: [['createdAt', 'DESC']],
       limit,
       offset,
       include: Table,
-    });
+    };
+
+    if (isWaiting) findOptions.where.isPlaying = false;
+    if (isPublic) findOptions.where.password = null;
+
+    return Room.findAndCountAll(findOptions);
   };
 
   /**
