@@ -35,9 +35,11 @@ const io = new Server(server, {
   },
 });
 
-io.adapter(createAdapter());
+if (process.env === 'production') {
+  io.adapter(createAdapter());
 
-setupWorker(io);
+  setupWorker(io);
+}
 
 io.on('connection', async (socket) => {
   try {
