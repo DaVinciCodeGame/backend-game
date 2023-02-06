@@ -315,10 +315,12 @@ io.on('connection', async (socket) => {
       if (JSON.parse(tableInfo.users).length > 1)
         if (readyCount.length === JSON.parse(tableInfo.users).length) {
           roomInfo.isPlaying = true;
+
+          await Room.update({ isPlaying: true }, { where: { roomId } });
+
           userInfo.forEach((el) =>
             io.to(el.sids).emit(eventName.GAME_START, roomInfo)
           );
-          await Room.update({ isPlaying: true }, { where: { roomId } });
         }
     });
 
