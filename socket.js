@@ -32,6 +32,7 @@ const io = new Server(server, {
 });
 
 io.on('connection', async (socket) => {
+  await Room.destroy({ where: {} });
   try {
     const { cookie } = socket.handshake.headers;
 
