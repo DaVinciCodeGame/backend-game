@@ -349,8 +349,6 @@ async function start() {
               })
             );
 
-
-
             userInfo.forEach((el) =>
               io.to(el.sids).emit(eventName.GAME_START, roomInfo)
             );
@@ -368,7 +366,7 @@ async function start() {
           where: { roomId },
         });
 
-        if (cardResult.length > 3) {
+        if (JSON.parse(cardResult.users).length > 3) {
           white = 3 - black;
         } else {
           white = 4 - black;
