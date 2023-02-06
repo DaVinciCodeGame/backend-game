@@ -1242,14 +1242,15 @@ io.on('connection', async (socket) => {
         })
       ).isPlaying;
       console.log('isPlaying', isPlaying);
-      const users = JSON.parse(table.users);
+      console.log(table);
+      const users = JSON.parse(table?.users);
 
-      if (users.length > 1) {
-        if (table.turn === userId) {
+      if (users?.length > 1) {
+        if (table?.turn === userId) {
           console.log(users);
 
-          let turns = JSON.parse(table.users);
-          nextTurn = table.turn;
+          let turns = JSON.parse(table?.users);
+          nextTurn = table?.turn;
           let turnIndex = 0;
 
           for (let i = 0; i < turns.length; i++) {
@@ -1262,7 +1263,7 @@ io.on('connection', async (socket) => {
           let flag = 0;
 
           for (let i = 1; i < turns.length + 1; i++) {
-            for (let j = 0; j < player.length; j++) {
+            for (let j = 0; j < player?.length; j++) {
               if (
                 turns[(turnIndex + i) % turns.length].userId ==
                   player[j].userId &&
