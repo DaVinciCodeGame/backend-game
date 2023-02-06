@@ -18,7 +18,7 @@ const { setupWorker } = require('@socket.io/sticky');
 const server = http.createServer(app);
 
 // 테이블 생성
-if (process.env === 'development') {
+if (process.env.NODE_ENV === 'development') {
   DB.sequelize
     .sync()
     .then(() => {
@@ -35,7 +35,7 @@ const io = new Server(server, {
   },
 });
 
-if (process.env === 'production') {
+if (process.env.NODE_ENV === 'production') {
   io.adapter(createAdapter());
 
   setupWorker(io);
