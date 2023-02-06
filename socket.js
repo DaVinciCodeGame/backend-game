@@ -973,38 +973,40 @@ async function start() {
 
           console.log(18);
           function infoV2(temp) {
-            const some = userInfoV2.map((el) => {
-              return {
-                userId: el.userId,
-                userName: el.userName,
-                userProfileImg: el.userProfileImg,
-                isReady: el.isReady,
-                gameOver: el.gameOver ? true : false,
-                hand: JSON.parse(el.hand).map((card) => {
-                  if (card == '[]') {
-                    return card;
-                  } else if (el.userId === temp.userId) {
-                    return {
-                      color: card.color,
-                      value: card.value,
-                      isOpen: card.isOpen,
-                    };
-                  } else if (!card.isOpen) {
-                    return {
-                      color: card.color,
-                      value: 'Back',
-                      isOpen: card.isOpen,
-                    };
-                  } else {
-                    return {
-                      color: card.color,
-                      value: card.value,
-                      isOpen: card.isOpen,
-                    };
-                  }
-                }),
-              };
-            });
+            const some = userInfoV2
+              .filter((el) => el !== undefined)
+              .map((el) => {
+                return {
+                  userId: el.userId,
+                  userName: el.userName,
+                  userProfileImg: el.userProfileImg,
+                  isReady: el.isReady,
+                  gameOver: el.gameOver ? true : false,
+                  hand: JSON.parse(el.hand).map((card) => {
+                    if (card == '[]') {
+                      return card;
+                    } else if (el.userId === temp.userId) {
+                      return {
+                        color: card.color,
+                        value: card.value,
+                        isOpen: card.isOpen,
+                      };
+                    } else if (!card.isOpen) {
+                      return {
+                        color: card.color,
+                        value: 'Back',
+                        isOpen: card.isOpen,
+                      };
+                    } else {
+                      return {
+                        color: card.color,
+                        value: card.value,
+                        isOpen: card.isOpen,
+                      };
+                    }
+                  }),
+                };
+              });
             console.log(19);
             (no_security = userCard.security.length === 0 ? false : true),
               (guessResult = {
@@ -1537,40 +1539,42 @@ async function start() {
 
             console.log(18);
             function infoV2(temp) {
-              const some = userInfoV2.filter((el)=>el !== undefined).map((el) => {
-                if (!el.needToBeDeleted) {
-                  return {
-                    userId: el.userId,
-                    userName: el.userName,
-                    userProfileImg: el.userProfileImg,
-                    isReady: el.isReady,
-                    gameOver: el.gameOver ? true : false,
-                    hand: JSON.parse(el.hand).map((card) => {
-                      if (card == '[]') {
-                        return card;
-                      } else if (el.userId === temp.userId) {
-                        return {
-                          color: card.color,
-                          value: card.value,
-                          isOpen: card.isOpen,
-                        };
-                      } else if (!card.isOpen) {
-                        return {
-                          color: card.color,
-                          value: 'Back',
-                          isOpen: card.isOpen,
-                        };
-                      } else {
-                        return {
-                          color: card.color,
-                          value: card.value,
-                          isOpen: card.isOpen,
-                        };
-                      }
-                    }),
-                  };
-                }
-              });
+              const some = userInfoV2
+                .filter((el) => el !== undefined)
+                .map((el) => {
+                  if (!el.needToBeDeleted) {
+                    return {
+                      userId: el.userId,
+                      userName: el.userName,
+                      userProfileImg: el.userProfileImg,
+                      isReady: el.isReady,
+                      gameOver: el.gameOver ? true : false,
+                      hand: JSON.parse(el.hand).map((card) => {
+                        if (card == '[]') {
+                          return card;
+                        } else if (el.userId === temp.userId) {
+                          return {
+                            color: card.color,
+                            value: card.value,
+                            isOpen: card.isOpen,
+                          };
+                        } else if (!card.isOpen) {
+                          return {
+                            color: card.color,
+                            value: 'Back',
+                            isOpen: card.isOpen,
+                          };
+                        } else {
+                          return {
+                            color: card.color,
+                            value: card.value,
+                            isOpen: card.isOpen,
+                          };
+                        }
+                      }),
+                    };
+                  }
+                });
               console.log(19);
 
               guessResult = {
