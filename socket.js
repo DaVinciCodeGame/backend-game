@@ -111,7 +111,7 @@ io.on('connection', async (socket) => {
 
       if (!room) {
         // TODO: 방 없을 때 에러 처리
-        const newError = new CustomError('방이 없습니다.', 999);
+        const newError = new CustomError('방이 없습니다.', 800);
 
         io.to(socket.id).emit(eventName.ERROR, newError);
         return;
@@ -327,15 +327,21 @@ io.on('connection', async (socket) => {
 
     socket.on(eventName.FIRST_DRAW, async (black, myCard) => {
       const roomId = socket.data.roomId;
-      const white = 3 - black;
+
       const userId = socket.data.userId;
       let getCards = [];
+      let white = 0;
 
       let cardResult = await Table.findOne({
         where: { roomId },
-        attributes: ['blackCards', 'whiteCards'],
-        raw: true,
       });
+
+      if (cardResult.length > 3) {
+        white = 3 - black;
+      } else {
+        white = 4 - black;
+      }
+
       let cards = JSON.parse(cardResult.blackCards);
 
       // black 뽑기
