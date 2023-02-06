@@ -12,7 +12,6 @@ const CustomError = require('./utils/custom-error');
 const verifyToken = require('./utils/verify-token');
 const { default: axios } = require('axios');
 const { createAdapter } = require('@socket.io/cluster-adapter');
-const { setupWorker } = require('@socket.io/sticky');
 // db 연결
 
 const server = http.createServer(app);
