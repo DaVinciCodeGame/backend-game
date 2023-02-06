@@ -86,7 +86,7 @@ module.exports = class RoomsService {
       if (searchType === 'number') {
         findResult =
           await this.roomsRepository.findAndCountPagedListFilteredById(
-            page,
+            page ?? 1,
             ROOMS_PER_PAGE,
             search,
             isWaiting,
@@ -95,7 +95,7 @@ module.exports = class RoomsService {
       } else {
         findResult =
           await this.roomsRepository.findAndCountPagedListFilteredByName(
-            page,
+            page ?? 1,
             ROOMS_PER_PAGE,
             search,
             isWaiting,
@@ -104,7 +104,7 @@ module.exports = class RoomsService {
       }
     } else {
       findResult = await this.roomsRepository.findAndCountPagedList(
-        page,
+        page ?? 1,
         ROOMS_PER_PAGE,
         isWaiting,
         isPublic
