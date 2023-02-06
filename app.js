@@ -13,7 +13,7 @@ const app = express();
 app.use(
   cors({
     credentials: true,
-    origin: ['https://davinci-code.online', 'http://localhost:3000'],
+    origin: [process.env.ORIGIN1, process.env.ORIGIN2],
   })
 );
 app.use(helmet());

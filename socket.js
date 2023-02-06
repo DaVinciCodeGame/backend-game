@@ -25,14 +25,13 @@ DB.sequelize
 
 const io = new Server(server, {
   cors: {
-    origin: ['http://localhost:3000', 'https://davinci-code.online'],
+    origin: [process.env.ORIGIN1, process.env.ORIGIN2],
     method: ['GET', 'POST'],
     credentials: true,
   },
 });
 
 io.on('connection', async (socket) => {
-
   try {
     const { cookie } = socket.handshake.headers;
 
