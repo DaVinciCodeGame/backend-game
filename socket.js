@@ -32,14 +32,6 @@ const io = new Server(server, {
 });
 
 io.on('connection', async (socket) => {
-  // 룸에 남아있던 유저들한테 서버가 재실행 되었음을 알려줘라.
-  // event name: "reset"
-  const player = await Player.findAll({ where: {}, attributes: ['sids'] });
-  console.log(player);
-  player.forEach((user) => {
-    io.to(user.sids).emit('reset');
-  });
-
   await Room.destroy({ where: {} });
   try {
     const { cookie } = socket.handshake.headers;

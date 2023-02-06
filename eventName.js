@@ -1,4 +1,5 @@
 const eventName = {
+  RESET: 'reset',
   ERROR: 'error',
   CONNECT: 'connect',
   DISCONNECT: 'disconnect',
