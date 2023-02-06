@@ -11,17 +11,21 @@ const cookieParser = require('./utils/cookie-parser');
 const CustomError = require('./utils/custom-error');
 const verifyToken = require('./utils/verify-token');
 const { default: axios } = require('axios');
+const { createAdapter } = require('@socket.io/cluster-adapter');
+const { setupWorker } = require('@socket.io/sticky');
 // db 연결
 
 const server = http.createServer(app);
 
 // 테이블 생성
-DB.sequelize
-  .sync()
-  .then(() => {
-    console.log('database 연결 성공');
-  })
-  .catch(console.error);
+if (process.env === 'development') {
+  DB.sequelize
+    .sync()
+    .then(() => {
+      console.log('database 동기화 성공');
+    })
+    .catch(console.error);
+}
 
 const io = new Server(server, {
   cors: {
@@ -30,6 +34,10 @@ const io = new Server(server, {
     credentials: true,
   },
 });
+
+io.adapter(createAdapter());
+
+setupWorker(io);
 
 io.on('connection', async (socket) => {
   try {
