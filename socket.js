@@ -18,12 +18,14 @@ const { setupWorker } = require('@socket.io/sticky');
 const server = http.createServer(app);
 
 // 테이블 생성
-DB.sequelize
-  .sync()
-  .then(() => {
-    console.log('database 연결 성공');
-  })
-  .catch(console.error);
+if (process.env === 'development') {
+  DB.sequelize
+    .sync()
+    .then(() => {
+      console.log('database 동기화 성공');
+    })
+    .catch(console.error);
+}
 
 const io = new Server(server, {
   cors: {
