@@ -35,12 +35,13 @@ const socketIoOptions = {
   },
 };
 
+if (process.env.NODE_ENV === 'production') {
+}
+
 const io = new Server(server, socketIoOptions);
 
 if (process.env.NODE_ENV === 'production') {
   io.adapter(createAdapter());
-
-  setupWorker(io);
 }
 
 io.on('connection', async (socket) => {
