@@ -25,7 +25,7 @@ DB.sequelize
 
 const io = new Server(server, {
   cors: {
-    origin: ['http://localhost:3000', 'https://davinci-code.online/'],
+    origin: ['http://localhost:3000', 'https://davinci-code.online'],
     method: ['GET', 'POST'],
     credentials: true,
   },
