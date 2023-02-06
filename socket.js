@@ -27,13 +27,15 @@ if (process.env.NODE_ENV === 'development') {
     .catch(console.error);
 }
 
-const io = new Server(server, {
+const socketIoOptions = {
   cors: {
     origin: [process.env.ORIGIN1, process.env.ORIGIN2],
     method: ['GET', 'POST'],
     credentials: true,
   },
-});
+};
+
+const io = new Server(server, socketIoOptions);
 
 if (process.env.NODE_ENV === 'production') {
   io.adapter(createAdapter());
