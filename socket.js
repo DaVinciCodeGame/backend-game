@@ -119,7 +119,8 @@ io.on('connection', async (socket) => {
           '이미 다른 방에 참여 중인 Player 입니다.',
           999
         );
-
+        // 기존에 룸에 들어가 있는 사람을 룸아웃 시켜라.
+        console.log('duplicate');
         io.to(socket.id).emit(eventName.ERROR, newError);
         return;
       }
