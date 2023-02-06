@@ -316,8 +316,37 @@ io.on('connection', async (socket) => {
       if (JSON.parse(tableInfo.users).length > 1)
         if (readyCount.length === JSON.parse(tableInfo.users).length) {
           roomInfo.isPlaying = true;
-
           await Room.update({ isPlaying: true }, { where: { roomId } });
+
+          await Table.update(
+            {
+              blackCards: JSON.stringify([
+                0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12,
+              ]),
+              whiteCards: JSON.stringify([
+                0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12,
+              ]),
+              top: JSON.stringify([]),
+            },
+            { where: { roomId } }
+          );
+          console.log(15);
+
+          await Promise.all(
+            userInfo.map(async (el) => {
+              await Player.update(
+                {
+                  isReady: false,
+                  gameOver: false,
+                  hand: JSON.stringify([]),
+                  security: '',
+                },
+                { where: { userId: el.userId } }
+              );
+            })
+          );
+
+
 
           userInfo.forEach((el) =>
             io.to(el.sids).emit(eventName.GAME_START, roomInfo)
