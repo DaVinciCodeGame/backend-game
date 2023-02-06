@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "scripts": {
     "dev": "nodemon socket.js",
-    "start": "pm2 start socket.js",
+    "start": "pm2 start",
     "lint": "eslint '*.{js,jsx}'",
     "lint:fix": "eslint --fix '*.{js,jsx}'"
   },

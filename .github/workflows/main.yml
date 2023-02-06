@@ -27,4 +27,4 @@ jobs:
             cd ${{ secrets.APP_PATH }}
             git pull
             npm install
-            pm2 restart socket
+            pm2 reload socket
