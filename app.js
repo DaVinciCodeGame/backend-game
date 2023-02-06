@@ -13,7 +13,7 @@ const app = express();
 app.use(
   cors({
     credentials: true,
-    origin: ['https://frontend-delta-puce.vercel.app', 'http://localhost:3000'],
+    origin: ['https://davinci-code.online/', 'http://localhost:3000'],
   })
 );
 app.use(helmet());
