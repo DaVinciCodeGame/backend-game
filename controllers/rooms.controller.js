@@ -14,7 +14,7 @@ module.exports = class RoomsController {
 
       if (!maxMembers) throw badRequest('요청에 본문에 최대 인원이 없습니다.');
 
-      if (Number.isNaN(Number(maxMembers)))
+      if (typeof maxMembers)
         throw badRequest('최대 인원이 숫자 형식이 아닙니다.');
 
       if (password) {
@@ -27,7 +27,7 @@ module.exports = class RoomsController {
 
       const roomId = await this.roomsService.createRoom(
         roomName,
-        Number(maxMembers),
+        maxMembers,
         password
       );
 
