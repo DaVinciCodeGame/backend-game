@@ -916,7 +916,7 @@ async function start() {
               userName: user.username,
               prevScore: user.prevScore,
               score: user.score,
-              change: user.change,
+              change: JSON.stringify(user.change),
             };
           });
           await Room.update(
@@ -1492,7 +1492,7 @@ async function start() {
                 userName: user.username,
                 prevScore: user.prevScore,
                 score: user.score,
-                change: user.change,
+                change: JSON.stringify(user.change),
               };
             });
             await Room.update(
