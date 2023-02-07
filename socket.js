@@ -356,6 +356,14 @@ async function start() {
       });
 
       socket.on(eventName.FIRST_DRAW, async (black, myCard) => {
+        if (socket.data.isFirstDraw) {
+          const newError = new CustomError('카드를 이미 뽑았습니다.', 801);
+
+          io.to(socket.id).emit(eventName.ERROR, newError);
+
+          return;
+        }
+
         const roomId = socket.data.roomId;
 
         const userId = socket.data.userId;
@@ -545,6 +553,8 @@ async function start() {
               io.to(el.sids).emit(eventName.DRAW_RESULT, result);
             }
           });
+
+          socket.data.isFirstDraw = true;
         }
       });
 
@@ -557,7 +567,7 @@ async function start() {
           attributes: ['blackCards', 'whiteCards'],
           raw: true,
         });
-        
+
         if (color === 'black') {
           let cards = JSON.parse(cardResult.blackCards);
           let cardLength = cards.length;
@@ -1028,7 +1038,7 @@ async function start() {
             if (!el.needToBeDeleted)
               io.to(el.sids).emit(eventName.GAMEOVER, endingInfo, gameInfo);
           });
-          
+
           userInfoV2.map(async (user) => {
             if (user.needToBeDeleted === 1) {
               await Player.destroy({
@@ -1036,7 +1046,6 @@ async function start() {
               });
             }
           });
-
         } else {
           userInfo.forEach((el) => {
             if (!el.needToBeDeleted) {
