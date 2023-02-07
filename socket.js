@@ -107,7 +107,7 @@ async function start() {
         // TODO: 쿠키에서 받아올 예정
         // const userName = 'hohoho';
         // const userProfileImg = 'https://cdn.davinci-code.online/1675150781053';
-
+        socket.data.isFirstDraw = false;
         const score = 0;
 
         const room = await Room.findOne({ where: { roomId } });
@@ -241,6 +241,7 @@ async function start() {
       socket.on(eventName.READY, async () => {
         const roomId = socket.data.roomId;
         const userId = socket.data.userId;
+        socket.data.isFirstDraw = false;
 
         console.log('roomId"', roomId);
         console.log('userId:', userId);
@@ -356,204 +357,197 @@ async function start() {
       });
 
       socket.on(eventName.FIRST_DRAW, async (black, myCard) => {
-        if (socket.data.isFirstDraw) {
-          const newError = new CustomError('카드를 이미 뽑았습니다.', 801);
+        if (!socket.data.isFirstDraw) {
+          const roomId = socket.data.roomId;
 
-          io.to(socket.id).emit(eventName.ERROR, newError);
+          const userId = socket.data.userId;
+          let getCards = [];
+          let white = 0;
 
-          return;
-        }
-
-        const roomId = socket.data.roomId;
-
-        const userId = socket.data.userId;
-        let getCards = [];
-        let white = 0;
-
-        let cardResult = await Table.findOne({
-          where: { roomId },
-        });
-
-        if (JSON.parse(cardResult.users).length > 3) {
-          white = 3 - black;
-        } else {
-          white = 4 - black;
-        }
-
-        let cards = JSON.parse(cardResult.blackCards);
-
-        // black 뽑기
-        for (let i = 0; i < black; i++) {
-          let cardLength = cards.length;
-          let CardIndex = Math.floor(Math.random() * Number(cardLength));
-          let randomCard = cards[CardIndex];
-          if (randomCard === 12) {
-            i--;
-            continue;
-          }
-
-          getCards = [
-            ...getCards,
-            { color: 'black', value: Number(randomCard), isOpen: false },
-          ];
-          cards.splice(CardIndex, 1);
-        }
-
-        await Table.update(
-          { blackCards: JSON.stringify(cards) },
-          { where: { roomId } }
-        );
-
-        cards = JSON.parse(cardResult.whiteCards);
-        // white 뽑기
-        for (let i = 0; i < white; i++) {
-          let cardLength = cards.length;
-          let CardIndex = Math.floor(Math.random() * Number(cardLength));
-          let randomCard = cards[CardIndex];
-          if (randomCard === 12) {
-            i--;
-            continue;
-          }
-          getCards = [
-            ...getCards,
-            { color: 'white', value: Number(randomCard), isOpen: false },
-          ];
-          cards.splice(CardIndex, 1);
-        }
-
-        await Table.update(
-          { whiteCards: JSON.stringify(cards) },
-          { where: { roomId } }
-        );
-
-        getCards
-          .sort((a, b) => a.value - b.value)
-          .sort((a, b) => {
-            if (a.value === b.value) {
-              if (a.color < b.color) return -1;
-              else if (b.color < a.color) return 1;
-              else return 0;
-            }
+          let cardResult = await Table.findOne({
+            where: { roomId },
           });
 
-        await Player.update(
-          { hand: JSON.stringify(getCards) },
-          { where: { userId } }
-        );
-
-        let tableInfo = await Table.findOne({
-          where: { roomId },
-          attributes: ['blackCards', 'whiteCards', 'users', 'turn'],
-          raw: true,
-        });
-
-        let userInfo = await Player.findAll({
-          where: { roomId },
-          attributes: [
-            'userId',
-            'userName',
-            'gameOver',
-            'hand',
-            'sids',
-            'needToBeDeleted',
-            'userProfileImg',
-          ],
-          raw: true,
-        });
-
-        let myInfo = userInfo.map((el) => {
-          if (el.userId === userId) {
-            return {
-              userId: el.userId,
-              userName: el.userName,
-              userProfileImg: el.userProfileImg,
-              gameOver: el.gameOver ? true : false,
-              hand: JSON.parse(el.hand).map((card) => {
-                console.log('카드 value:', card.value);
-                return {
-                  color: card.color,
-                  value: card.value,
-                  isOpen: card.isOpen,
-                };
-              }),
-            };
+          if (JSON.parse(cardResult.users).length > 3) {
+            white = 3 - black;
           } else {
-            return {
-              userId: el.userId,
-              userName: el.userName,
-              userProfileImg: el.userProfileImg,
-              gameOver: el.gameOver ? true : false,
-              hand: JSON.parse(el.hand).map((card) => {
-                return {
-                  color: card.color,
-                  value: 'Back',
-                  isOpen: card.isOpen,
-                };
-              }),
-            };
+            white = 4 - black;
           }
-        });
 
-        let mycardResult = {
-          blackCards: JSON.parse(tableInfo.blackCards).length,
-          whiteCards: JSON.parse(tableInfo.whiteCards).length,
-          turn: tableInfo.turn,
-          users: myInfo,
-        };
+          let cards = JSON.parse(cardResult.blackCards);
 
-        myCard(mycardResult);
-        // length 가 0
+          // black 뽑기
+          for (let i = 0; i < black; i++) {
+            let cardLength = cards.length;
+            let CardIndex = Math.floor(Math.random() * Number(cardLength));
+            let randomCard = cards[CardIndex];
+            if (randomCard === 12) {
+              i--;
+              continue;
+            }
 
-        const completion = userInfo.filter(
-          (el) => JSON.parse(el.hand).length === 0
-        ).length;
+            getCards = [
+              ...getCards,
+              { color: 'black', value: Number(randomCard), isOpen: false },
+            ];
+            cards.splice(CardIndex, 1);
+          }
 
-        if (completion === 0) {
-          function info(temp) {
-            const gameInfo = userInfo.map((el) => {
+          await Table.update(
+            { blackCards: JSON.stringify(cards) },
+            { where: { roomId } }
+          );
+
+          cards = JSON.parse(cardResult.whiteCards);
+          // white 뽑기
+          for (let i = 0; i < white; i++) {
+            let cardLength = cards.length;
+            let CardIndex = Math.floor(Math.random() * Number(cardLength));
+            let randomCard = cards[CardIndex];
+            if (randomCard === 12) {
+              i--;
+              continue;
+            }
+            getCards = [
+              ...getCards,
+              { color: 'white', value: Number(randomCard), isOpen: false },
+            ];
+            cards.splice(CardIndex, 1);
+          }
+
+          await Table.update(
+            { whiteCards: JSON.stringify(cards) },
+            { where: { roomId } }
+          );
+
+          getCards
+            .sort((a, b) => a.value - b.value)
+            .sort((a, b) => {
+              if (a.value === b.value) {
+                if (a.color < b.color) return -1;
+                else if (b.color < a.color) return 1;
+                else return 0;
+              }
+            });
+
+          await Player.update(
+            { hand: JSON.stringify(getCards) },
+            { where: { userId } }
+          );
+
+          let tableInfo = await Table.findOne({
+            where: { roomId },
+            attributes: ['blackCards', 'whiteCards', 'users', 'turn'],
+            raw: true,
+          });
+
+          let userInfo = await Player.findAll({
+            where: { roomId },
+            attributes: [
+              'userId',
+              'userName',
+              'gameOver',
+              'hand',
+              'sids',
+              'needToBeDeleted',
+              'userProfileImg',
+            ],
+            raw: true,
+          });
+
+          let myInfo = userInfo.map((el) => {
+            if (el.userId === userId) {
               return {
                 userId: el.userId,
                 userName: el.userName,
                 userProfileImg: el.userProfileImg,
                 gameOver: el.gameOver ? true : false,
                 hand: JSON.parse(el.hand).map((card) => {
-                  if (el.userId === temp.userId) {
-                    return {
-                      color: card.color,
-                      value: card.value,
-                      isOpen: card.isOpen,
-                    };
-                  } else if (!card.isOpen) {
-                    return {
-                      color: card.color,
-                      value: 'Back',
-                      isOpen: card.isOpen,
-                    };
-                  } else {
-                    return {
-                      color: card.color,
-                      value: card.value,
-                      isOpen: card.isOpen,
-                    };
-                  }
+                  console.log('카드 value:', card.value);
+                  return {
+                    color: card.color,
+                    value: card.value,
+                    isOpen: card.isOpen,
+                  };
                 }),
               };
-            });
-            cardResult = {
-              blackCards: JSON.parse(tableInfo.blackCards).length,
-              whiteCards: JSON.parse(tableInfo.whiteCards).length,
-              turn: tableInfo.turn,
-              users: gameInfo,
-            };
-            return cardResult;
-          }
-          userInfo.forEach((el) => {
-            if (!el.needToBeDeleted) {
-              const result = info(el);
-              io.to(el.sids).emit(eventName.DRAW_RESULT, result);
+            } else {
+              return {
+                userId: el.userId,
+                userName: el.userName,
+                userProfileImg: el.userProfileImg,
+                gameOver: el.gameOver ? true : false,
+                hand: JSON.parse(el.hand).map((card) => {
+                  return {
+                    color: card.color,
+                    value: 'Back',
+                    isOpen: card.isOpen,
+                  };
+                }),
+              };
             }
           });
 
+          let mycardResult = {
+            blackCards: JSON.parse(tableInfo.blackCards).length,
+            whiteCards: JSON.parse(tableInfo.whiteCards).length,
+            turn: tableInfo.turn,
+            users: myInfo,
+          };
+
+          myCard(mycardResult);
+          // length 가 0
+
+          const completion = userInfo.filter(
+            (el) => JSON.parse(el.hand).length === 0
+          ).length;
+
+          if (completion === 0) {
+            function info(temp) {
+              const gameInfo = userInfo.map((el) => {
+                return {
+                  userId: el.userId,
+                  userName: el.userName,
+                  userProfileImg: el.userProfileImg,
+                  gameOver: el.gameOver ? true : false,
+                  hand: JSON.parse(el.hand).map((card) => {
+                    if (el.userId === temp.userId) {
+                      return {
+                        color: card.color,
+                        value: card.value,
+                        isOpen: card.isOpen,
+                      };
+                    } else if (!card.isOpen) {
+                      return {
+                        color: card.color,
+                        value: 'Back',
+                        isOpen: card.isOpen,
+                      };
+                    } else {
+                      return {
+                        color: card.color,
+                        value: card.value,
+                        isOpen: card.isOpen,
+                      };
+                    }
+                  }),
+                };
+              });
+              cardResult = {
+                blackCards: JSON.parse(tableInfo.blackCards).length,
+                whiteCards: JSON.parse(tableInfo.whiteCards).length,
+                turn: tableInfo.turn,
+                users: gameInfo,
+              };
+              return cardResult;
+            }
+            userInfo.forEach((el) => {
+              if (!el.needToBeDeleted) {
+                const result = info(el);
+                io.to(el.sids).emit(eventName.DRAW_RESULT, result);
+              }
+            });
+          }
           socket.data.isFirstDraw = true;
         }
       });
