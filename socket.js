@@ -911,12 +911,16 @@ async function start() {
           ).data;
 
           let endingInfo = result.map((user) => {
+            if (user.change > 0) {
+              number = `+${user.change}`;
+            } else number = JSON.stringify(user.change);
+
             return {
               userId: user.userId,
               userName: user.username,
               prevScore: user.prevScore,
               score: user.score,
-              change: JSON.stringify(user.change),
+              change: number,
             };
           });
           await Room.update(
@@ -1487,12 +1491,16 @@ async function start() {
             ).data;
 
             let endingInfo = result.map((user) => {
+              if (user.change > 0) {
+                number = `+${user.change}`;
+              } else number = JSON.stringify(user.change);
+
               return {
                 userId: user.userId,
                 userName: user.username,
                 prevScore: user.prevScore,
                 score: user.score,
-                change: JSON.stringify(user.change),
+                change: number,
               };
             });
             await Room.update(
