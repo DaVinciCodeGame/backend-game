@@ -557,6 +557,7 @@ async function start() {
           attributes: ['blackCards', 'whiteCards'],
           raw: true,
         });
+        
         if (color === 'black') {
           let cards = JSON.parse(cardResult.blackCards);
           let cardLength = cards.length;
@@ -1027,6 +1028,15 @@ async function start() {
             if (!el.needToBeDeleted)
               io.to(el.sids).emit(eventName.GAMEOVER, endingInfo, gameInfo);
           });
+          
+          userInfoV2.map(async (user) => {
+            if (user.needToBeDeleted === 1) {
+              await Player.destroy({
+                where: { userId: user.userId, [Op.and]: [{ roomId }] },
+              });
+            }
+          });
+
         } else {
           userInfo.forEach((el) => {
             if (!el.needToBeDeleted) {
