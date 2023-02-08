@@ -778,35 +778,38 @@ async function start() {
 
           let turnIndex = 0;
 
-          for (let i = 0; i < turns.length; i++) {
-            if (turns[i].userId === nextTurn) {
-              turnIndex = i;
-              break;
-            }
-          }
-
-          let flag = 0;
-
-          for (let i = 1; i < turns.length + 1; i++) {
-            for (let j = 0; j < player.length; j++) {
-              if (
-                turns[(turnIndex + i) % turns.length].userId ==
-                  player[j].userId &&
-                !player[j].gameOver
-              ) {
-                nextTurn = player[j].userId;
-                flag = 1;
+          // 담보가 있을 때 && 틀렸을 때
+          if (userCard.security) {
+            for (let i = 0; i < turns.length; i++) {
+              if (turns[i].userId === nextTurn) {
+                turnIndex = i;
                 break;
               }
             }
-            if (flag) {
-              break;
+
+            let flag = 0;
+
+            for (let i = 1; i < turns.length + 1; i++) {
+              for (let j = 0; j < player.length; j++) {
+                if (
+                  turns[(turnIndex + i) % turns.length].userId ==
+                    player[j].userId &&
+                  !player[j].gameOver
+                ) {
+                  nextTurn = player[j].userId;
+                  flag = 1;
+                  break;
+                }
+              }
+              if (flag) {
+                break;
+              }
             }
+
+            console.log(7);
+
+            await Table.update({ turn: nextTurn }, { where: { roomId } });
           }
-
-          console.log(7);
-          await Table.update({ turn: nextTurn }, { where: { roomId } });
-
           result = false;
         }
 
@@ -863,8 +866,11 @@ async function start() {
               }),
             };
           });
-          console.log(10);
-          (no_security = userCard.security.length === 0 ? false : true),
+          console.log(
+            'userCard.securityuserCard.securityuserCard.securityuserCard.security',
+            userCard.security
+          );
+          (no_security = userCard?.security.length === 0 ? false : true),
             (guessResult = {
               blackCards: JSON.parse(tableInfoV2.blackCards).length,
               whiteCards: JSON.parse(tableInfoV2.whiteCards).length,
@@ -1056,6 +1062,10 @@ async function start() {
               );
             }
           });
+          await Player.update(
+            { security: '[]' },
+            { where: socket.data.userId }
+          );
         }
       });
 
