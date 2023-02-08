@@ -722,7 +722,7 @@ async function start() {
           console.log('userCard: ', userCard);
           console.log('772line: ', userCard?.security);
 
-          let targetSecurity = JSON.parse(userCard?.security);
+          let targetSecurity = userCard?.security;
 
           for (let i = 0; i < changeHand.length; i++) {
             if (
