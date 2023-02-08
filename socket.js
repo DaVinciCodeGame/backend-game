@@ -719,7 +719,6 @@ async function start() {
           });
 
           let changeHand = JSON.parse(userCard.hand);
-          console.log(userCard);
           let targetSecurity = JSON.parse(userCard.security);
 
           for (let i = 0; i < changeHand.length; i++) {
@@ -734,7 +733,7 @@ async function start() {
 
           if (changeHand.filter((card) => card.isOpen === false).length) {
             await Player.update(
-              { hand: JSON.stringify(changeHand), security: '' },
+              { hand: JSON.stringify(changeHand) },
               { where: { userId: socket.data.userId } }
             );
           } else {
@@ -865,7 +864,7 @@ async function start() {
             };
           });
           console.log(10);
-          (no_security = userInfo.security.length === 0 ? false : true),
+          (no_security = userCard.security.length === 0 ? false : true),
             (guessResult = {
               blackCards: JSON.parse(tableInfoV2.blackCards).length,
               whiteCards: JSON.parse(tableInfoV2.whiteCards).length,
