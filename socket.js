@@ -871,7 +871,7 @@ async function start() {
             };
           });
           console.log(10);
-          (no_security = targetSecurity == '' ? false : true),
+          (no_security = targetSecurity ? false : true),
             (guessResult = {
               blackCards: JSON.parse(tableInfoV2.blackCards).length,
               whiteCards: JSON.parse(tableInfoV2.whiteCards).length,
