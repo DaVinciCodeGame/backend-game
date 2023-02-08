@@ -719,56 +719,62 @@ async function start() {
           });
 
           let changeHand = JSON.parse(userCard.hand);
-          let targetSecurity = JSON.parse(userCard.security);
+          let targetSecurity;
 
-          for (let i = 0; i < changeHand.length; i++) {
-            if (
-              changeHand[i].value == targetSecurity.value &&
-              changeHand[i].color == targetSecurity.color
-            ) {
-              changeHand[i].isOpen = true;
+          if (userCard.security) {
+            targetSecurity = JSON.parse(userCard.security);
+
+            for (let i = 0; i < changeHand.length; i++) {
+              if (
+                changeHand[i].value == targetSecurity.value &&
+                changeHand[i].color == targetSecurity.color
+              ) {
+                changeHand[i].isOpen = true;
+              }
             }
-          }
-          console.log(4);
+            console.log(4);
 
-          if (changeHand.filter((card) => card.isOpen === false).length) {
-            await Player.update(
-              { hand: JSON.stringify(changeHand) },
-              { where: { userId: socket.data.userId } }
-            );
+            if (changeHand.filter((card) => card.isOpen === false).length) {
+              await Player.update(
+                { hand: JSON.stringify(changeHand), security: '' },
+                { where: { userId: socket.data.userId } }
+              );
+            } else {
+              await Player.update(
+                {
+                  hand: JSON.stringify(changeHand),
+                  gameOver: true,
+                  security: '',
+                },
+                { where: { userId: socket.data.userId } }
+              );
+
+              let topRank = JSON.parse(
+                (
+                  await Table.findOne({
+                    where: { roomId },
+                    attributes: ['top'],
+                    raw: true,
+                  })
+                ).top
+              );
+
+              let getUser = await Player.findOne({
+                where: { userId: socket.data.userId, [Op.and]: [{ roomId }] },
+                attributes: ['userId'],
+                //attributes: ['userId', 'userName', 'score'],
+                raw: true,
+              });
+
+              topRank.unshift(getUser.userId);
+
+              await Table.update(
+                { top: JSON.stringify(topRank) },
+                { where: { roomId } }
+              );
+            }
           } else {
-            await Player.update(
-              {
-                hand: JSON.stringify(changeHand),
-                gameOver: true,
-                security: '',
-              },
-              { where: { userId: socket.data.userId } }
-            );
-
-            let topRank = JSON.parse(
-              (
-                await Table.findOne({
-                  where: { roomId },
-                  attributes: ['top'],
-                  raw: true,
-                })
-              ).top
-            );
-
-            let getUser = await Player.findOne({
-              where: { userId: socket.data.userId, [Op.and]: [{ roomId }] },
-              attributes: ['userId'],
-              //attributes: ['userId', 'userName', 'score'],
-              raw: true,
-            });
-
-            topRank.unshift(getUser.userId);
-
-            await Table.update(
-              { top: JSON.stringify(topRank) },
-              { where: { roomId } }
-            );
+            targetSecurity = '';
           }
 
           const table = await Table.findOne({ where: { roomId } });
@@ -786,26 +792,27 @@ async function start() {
           }
 
           let flag = 0;
-
-          for (let i = 1; i < turns.length + 1; i++) {
-            for (let j = 0; j < player.length; j++) {
-              if (
-                turns[(turnIndex + i) % turns.length].userId ==
-                  player[j].userId &&
-                !player[j].gameOver
-              ) {
-                nextTurn = player[j].userId;
-                flag = 1;
+          if (userCard.security) {
+            for (let i = 1; i < turns.length + 1; i++) {
+              for (let j = 0; j < player.length; j++) {
+                if (
+                  turns[(turnIndex + i) % turns.length].userId ==
+                    player[j].userId &&
+                  !player[j].gameOver
+                ) {
+                  nextTurn = player[j].userId;
+                  flag = 1;
+                  break;
+                }
+              }
+              if (flag) {
                 break;
               }
             }
-            if (flag) {
-              break;
-            }
-          }
 
-          console.log(7);
-          await Table.update({ turn: nextTurn }, { where: { roomId } });
+            console.log(7);
+            await Table.update({ turn: nextTurn }, { where: { roomId } });
+          }
 
           result = false;
         }
@@ -864,7 +871,7 @@ async function start() {
             };
           });
           console.log(10);
-          (no_security = userCard.security.length === 0 ? false : true),
+          (no_security = targetSecurity == '' ? false : true),
             (guessResult = {
               blackCards: JSON.parse(tableInfoV2.blackCards).length,
               whiteCards: JSON.parse(tableInfoV2.whiteCards).length,
