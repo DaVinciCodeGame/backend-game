@@ -868,7 +868,7 @@ async function start() {
           });
           console.log(
             'userCard.securityuserCard.securityuserCard.securityuserCard.security',
-            userCard.security
+            userCard?.security
           );
           (no_security = userCard?.security.length === 0 ? false : true),
             (guessResult = {
