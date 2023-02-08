@@ -733,7 +733,7 @@ async function start() {
 
           if (changeHand.filter((card) => card.isOpen === false).length) {
             await Player.update(
-              { hand: JSON.stringify(changeHand) },
+              { hand: JSON.stringify(changeHand), security: '' },
               { where: { userId: socket.data.userId } }
             );
           } else {
@@ -864,7 +864,7 @@ async function start() {
             };
           });
           console.log(10);
-          (no_security = userCard.security.length === 0 ? false : true),
+          (no_security = userInfo.security.length === 0 ? false : true),
             (guessResult = {
               blackCards: JSON.parse(tableInfoV2.blackCards).length,
               whiteCards: JSON.parse(tableInfoV2.whiteCards).length,
@@ -1324,8 +1324,7 @@ async function start() {
             raw: true,
           })
         ).isPlaying;
-        console.log('isPlaying', isPlaying);
-        console.log(table);
+
         const users = JSON.parse(table?.users);
 
         if (users?.length > 1) {
