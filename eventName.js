@@ -26,5 +26,6 @@ const eventName = {
   ROOM_OUT: 'room-out',
   ONGOING: 'ongoing',
   LEAVE_USER: 'leave-user',
+  OPEN_MINE: 'open-mine',
 };
 module.exports = { eventName };

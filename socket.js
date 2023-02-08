@@ -1723,6 +1723,124 @@ async function start() {
 
       socket.disconnect(true);
     }
+
+    socket.on(eventName.OPEN_MINE, async (index) => {
+      const userId = socket.data.userId;
+      const roomId = socket.data.roomId;
+
+      //DB 불러오는 값
+      let user = await Player.findOne({ where: { userId } });
+
+      // 본인 패 오픈 시켜야하고
+      let userHand = JSON.parse(user.hand);
+      userHand[index].isOpen = true;
+
+      // TODO: 죽었을 때 DB 수정사항 추가.
+
+      // 살았을 때
+      if (userHand.filter((card) => card.isOpen === false).length) {
+        //죽었을 때
+      } else {
+      }
+
+      await Player.update(
+        { hand: JSON.stringify(userHand) },
+        { where: { userId } }
+      );
+
+      // 턴이 바뀌어야 하고
+      let player = await Player.findAll({ where: { roomId } });
+      const table = await Table.findOne({ where: { roomId } });
+
+      let nextTurn = table.turn;
+      let turns = JSON.parse(table.users);
+
+      let turnIndex = 0;
+
+      for (let i = 0; i < turns.length; i++) {
+        if (turns[i].userId === nextTurn) {
+          turnIndex = i;
+          break;
+        }
+      }
+
+      let flag = 0;
+
+      for (let i = 1; i < turns.length + 1; i++) {
+        for (let j = 0; j < player.length; j++) {
+          if (
+            turns[(turnIndex + i) % turns.length].userId == player[j].userId &&
+            !player[j].gameOver
+          ) {
+            nextTurn = player[j].userId;
+            flag = 1;
+            break;
+          }
+        }
+        if (flag) {
+          break;
+        }
+      }
+      await Table.update({ turn: nextTurn }, { where: { roomId } });
+      table.turn = nextTurn;
+
+      // 게임인포 만들어서 보낸다
+      let tableInfo = table;
+
+      let userInfo = player;
+
+      function infoV2(temp) {
+        const some = userInfo
+          .filter((el) => el !== undefined)
+          .map((el) => {
+            return {
+              userId: el.userId,
+              userName: el.userName,
+              userProfileImg: el.userProfileImg,
+              isReady: el.isReady,
+              gameOver: el.gameOver ? true : false,
+              hand: JSON.parse(el.hand).map((card) => {
+                if (card == '[]') {
+                  return card;
+                } else if (el.userId === temp.userId) {
+                  return {
+                    color: card.color,
+                    value: card.value,
+                    isOpen: card.isOpen,
+                  };
+                } else if (!card.isOpen) {
+                  return {
+                    color: card.color,
+                    value: 'Back',
+                    isOpen: card.isOpen,
+                  };
+                } else {
+                  return {
+                    color: card.color,
+                    value: card.value,
+                    isOpen: card.isOpen,
+                  };
+                }
+              }),
+            };
+          });
+
+        (no_security = userCard.security.length === 0 ? false : true),
+          (guessResult = {
+            blackCards: JSON.parse(tableInfo.blackCards).length,
+            whiteCards: JSON.parse(tableInfo.whiteCards).length,
+            turn: tableInfo.turn,
+            users: some,
+          });
+        return guessResult;
+      }
+
+      userInfo.forEach((el) => {
+        const gameInfo = infoV2(el);
+        if (!el.needToBeDeleted)
+          io.to(el.sids).emit(eventName.DRAW_RESULT, gameInfo);
+      });
+    })
   });
 
   httpServer.listen(process.env.PORT, () => {
