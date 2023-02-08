@@ -736,7 +736,6 @@ async function start() {
               { hand: JSON.stringify(changeHand) },
               { where: { userId: socket.data.userId } }
             );
-           
           } else {
             await Player.update(
               {
@@ -805,7 +804,7 @@ async function start() {
               }
             }
 
-            
+            await Player.update({ security: '' }, { where: { roomId } });
             await Table.update({ turn: nextTurn }, { where: { roomId } });
           }
           result = false;
@@ -1250,7 +1249,7 @@ async function start() {
             break;
           }
         }
-
+        await Player.update({ security: '' }, { where: { roomId } });
         await Table.update({ turn: nextTurn }, { where: { roomId } });
 
         function info(temp) {
@@ -1361,7 +1360,7 @@ async function start() {
                 break;
               }
             }
-
+            await Player.update({ security: '' }, { where: { roomId } });
             await Table.update({ turn: nextTurn }, { where: { roomId } });
           }
         }
@@ -1781,6 +1780,7 @@ async function start() {
           break;
         }
       }
+      await Player.update({ security: '' }, { where: { roomId } });
       await Table.update({ turn: nextTurn }, { where: { roomId } });
       table.turn = nextTurn;
 
