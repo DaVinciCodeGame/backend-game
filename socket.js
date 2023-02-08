@@ -736,7 +736,7 @@ async function start() {
               { hand: JSON.stringify(changeHand), security: '' },
               { where: { userId: socket.data.userId } }
             );
-            userCard.security = '';
+            // userCard.security = '';
           } else {
             await Player.update(
               {
@@ -777,37 +777,37 @@ async function start() {
           let nextTurn = table.turn;
           let turns = JSON.parse(table.users);
 
-          let turnIndex = 0;
-
-          for (let i = 0; i < turns.length; i++) {
-            if (turns[i].userId === nextTurn) {
-              turnIndex = i;
-              break;
-            }
-          }
-
-          let flag = 0;
-
-          for (let i = 1; i < turns.length + 1; i++) {
-            for (let j = 0; j < player.length; j++) {
-              if (
-                turns[(turnIndex + i) % turns.length].userId ==
-                  player[j].userId &&
-                !player[j].gameOver
-              ) {
-                nextTurn = player[j].userId;
-                flag = 1;
+          if (userCard.security.length) {
+            let turnIndex = 0;
+            for (let i = 0; i < turns.length; i++) {
+              if (turns[i].userId === nextTurn) {
+                turnIndex = i;
                 break;
               }
             }
-            if (flag) {
-              break;
+
+            let flag = 0;
+
+            for (let i = 1; i < turns.length + 1; i++) {
+              for (let j = 0; j < player.length; j++) {
+                if (
+                  turns[(turnIndex + i) % turns.length].userId ==
+                    player[j].userId &&
+                  !player[j].gameOver
+                ) {
+                  nextTurn = player[j].userId;
+                  flag = 1;
+                  break;
+                }
+              }
+              if (flag) {
+                break;
+              }
             }
+
+            userCard.security = '';
+            await Table.update({ turn: nextTurn }, { where: { roomId } });
           }
-
-          console.log(7);
-          await Table.update({ turn: nextTurn }, { where: { roomId } });
-
           result = false;
         }
 
@@ -1840,7 +1840,7 @@ async function start() {
         if (!el.needToBeDeleted)
           io.to(el.sids).emit(eventName.DRAW_RESULT, gameInfo);
       });
-    })
+    });
   });
 
   httpServer.listen(process.env.PORT, () => {
