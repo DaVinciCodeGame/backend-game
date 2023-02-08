@@ -165,7 +165,7 @@ async function start() {
           sids: socket.id,
           userName: socket.data.userName,
           userProfileImg: socket.data.userProfileImg,
-          security: '',
+          security: '[]',
           isReady: false,
           gameOver: false,
           hand: JSON.stringify([]),
@@ -343,7 +343,7 @@ async function start() {
                     isReady: false,
                     gameOver: false,
                     hand: JSON.stringify([]),
-                    security: '',
+                    security: '[]',
                   },
                   { where: { userId: el.userId } }
                 );
@@ -741,7 +741,7 @@ async function start() {
               {
                 hand: JSON.stringify(changeHand),
                 gameOver: true,
-                security: '',
+                security: '[]',
               },
               { where: { userId: socket.data.userId } }
             );
@@ -804,7 +804,7 @@ async function start() {
               }
             }
 
-            await Player.update({ security: '' }, { where: { roomId } });
+            await Player.update({ security: '[]' }, { where: { roomId } });
             await Table.update({ turn: nextTurn }, { where: { roomId } });
           }
           result = false;
@@ -949,7 +949,7 @@ async function start() {
                   isReady: false,
                   gameOver: false,
                   hand: JSON.stringify([]),
-                  security: '',
+                  security: '[]',
                 },
                 { where: { userId: el.userId } }
               );
@@ -1249,7 +1249,7 @@ async function start() {
             break;
           }
         }
-        await Player.update({ security: '' }, { where: { roomId } });
+        await Player.update({ security: '[]' }, { where: { roomId } });
         await Table.update({ turn: nextTurn }, { where: { roomId } });
 
         function info(temp) {
@@ -1360,7 +1360,7 @@ async function start() {
                 break;
               }
             }
-            await Player.update({ security: '' }, { where: { roomId } });
+            await Player.update({ security: '[]' }, { where: { roomId } });
             await Table.update({ turn: nextTurn }, { where: { roomId } });
           }
         }
@@ -1528,7 +1528,7 @@ async function start() {
                     isReady: false,
                     gameOver: false,
                     hand: JSON.stringify([]),
-                    security: '',
+                    security: '[]',
                   },
                   { where: { userId: el.userId } }
                 );
@@ -1780,7 +1780,7 @@ async function start() {
           break;
         }
       }
-      await Player.update({ security: '' }, { where: { roomId } });
+      await Player.update({ security: '[]' }, { where: { roomId } });
       await Table.update({ turn: nextTurn }, { where: { roomId } });
       table.turn = nextTurn;
 
