@@ -733,10 +733,10 @@ async function start() {
 
           if (changeHand.filter((card) => card.isOpen === false).length) {
             await Player.update(
-              { hand: JSON.stringify(changeHand), security: '' },
+              { hand: JSON.stringify(changeHand) },
               { where: { userId: socket.data.userId } }
             );
-            // userCard.security = '';
+           
           } else {
             await Player.update(
               {
@@ -805,7 +805,7 @@ async function start() {
               }
             }
 
-            userCard.security = '';
+            
             await Table.update({ turn: nextTurn }, { where: { roomId } });
           }
           result = false;
