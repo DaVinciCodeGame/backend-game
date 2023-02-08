@@ -719,6 +719,7 @@ async function start() {
           });
 
           let changeHand = JSON.parse(userCard.hand);
+          console.log("772line: ",userCard.security);
           let targetSecurity = JSON.parse(userCard.security);
 
           for (let i = 0; i < changeHand.length; i++) {
