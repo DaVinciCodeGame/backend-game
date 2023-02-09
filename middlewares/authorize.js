@@ -1,5 +1,6 @@
 const jwt = require('jsonwebtoken');
 const { unauthorized } = require('@hapi/boom');
+const axios = require('axios');
 
 const authorize = async (req, res, next) => {
   const { accessToken, refreshToken } = req.cookies;
