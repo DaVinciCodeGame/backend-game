@@ -34,6 +34,8 @@ const authorize = async (req, res, next) => {
         );
 
         if (typeof refreshTokenPayload === 'string') throw new Error();
+
+        userId = refreshTokenPayload.userId;
       } catch {
         throw unauthorized('요청에 포함된 토큰이 유효하지 않습니다.');
       }
