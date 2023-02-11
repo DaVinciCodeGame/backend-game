@@ -94,7 +94,6 @@ Git Flow라는 전략도 사용해 봤지만 적은 인원으로 이뤄진 프�
 
 참고 사이트: https://www.conventionalcommits.org/ko/v1.0.0-beta.4/#%ea%b0%9c%ec%9a%94
 
-///////////////////////////////////////
 
 ## title
 
