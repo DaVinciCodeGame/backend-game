@@ -343,7 +343,6 @@ async function start() {
 
           let cards = JSON.parse(cardResult.blackCards);
 
-          // black 뽑기
           for (let i = 0; i < black; i++) {
             let cardLength = cards.length;
             let CardIndex = Math.floor(Math.random() * Number(cardLength));
@@ -366,7 +365,7 @@ async function start() {
           );
 
           cards = JSON.parse(cardResult.whiteCards);
-          // white 뽑기
+
           for (let i = 0; i < white; i++) {
             let cardLength = cards.length;
             let CardIndex = Math.floor(Math.random() * Number(cardLength));
@@ -462,7 +461,6 @@ async function start() {
           };
 
           myCard(mycardResult);
-          // length 가 0
 
           const completion = userInfo.filter(
             (el) => JSON.parse(el.hand).length === 0
@@ -617,7 +615,6 @@ async function start() {
         let no_security;
         let userInfoV2;
 
-        // HACK: 타겟유저의 카드를 맞췄을 때
         if (targetHand[index].value === value) {
           targetHand[index].isOpen = true;
           if (targetHand.filter((card) => card.isOpen === false).length) {
@@ -644,7 +641,7 @@ async function start() {
             let getUser = await Player.findOne({
               where: { userId, [Op.and]: [{ roomId }] },
               attributes: ['userId'],
-              //attributes: ['userId', 'userName', 'score'],
+
               raw: true,
             });
 
@@ -712,7 +709,7 @@ async function start() {
             let getUser = await Player.findOne({
               where: { userId: socket.data.userId, [Op.and]: [{ roomId }] },
               attributes: ['userId'],
-              //attributes: ['userId', 'userName', 'score'],
+
               raw: true,
             });
 
@@ -1308,7 +1305,6 @@ async function start() {
           { where: { roomId } }
         );
 
-        // 게임 진행중일 때
         if (isPlaying) {
           let outUser = await Player.findOne({
             where: {
@@ -1612,23 +1608,16 @@ async function start() {
         const userId = socket.data.userId;
         const roomId = socket.data.roomId;
 
-        //DB 불러오는 값
         let user = await Player.findOne({ where: { userId } });
 
-        // 본인 패 오픈 시켜야하고
         let userHand = JSON.parse(user.hand);
         userHand[index].isOpen = true;
 
-        // TODO: 죽었을 때 DB 수정사항 추가.
-
-        // 살았을 때
         if (userHand.filter((card) => card.isOpen === false).length) {
           await Player.update(
             { hand: JSON.stringify(userHand) },
             { where: { userId } }
           );
-
-          //죽었을 때
         } else {
           await Player.update(
             { gameOver: true, hand: JSON.stringify(userHand) },
@@ -1636,7 +1625,6 @@ async function start() {
           );
         }
 
-        // 턴이 바뀌어야 하고
         let player = await Player.findAll({ where: { roomId } });
         const table = await Table.findOne({ where: { roomId } });
 
@@ -1673,7 +1661,6 @@ async function start() {
         await Table.update({ turn: nextTurn }, { where: { roomId } });
         table.turn = nextTurn;
 
-        // 게임인포 만들어서 보낸다
         let tableInfo = table;
 
         let userInfo = player;
