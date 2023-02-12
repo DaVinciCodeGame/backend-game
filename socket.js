@@ -90,7 +90,6 @@ async function start() {
       });
 
       socket.on(eventName.SEND_MESSAGE, (msg, room, addMyMessage) => {
-        
         const userName = socket.data.userName;
 
         socket.to(room).emit(eventName.RECEIVE_MESSAGE, msg, userName);
@@ -98,7 +97,6 @@ async function start() {
       });
 
       socket.on(eventName.JOINED, async (roomId, fn) => {
-      
         socket.data.isFirstDraw = false;
         const score = 0;
 
@@ -113,21 +111,19 @@ async function start() {
 
         socket.join(roomId);
         socket.data.roomId = roomId;
-        
+
         socket.data.userId = data.userId;
         const userId = data.userId;
         socket.data.userProfileImg = data.profileImageUrl;
         socket.data.userName = data.username;
 
-        
         const duplicate = await Player.findOne({ where: { userId } });
         if (duplicate) {
           const newError = new CustomError(
             '이미 다른 방에 참여 중인 Player 입니다.',
             999
           );
-          
-          console.log('duplicate');
+
           io.to(socket.id).emit(eventName.ERROR, newError);
           return;
         }
@@ -176,22 +172,10 @@ async function start() {
 
         let tableInfo = await Table.findOne({
           where: { roomId },
-          attributes: ['blackCards', 'whiteCards', 'turn'],
-          raw: true,
         });
 
         let userInfo = await Player.findAll({
           where: { roomId },
-          attributes: [
-            'userId',
-            'userName',
-            'isReady',
-            'gameOver',
-            'hand',
-            'sids',
-            'userProfileImg',
-          ],
-          raw: true,
         });
 
         let userInfoV2 = userInfo.map((el) => {
