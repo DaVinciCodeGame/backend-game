@@ -90,7 +90,7 @@ async function start() {
       });
 
       socket.on(eventName.SEND_MESSAGE, (msg, room, addMyMessage) => {
-        // 소켓 아이디에 맞는 닉네임을 뽑아서 msg와 같이 전송
+        
         const userName = socket.data.userName;
 
         socket.to(room).emit(eventName.RECEIVE_MESSAGE, msg, userName);
@@ -98,22 +98,13 @@ async function start() {
       });
 
       socket.on(eventName.JOINED, async (roomId, fn) => {
-        // TODO:
-        // game-info 필요
-        // roomId에 따른 방 제목 -> 게임 시작시 상단 바 정보(비공개, 인원, 방제목)
-        // room 정보 마지막 함수로
-        // userName은 main DB에서 추출
-
-        // TODO: 쿠키에서 받아올 예정
-        // const userName = 'hohoho';
-        // const userProfileImg = 'https://cdn.davinci-code.online/1675150781053';
+      
         socket.data.isFirstDraw = false;
         const score = 0;
 
         const room = await Room.findOne({ where: { roomId } });
 
         if (!room) {
-          // TODO: 방 없을 때 에러 처리
           const newError = new CustomError('방이 없습니다.', 800);
 
           io.to(socket.id).emit(eventName.ERROR, newError);
@@ -122,20 +113,20 @@ async function start() {
 
         socket.join(roomId);
         socket.data.roomId = roomId;
-        // socket.data.userId = userId;
+        
         socket.data.userId = data.userId;
         const userId = data.userId;
         socket.data.userProfileImg = data.profileImageUrl;
         socket.data.userName = data.username;
 
-        // FIXME: 유저 중복으로 joined 안먹는 부분 수정 필요
+        
         const duplicate = await Player.findOne({ where: { userId } });
         if (duplicate) {
           const newError = new CustomError(
             '이미 다른 방에 참여 중인 Player 입니다.',
             999
           );
-          // 기존에 룸에 들어가 있는 사람을 룸아웃 시켜라.
+          
           console.log('duplicate');
           io.to(socket.id).emit(eventName.ERROR, newError);
           return;
@@ -221,8 +212,6 @@ async function start() {
           users: userInfoV2,
         };
 
-        console.log('members 값 확인 console.log', userInfoV2.length);
-        // TODO: 보내주기 위한 roomInfo
         const roomInfo = {
           maxMembers: room.maxMembers,
           members: userInfoV2.length,
