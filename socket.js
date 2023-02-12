@@ -67,8 +67,6 @@ async function start() {
         `${process.env.MAIN_SERVER_URL}/p/users/${userId}`
       );
 
-      console.log(socket.data);
-
       socket.onAny((event, ...args) => {
         console.log(`들어온 이벤트 이름: ${event}`);
         if (args) {
@@ -216,9 +214,6 @@ async function start() {
         const userId = socket.data.userId;
         socket.data.isFirstDraw = false;
 
-        console.log('roomId"', roomId);
-        console.log('userId:', userId);
-
         const room = await Room.findOne({ where: { roomId } });
         const userReady = await Player.findOne({
           where: { userId, [Op.and]: [{ roomId }] },
@@ -307,7 +302,6 @@ async function start() {
               },
               { where: { roomId } }
             );
-            console.log(15);
 
             await Promise.all(
               userInfo.map(async (el) => {
@@ -436,7 +430,6 @@ async function start() {
                 userProfileImg: el.userProfileImg,
                 gameOver: el.gameOver ? true : false,
                 hand: JSON.parse(el.hand).map((card) => {
-                  console.log('카드 value:', card.value);
                   return {
                     color: card.color,
                     value: card.value,
@@ -617,7 +610,7 @@ async function start() {
             })
           ).hand
         );
-        console.log('target유저 이전 값:', targetHand);
+
         let result = false;
         let guessResult = {};
         let userCard;
@@ -626,16 +619,12 @@ async function start() {
 
         // HACK: 타겟유저의 카드를 맞췄을 때
         if (targetHand[index].value === value) {
-          console.log('result true');
-          console.log('타겟의 값', targetHand[index].value);
-          console.log('설정한 값', value);
           targetHand[index].isOpen = true;
           if (targetHand.filter((card) => card.isOpen === false).length) {
             await Player.update(
               { hand: JSON.stringify(targetHand) },
               { where: { userId } }
             );
-            console.log('1번콘솔', { hand: JSON.stringify(targetHand) });
           } else {
             await Player.update(
               { hand: JSON.stringify(targetHand), gameOver: true },
@@ -658,7 +647,7 @@ async function start() {
               //attributes: ['userId', 'userName', 'score'],
               raw: true,
             });
-            // FIXME 스코어 받아와서 정보 넣어줘야함.
+
             topRank.unshift(getUser.userId);
 
             await Table.update(
@@ -667,11 +656,8 @@ async function start() {
             );
 
             await Room.update({ isPlaying: false }, { where: { roomId } });
-
-            console.log('2번콘솔');
           }
 
-          console.log(1);
           userCard = await Player.findOne({
             where: { userId, [Op.and]: [{ roomId }] },
             attributes: ['hand', 'security'],
@@ -680,11 +666,6 @@ async function start() {
 
           result = true;
         } else {
-          // 틀렸을 때
-          console.log(2);
-          console.log('result false');
-          console.log('타겟의 값', targetHand[index].value);
-          console.log('설정한 값', value);
           userCard = await Player.findOne({
             where: { userId: socket.data.userId, [Op.and]: [{ roomId }] },
             attributes: ['hand', 'security'],
@@ -702,7 +683,6 @@ async function start() {
               changeHand[i].isOpen = true;
             }
           }
-          console.log(4);
 
           if (changeHand.filter((card) => card.isOpen === false).length) {
             await Player.update(
@@ -777,14 +757,11 @@ async function start() {
             }
           }
 
-          console.log(7);
           await Table.update({ turn: nextTurn }, { where: { roomId } });
 
           result = false;
         }
 
-        // TODO: 전체적으로 뿌려주기 전에 상태값 다 입히기.
-        console.log(8);
         let userInfo = await Player.findAll({
           where: { roomId },
           attributes: [
@@ -799,7 +776,7 @@ async function start() {
           ],
           raw: true,
         });
-        console.log(9);
+
         let tableInfoV2 = await Table.findOne({
           where: { roomId },
           attributes: ['blackCards', 'whiteCards', 'turn'],
@@ -836,7 +813,7 @@ async function start() {
               }),
             };
           });
-          console.log(10);
+
           (no_security = userCard.security.length === 0 ? false : true),
             (guessResult = {
               blackCards: JSON.parse(tableInfoV2.blackCards).length,
@@ -846,22 +823,18 @@ async function start() {
             });
           return guessResult;
         }
-        console.log(11);
 
-        // gameover 일 때
         if (userInfo.filter((user) => user.gameOver == false).length === 1) {
-          console.log(12);
           const winner = await Player.findOne({
             where: {
               roomId,
               [Op.and]: [{ gameOver: false }],
             },
             attributes: ['userId'],
-            // attributes: ['userId', 'userName', 'score'],
+
             raw: true,
           });
 
-          console.log(13);
           let topRank = JSON.parse(
             (
               await Table.findOne({
@@ -871,10 +844,8 @@ async function start() {
               })
             ).top
           );
-          console.log('승리 user 정보:::::', winner);
-          console.log('topRank 정보:::::', topRank);
+
           topRank.unshift(winner.userId);
-          console.log('합친 정보:::::', topRank);
 
           const result = (
             await axios.post(
@@ -900,7 +871,7 @@ async function start() {
             { isPlaying: false, turn: winner.userId },
             { where: { roomId } }
           );
-          console.log(14);
+
           await Table.update(
             {
               blackCards: JSON.stringify([
@@ -913,7 +884,6 @@ async function start() {
             },
             { where: { roomId } }
           );
-          console.log(15);
 
           await Promise.all(
             userInfo.map(async (el) => {
@@ -950,10 +920,7 @@ async function start() {
             ],
             raw: true,
           });
-          console.log('초기화 한 user data', userInfoV2);
-          console.log(16);
 
-          console.log(18);
           function infoV2(temp) {
             const some = userInfoV2
               .filter((el) => el !== undefined)
@@ -989,7 +956,7 @@ async function start() {
                   }),
                 };
               });
-            console.log(19);
+
             (no_security = userCard.security.length === 0 ? false : true),
               (guessResult = {
                 blackCards: JSON.parse(tableInfo.blackCards).length,
@@ -1000,12 +967,9 @@ async function start() {
             return guessResult;
           }
 
-          console.log(20);
-          // TODO:  게임 오버
           userInfo.forEach((el) => {
             const gameInfo = infoV2(el);
-            console.log('endingInfo:::::', endingInfo);
-            console.log('gameInfo:::::', gameInfo);
+
             if (!el.needToBeDeleted)
               io.to(el.sids).emit(eventName.GAMEOVER, endingInfo, gameInfo);
           });
@@ -1035,32 +999,24 @@ async function start() {
       socket.on(eventName.PLACE_JOKER, async (hand) => {
         const userId = socket.data.userId;
         const roomId = socket.data.roomId;
-        // hand가 있으면 수정해서 보내주고,
-        // 없으면 그냥 전체적인Info  // 없을 때는 Null
 
-        // hand가 있을 때
         if (hand) {
           await Player.update(
             { hand: JSON.stringify(hand) },
             { where: { userId } }
           );
         } else {
-          // TODO: 담보 불러서 저장하기.
           let userInfo = await Player.findOne({
             where: { userId, [Op.and]: [{ roomId }] },
             attributes: ['security', 'hand'],
             raw: true,
           });
 
-          console.log(userInfo.security);
-          console.log(userInfo.hand);
-
           let userSecurity = JSON.parse(userInfo.security);
           let userHand = JSON.parse(userInfo.hand);
           userSecurity.isOpen = false;
 
           userHand.push(userSecurity);
-          console.log('place-joker 변한 userHand 값: ', userHand);
 
           let jokerIndex = [];
           let jokerCard = [];
@@ -1272,12 +1228,9 @@ async function start() {
       });
 
       socket.on(eventName.ROOM_OUT, async () => {
-        console.log('들어온', socket.id);
-        // 방 나갈 때
         const roomId = socket.data.roomId;
         const userId = socket.data.userId;
-        console.log(roomId);
-        console.log(userId);
+
         let userInfoV2;
         let userInfo;
         let nextTurn;
@@ -1297,14 +1250,11 @@ async function start() {
             raw: true,
           })
         ).isPlaying;
-        console.log('isPlaying', isPlaying);
-        console.log(table);
+
         const users = JSON.parse(table?.users);
 
         if (users?.length > 1) {
           if (table?.turn === userId) {
-            console.log(users);
-
             let turns = JSON.parse(table?.users);
             nextTurn = table?.turn;
             let turnIndex = 0;
@@ -1358,11 +1308,8 @@ async function start() {
           { where: { roomId } }
         );
 
-        console.log(3);
-
         // 게임 진행중일 때
         if (isPlaying) {
-          console.log(4);
           let outUser = await Player.findOne({
             where: {
               userId,
@@ -1411,7 +1358,6 @@ async function start() {
             { where: { userId, [Op.and]: [{ roomId }] } }
           );
 
-          console.log('outUser 진행 1');
           userInfo = await Player.findAll({
             where: { roomId },
             attributes: [
@@ -1424,24 +1370,18 @@ async function start() {
             ],
             raw: true,
           });
-          console.log('outUser다음 진행 확인.2');
 
-          // 게임이 끝난 상태인지 확인.
           if (userInfo.filter((user) => user.gameOver == false).length === 1) {
-            console.log(
-              '====================================GAME OVER===================================='
-            );
             const winner = await Player.findOne({
               where: {
                 roomId,
                 [Op.and]: [{ gameOver: false }],
               },
               attributes: ['userId'],
-              //attributes: ['userId', 'userName', 'score'],
+
               raw: true,
             });
 
-            console.log(13);
             let topRank = JSON.parse(
               (
                 await Table.findOne({
@@ -1451,10 +1391,8 @@ async function start() {
                 })
               ).top
             );
-            console.log('승리 user 정보:::::', winner);
-            console.log('topRank 정보:::::', topRank);
+
             topRank.unshift(winner.userId);
-            console.log('합친 정보:::::', topRank);
 
             const result = (
               await axios.post(
@@ -1480,7 +1418,7 @@ async function start() {
               { isPlaying: false, turn: winner.userId },
               { where: { roomId } }
             );
-            console.log(14);
+
             await Table.update(
               {
                 blackCards: JSON.stringify([
@@ -1493,7 +1431,6 @@ async function start() {
               },
               { where: { roomId } }
             );
-            console.log(15);
 
             await Promise.all(
               userInfo.map(async (el) => {
@@ -1531,7 +1468,6 @@ async function start() {
               raw: true,
             });
 
-            console.log(18);
             function infoV2(temp) {
               const some = userInfoV2
                 .filter((el) => el !== undefined)
@@ -1569,7 +1505,6 @@ async function start() {
                     };
                   }
                 });
-              console.log(19);
 
               guessResult = {
                 blackCards: JSON.parse(tableInfo.blackCards).length,
@@ -1579,9 +1514,6 @@ async function start() {
               };
               return guessResult;
             }
-
-            console.log(20);
-            // TODO:  게임 오버
 
             userInfo.forEach((el) => {
               const gameInfo = infoV2(el);
@@ -1599,13 +1531,8 @@ async function start() {
               }
             });
           }
-          // 게임 진행중이 아닐 때.
         } else {
-          // 마지막 유저가 나갈 때 방 삭제.
-
           await Player.destroy({ where: { userId } });
-
-          console.log('just roomOut');
 
           userInfo = await Player.findAll({
             where: { roomId },
