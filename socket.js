@@ -7,7 +7,7 @@ const { default: axios } = require('axios');
 const { createAdapter } = require('@socket.io/redis-adapter');
 const { createClient } = require('redis');
 
-const { eventName } = require('./eventName');
+const { eventName } = require('./event-name');
 const app = require('./app');
 const { Player, Room, Table } = require('./models');
 const DB = require('./models');
